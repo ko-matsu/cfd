@@ -57,7 +57,8 @@ endfunction()
 ####################
 # test
 ####################
-if(ENABLE_TESTS)
+if(NOT ENABLE_TESTS)
+else()
 enable_testing()
 endif()		# ENABLE_TESTS
 
@@ -73,7 +74,8 @@ add_subdirectory(src)
 ####################
 # test subdirectories
 ####################
-if(ENABLE_TESTS)
+if(NOT ENABLE_TESTS)
+else()
 project(cfd_all_test CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

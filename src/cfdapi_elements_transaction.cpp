@@ -803,19 +803,19 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
 
   // txoutへ追加するamountのmapを用意
   std::map<std::string, Amount> append_txout_amount_map = amount_map;
-  auto itr = amount_map.begin();
-  while (itr != amount_map.end()) {
-    std::string asset = itr->first;
+  auto itr2 = amount_map.begin();
+  while (itr2 != amount_map.end()) {
+    std::string asset = itr2->first;
     Amount txin_amount = txin_amount_map[asset];
     Amount txout_amount = tx_amount_map[asset];
-    append_txout_amount_map[itr->first] =
-        itr->second + txin_amount - txout_amount;
+    append_txout_amount_map[itr2->first] =
+        itr2->second + txin_amount - txout_amount;
 
-    if (use_fee && (itr->first == fee_asset_str)) {
+    if (use_fee && (itr2->first == fee_asset_str)) {
       /* fee assetは別で計算するため、txout追加対象から除外 */
-      append_txout_amount_map.erase(itr->first);
+      append_txout_amount_map.erase(itr2->first);
     }
-    ++itr;
+    ++itr2;
   }
 
   // TxOut追加

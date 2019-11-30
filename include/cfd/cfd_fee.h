@@ -61,13 +61,6 @@ class CFD_EXPORT FeeCalculator {
    * @param[in] size    Transaction size
    * @return Fee Amount
    */
-  Amount GetFee(uint32_t size) const;
-
-  /**
-   * @brief Feeを計算する.
-   * @param[in] size    Transaction size
-   * @return Fee Amount
-   */
   Amount GetFee(size_t size) const;
 
   /**
