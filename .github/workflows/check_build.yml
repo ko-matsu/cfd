@@ -67,3 +67,33 @@ jobs:
       run: |
         cd doc
         doxygen Doxyfile_quiet_all
+
+  docker-build:
+    name: docker-build
+
+    steps:
+    - name: docker setup
+      uses: docker://alpine:3.10
+    - name: install
+      run: apk add --update --no-cache musl gcc g++ make git cmake nodejs
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: cmake_version
+      run: cmake --version
+    - name: cmake_generage
+      run: |
+        mkdir /tmp/dist
+        mkdir build
+        cd build
+        cmake .. -DENABLE_SHARED=on -DCMAKE_BUILD_TYPE=Release -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DENABLE_CAPI=on -DTARGET_RPATH="/usr/local/lib;/usr/local/lib64"
+        make
+        make install DESTDIR=/tmp/dist 
+        ls /tmp/dist
+        ls /tmp/dist/usr
+        ls /tmp/dist/usr/local
+        ls /tmp/dist/usr/local/lib64
+        ls /usr/local/lib64
+    - name: doxygen_check
+      run: |
+        cd doc
+        doxygen Doxyfile_quiet_all
