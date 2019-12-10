@@ -26,9 +26,9 @@ jobs:
     - name: docker setup
       uses: docker://alpine:3.10
       with:
-        entrypoint: /bin/ls
-        args: /github/workspace
-#        entrypoint: ./.github/workflows/entrypoint.sh
+        entrypoint: /github/workspace/.github/workflows/entrypoint.sh
+#        entrypoint: /bin/ls
+#        args: /github/workspace
     - name: output check
       run: |
         ls $GITHUB_WORKSPACE
