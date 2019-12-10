@@ -22,11 +22,11 @@ jobs:
     - name: checkout
       uses: actions/checkout@v1
     - name: list
-      run: ls $GITHUB_WORKSPACE
+      run: ls -a $GITHUB_WORKSPACE
     - name: docker setup
       uses: docker://alpine:3.10
       with:
-        entrypoint: $GITHUB_WORKSPACE/cfd/.github/workflows/entrypoint.sh
+        entrypoint: $GITHUB_WORKSPACE/.github/workflows/entrypoint.sh
     - name: output check
       run: |
         ls $GITHUB_WORKSPACE
