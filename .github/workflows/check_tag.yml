@@ -19,16 +19,14 @@ jobs:
       uses: docker://alpine:3.10
       with:
         entrypoint: /github/workspace/.github/workflows/build_entrypoint.sh
-    - name: output check
+    - name: create zip file
       run: |
         echo "---- dump output data ----"
         ls -l $GITHUB_WORKSPACE/dist/usr/local/*
-    - name: create zip file
-      run: |
         mkdir -p /tmp/cfd/usr
         sudo chmod 666 /tmp/cfd
         sudo chmod 666 /tmp/cfd/usr
-        cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
+        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
         cd /tmp/cfd
         zip -r cfd.zip usr
         echo "---- dump zip file ----"
