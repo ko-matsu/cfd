@@ -25,8 +25,10 @@ jobs:
         ls -l $GITHUB_WORKSPACE/dist/usr/local/*
     - name: create zip file
       run: |
-        sudo chmod 666 $GITHUB_WORKSPACE/dist
-        cd $GITHUB_WORKSPACE/dist
+        mkdir -p /tmp/cfd
+        sudo chmod 666 /tmp/cfd
+        cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
+        cd /tmp/cfd
         zip -r cfd.zip usr
         echo "---- dump zip file ----"
         ls -l
