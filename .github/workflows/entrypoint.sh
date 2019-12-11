@@ -1,6 +1,5 @@
 #!/bin/sh -l
 
-# alpine 3.10.x
 apk add --update --no-cache musl gcc g++ make git cmake
 
 cd /github/workspace
