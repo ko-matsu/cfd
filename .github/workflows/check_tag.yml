@@ -40,8 +40,13 @@ jobs:
         sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
         sudo zip -r /tmp/cfd/cfd.zip /tmp/cfd/usr
         sudo chmod 666 /tmp/cfd/cfd.zip
+        sudo chown runner /tmp/cfd/cfd.zip
+        mkdir /tmp/work_cfd
+        cp /tmp/cfd/cfd.zip /tmp/work_cfd
         echo "---- dump zip file ----"
-        ls -l
+        ls -l /tmp/cfd
+        echo "---- dump zip file ----"
+        ls -l /tmp/work_cfd
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
