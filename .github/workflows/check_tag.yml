@@ -13,40 +13,28 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v1
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - name: list
       run: ls -a $GITHUB_WORKSPACE
-    - name: zip test
-      run: |
-        echo "---- dump output data ----"
-        mkdir -p /tmp/test/usr
-        sudo chmod 666 /tmp/test
-        sudo chmod 666 /tmp/test/usr
-        sudo cp -r $GITHUB_WORKSPACE/README.md /tmp/test/usr/
-        sudo zip -r /tmp/test/test.zip /tmp/test/usr
-        sudo chmod 666 /tmp/test/test.zip
-        echo "---- dump zip file ----"
-        sudo ls -l /tmp/test
     - name: docker setup
       uses: docker://alpine:3.10
       with:
         entrypoint: /github/workspace/.github/workflows/build_entrypoint.sh
-    - name: create zip file
+    - name: create archive file
       run: |
         echo "---- dump output data ----"
         ls -l $GITHUB_WORKSPACE/dist/usr/local/*
-        mkdir -p /tmp/cfd/usr
+        mkdir -p /tmp/cfd
         sudo chmod 777 /tmp/cfd
-        sudo chmod 777 /tmp/cfd/usr
-        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
-        sudo zip -r /tmp/cfd/cfd.zip /tmp/cfd/usr
+        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd
+        sudo cd /tmp/cfd
+        sudo zip -r /tmp/cfd/cfd.zip usr
         sudo chmod 777 /tmp/cfd/cfd.zip
         sudo chown runner /tmp/cfd/cfd.zip
         echo "---- dump zip file ----"
         sudo ls -l /tmp/cfd
-        mkdir /tmp/work_cfd
-        sudo cp /tmp/cfd/cfd.zip .
-        echo "---- dump zip file ----"
-        sudo ls -l
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -69,6 +57,6 @@ jobs:
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: /tmp/cfd/cfd.zip
-        asset_name: cfd-${{ github.ref }}-alpine_x86_64.zip
+        asset_name: cfd-${{ steps.get_version.outputs.VERSION }}-alpine_x86_64.zip
         asset_content_type: application/zip
 
