@@ -15,6 +15,18 @@ jobs:
       uses: actions/checkout@v1
     - name: list
       run: ls -a $GITHUB_WORKSPACE
+    - name: zip test
+      run: |
+        echo "---- dump output data ----"
+        ls -l $GITHUB_WORKSPACE/dist/usr/local/*
+        mkdir -p /tmp/test/usr
+        sudo chmod 666 /tmp/test
+        sudo chmod 666 /tmp/test/usr
+        sudo cp -r $GITHUB_WORKSPACE/README.md /tmp/cfd/usr/
+        sudo zip -r /tmp/test/test.zip /tmp/test/usr
+        sudo chmod 666 test.zip
+        echo "---- dump zip file ----"
+        ls -l
     - name: docker setup
       uses: docker://alpine:3.10
       with:
@@ -27,8 +39,8 @@ jobs:
         sudo chmod 666 /tmp/cfd
         sudo chmod 666 /tmp/cfd/usr
         sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
-        cd /tmp/cfd
-        zip -r cfd.zip usr
+        sudo zip -r /tmp/cfd/cfd.zip /tmp/cfd/usr
+        sudo chmod 666 cfd.zip
         echo "---- dump zip file ----"
         ls -l
     - name: Create Release
