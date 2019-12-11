@@ -18,7 +18,6 @@ jobs:
     - name: zip test
       run: |
         echo "---- dump output data ----"
-        ls -l $GITHUB_WORKSPACE/dist/usr/local/*
         mkdir -p /tmp/test/usr
         sudo chmod 666 /tmp/test
         sudo chmod 666 /tmp/test/usr
