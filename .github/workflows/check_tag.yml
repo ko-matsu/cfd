@@ -21,7 +21,7 @@ jobs:
         mkdir -p /tmp/test/usr
         sudo chmod 666 /tmp/test
         sudo chmod 666 /tmp/test/usr
-        sudo cp -r $GITHUB_WORKSPACE/README.md /tmp/cfd/usr/
+        sudo cp -r $GITHUB_WORKSPACE/README.md /tmp/test/usr/
         sudo zip -r /tmp/test/test.zip /tmp/test/usr
         sudo chmod 666 test.zip
         echo "---- dump zip file ----"
