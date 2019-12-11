@@ -25,7 +25,7 @@ jobs:
         sudo zip -r /tmp/test/test.zip /tmp/test/usr
         sudo chmod 666 /tmp/test/test.zip
         echo "---- dump zip file ----"
-        ls -l
+        ls -l /tmp/test
     - name: docker setup
       uses: docker://alpine:3.10
       with:
@@ -35,16 +35,16 @@ jobs:
         echo "---- dump output data ----"
         ls -l $GITHUB_WORKSPACE/dist/usr/local/*
         mkdir -p /tmp/cfd/usr
-        sudo chmod 666 /tmp/cfd
-        sudo chmod 666 /tmp/cfd/usr
+        sudo chmod 777 /tmp/cfd
+        sudo chmod 777 /tmp/cfd/usr
         sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
         sudo zip -r /tmp/cfd/cfd.zip /tmp/cfd/usr
-        sudo chmod 666 /tmp/cfd/cfd.zip
+        sudo chmod 777 /tmp/cfd/cfd.zip
         sudo chown runner /tmp/cfd/cfd.zip
-        mkdir /tmp/work_cfd
-        cp /tmp/cfd/cfd.zip /tmp/work_cfd
         echo "---- dump zip file ----"
         ls -l /tmp/cfd
+        mkdir /tmp/work_cfd
+        sudo cp /tmp/cfd/cfd.zip .
         echo "---- dump zip file ----"
         ls -l /tmp/work_cfd
     - name: Create Release
