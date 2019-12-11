@@ -25,7 +25,7 @@ jobs:
         sudo zip -r /tmp/test/test.zip /tmp/test/usr
         sudo chmod 666 /tmp/test/test.zip
         echo "---- dump zip file ----"
-        ls -l /tmp/test
+        sudo ls -l /tmp/test
     - name: docker setup
       uses: docker://alpine:3.10
       with:
@@ -42,11 +42,11 @@ jobs:
         sudo chmod 777 /tmp/cfd/cfd.zip
         sudo chown runner /tmp/cfd/cfd.zip
         echo "---- dump zip file ----"
-        ls -l /tmp/cfd
+        sudo ls -l /tmp/cfd
         mkdir /tmp/work_cfd
         sudo cp /tmp/cfd/cfd.zip .
         echo "---- dump zip file ----"
-        ls -l /tmp/work_cfd
+        sudo ls -l
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
