@@ -23,7 +23,7 @@ jobs:
         sudo chmod 666 /tmp/test/usr
         sudo cp -r $GITHUB_WORKSPACE/README.md /tmp/test/usr/
         sudo zip -r /tmp/test/test.zip /tmp/test/usr
-        sudo chmod 666 test.zip
+        sudo chmod 666 /tmp/test/test.zip
         echo "---- dump zip file ----"
         ls -l
     - name: docker setup
@@ -39,7 +39,7 @@ jobs:
         sudo chmod 666 /tmp/cfd/usr
         sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd/usr
         sudo zip -r /tmp/cfd/cfd.zip /tmp/cfd/usr
-        sudo chmod 666 cfd.zip
+        sudo chmod 666 /tmp/cfd/cfd.zip
         echo "---- dump zip file ----"
         ls -l
     - name: Create Release
