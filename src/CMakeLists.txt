@@ -119,9 +119,30 @@ transform_makefile_srclist("Makefile.srclist" "${CMAKE_CURRENT_BINARY_DIR}/Makef
 include(${CMAKE_CURRENT_BINARY_DIR}/Makefile.srclist.cmake)
 
 project(cfd CXX)
+
+find_package(cfdcore)
+if((NOT cfdcore_FOUND) OR (NOT ${cfdcore_FOUND}))
 set(CFDCORE_LIBRARY cfdcore)
 set(LIBWALLY_LIBRARY wally)
 set(UNIVALUE_LIBRARY univalue)
+
+else()
+message(STATUS "[CFDCORE]=${cfdcore_LIBRARIES}")
+message(STATUS "[cfdcore_INCLUDEDIR]=${cfdcore_INCLUDE_DIR}")
+message(STATUS "[cfdcore_LIBDIR]=${cfdcore_LIBRARY_DIR}")
+message(STATUS "[cfdcore_FOUND]=${cfdcore_FOUND}")
+message(STATUS "[cfdcore_DIR]=${cfdcore_DIR}")
+
+find_package(univalue   REQUIRED)
+message(STATUS "[UNIVALUE]=${univalue_LIBS}")
+
+find_package(wally   REQUIRED)
+message(STATUS "[LIBWALLY]=${wally_LIBS}")
+
+set(CFDCORE_LIBRARY cfdcore)
+set(LIBWALLY_LIBRARY wally)
+set(UNIVALUE_LIBRARY univalue)
+endif()
 
 if(MSVC)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Od /Zi")
@@ -169,6 +190,8 @@ target_compile_definitions(${PROJECT_NAME}
     ${CFD_CAPI_USE}
     ${CFD_CORE_SHARED_OPT}
 )
+
+if((NOT cfdcore_FOUND) OR (NOT ${cfdcore_FOUND}))
 target_include_directories(${PROJECT_NAME}
   PUBLIC
     ../include
@@ -176,11 +199,27 @@ target_include_directories(${PROJECT_NAME}
     .
     ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
 )
-
 target_link_directories(${PROJECT_NAME}
   PRIVATE
     ./
 )
+set(USE_INSTALLED_LIBRARY  FALSE)
+else()
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    ../include
+  PRIVATE
+    .
+    ${cfdcore_DIR}/../include
+    ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
+)
+target_link_directories(${PROJECT_NAME}
+  PRIVATE
+    ./
+    ${cfdcore_DIR}/../lib
+)
+set(USE_INSTALLED_LIBRARY  TRUE)
+endif()
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:-static-libgcc>
@@ -192,6 +231,30 @@ target_link_libraries(${PROJECT_NAME}
     ${UNIVALUE_LIBRARY}
     ${GCOV_LIBRARY}
 )
+
+
+if(USE_INSTALLED_LIBRARY)
+set(INSTALLED_LIBRARY_DIR  ${cfdcore_DIR}/../lib)
+if(ENABLE_SHARED)
+set(LIB_PREFIX  ${CMAKE_SHARED_LIBRARY_PREFIX})
+set(LIB_SUFFIX  ${CMAKE_SHARED_LIBRARY_SUFFIX})
+else()
+set(LIB_PREFIX  ${CMAKE_STATIC_LIBRARY_PREFIX})
+set(LIB_SUFFIX  ${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
+
+set(LIBWALLY_LIB_PATH  ${INSTALLED_LIBRARY_DIR}/${LIB_PREFIX}wally${LIB_SUFFIX})
+set(UNIVALUE_LIB_PATH  ${INSTALLED_LIBRARY_DIR}/${LIB_PREFIX}univalue${LIB_SUFFIX})
+set(CFDCORE_LIB_PATH   ${INSTALLED_LIBRARY_DIR}/${LIB_PREFIX}cfdcore${LIB_SUFFIX})
+
+add_custom_command(
+    TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy  ${LIBWALLY_LIB_PATH} ${CFD_OBJ_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy  ${UNIVALUE_LIB_PATH} ${CFD_OBJ_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy  ${CFDCORE_LIB_PATH} ${CFD_OBJ_BINARY_DIR}
+)
+endif()   # USE_INSTALLED_LIBRARY
 
 
 ####################

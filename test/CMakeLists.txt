@@ -100,6 +100,8 @@ enable_testing()
 include(CTest)
 project(cfd_test CXX)
 
+find_package(cfdcore)
+
 if(MSVC)
 set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} /Od /Zi")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Od /Zi")
@@ -133,7 +135,7 @@ endif()
 target_compile_options(${PROJECT_NAME}
   PRIVATE
     $<IF:$<CXX_COMPILER_ID:MSVC>,
-      /source-charset:utf-8 /Wall 
+      /source-charset:utf-8 /Wall
       /wd4061 /wd4244 /wd4251 /wd4365 /wd4464 /wd4514 /wd4571 /wd4574 /wd4623 /wd4625 /wd4626 /wd4668 /wd4710 /wd4711 /wd4774 /wd4820 /wd4946 /wd5026 /wd5027 /wd5039 /wd5045 /wd5052
       ${STACK_PROTECTOR_OPT},
       -Wall -Wextra
@@ -161,17 +163,35 @@ target_compile_definitions(${PROJECT_NAME}
 )
 endif()
 
+if((NOT cfdcore_FOUND) OR (NOT ${cfdcore_FOUND}))
 target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    ../include
   PRIVATE
     .
     ../src
     ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
 )
-
 target_link_directories(${PROJECT_NAME}
   PRIVATE
     ./
 )
+else()
+target_include_directories(${PROJECT_NAME}
+  PUBLIC
+    ../include
+  PRIVATE
+    .
+    ../src
+    ${cfdcore_DIR}/../include
+    ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
+)
+target_link_directories(${PROJECT_NAME}
+  PRIVATE
+    ./
+    ${cfdcore_DIR}/../lib
+)
+endif()
 
 target_link_libraries(${PROJECT_NAME}
   PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:MSVC>>:winmm.lib>

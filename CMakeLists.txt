@@ -62,12 +62,27 @@ if(ENABLE_TESTS)
 enable_testing()
 endif()		# ENABLE_TESTS
 
+
+####################
+# install check
+####################
+set(EXTERNAL_FILENAME  external_project_local_setting.config)
+set(EXTERNAL_LOCAL_FILENAME  local_resource/${EXTERNAL_FILENAME})
+if(EXISTS ${EXTERNAL_LOCAL_FILENAME})
+transform_makefile_srclist(${EXTERNAL_LOCAL_FILENAME} "${CMAKE_CURRENT_BINARY_DIR}/${EXTERNAL_FILENAME}.cmake")
+include(${CMAKE_CURRENT_BINARY_DIR}/${EXTERNAL_FILENAME}.cmake)
+endif()
+if(CFD_VERSION)
+set(PACKAGE_VERSION    ${CFD_VERSION})
+else()
+set(PACKAGE_VERSION    ${PACKAGE_VERSION_p2pderivatives})
+endif()
+
+
 ####################
 # subdirectories
 ####################
-if(NOT CFD_SINGLE_BUILD)
 add_subdirectory(external)
-endif()
 add_subdirectory(src)
 
 
