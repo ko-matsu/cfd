@@ -83,15 +83,14 @@ ByteData SerializeLedgerFormat(
     uint32_t vout = txin.GetVout();
     std::vector<uint8_t> byte_data(sizeof(vout));
     memcpy(byte_data.data(), &vout, byte_data.size());
-    txin_bytes =
-        txin_bytes.Join(txin.GetTxid().GetData(), ByteData(byte_data));
+    txin_bytes = txin.GetTxid().GetData();
+    txin_bytes.Push(ByteData(byte_data));
     if (!is_authorization) {
-      txin_bytes =
-          txin_bytes.Join(txin.GetUnlockingScript().GetData().Serialize());
+      txin_bytes.Push(txin.GetUnlockingScript().GetData().Serialize());
     }
     uint32_t sequence = txin.GetSequence();
     memcpy(byte_data.data(), &sequence, byte_data.size());
-    txin_bytes = txin_bytes.Join(ByteData(byte_data));
+    txin_bytes.Push(ByteData(byte_data));
     return txin_bytes;
   };
 
@@ -100,12 +99,12 @@ ByteData SerializeLedgerFormat(
          const CfdCapiLedgerMetaDataStackItem& metadata) -> ByteData {
     ByteData txout_bytes;
     if (!is_authorization) {
-      txout_bytes = txout_bytes.Join(
+      txout_bytes = txout_bytes.Concat(
           txout.GetAsset().GetData(), txout.GetConfidentialValue().GetData(),
           txout.GetNonce().GetData(),
           txout.GetLockingScript().GetData().Serialize());
     } else {
-      txout_bytes = txout_bytes.Join(
+      txout_bytes = txout_bytes.Concat(
           ByteData(metadata.metadata1), ByteData(metadata.metadata2),
           txout.GetLockingScript().GetData().Serialize());
     }
@@ -120,23 +119,23 @@ ByteData SerializeLedgerFormat(
   int32_t version = tx.GetVersion();
   std::vector<uint8_t> byte_data(sizeof(version));
   memcpy(byte_data.data(), &version, byte_data.size());
-  data = data.Join(ByteData(byte_data));
+  data.Push(ByteData(byte_data));
 
   // marker & flag (equivalent to bitcoin format)
   if (has_witness) {
-    data = data.Join(ByteData("0001"));
+    data.Push(ByteData("0001"));
   }
 
   uint32_t txin_count = tx.GetTxInCount();
-  data = data.Join(ByteData::GetVariableInt(txin_count));
+  data.Push(ByteData::GetVariableInt(txin_count));
   for (uint32_t index = 0; index < txin_count; ++index) {
     temp_data = serialize_input_function(tx.GetTxIn(index), is_authorization);
-    data = data.Join(temp_data);
+    data.Push(temp_data);
   }
 
   CfdCapiLedgerMetaDataStackItem empty_item;
   uint32_t txout_count = tx.GetTxOutCount();
-  data = data.Join(ByteData::GetVariableInt(txout_count));
+  data.Push(ByteData::GetVariableInt(txout_count));
   for (uint32_t index = 0; index < txout_count; ++index) {
     if (metadata_stack.size() > index) {
       temp_data = serialize_output_function(
@@ -150,14 +149,14 @@ ByteData SerializeLedgerFormat(
       temp_data = serialize_output_function(
           tx.GetTxOut(index), is_authorization, empty_item);
     }
-    data = data.Join(temp_data);
+    data.Push(temp_data);
   }
 
   if (has_witness) {
     // locktime
     uint32_t locktime = tx.GetLockTime();
     memcpy(byte_data.data(), &locktime, byte_data.size());
-    data = data.Join(ByteData(byte_data));
+    data.Push(ByteData(byte_data));
 
     // issue rangeproof, token rangeproof, witness, pegin witness
     // surjectionproof, rangeproof
