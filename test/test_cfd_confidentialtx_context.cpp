@@ -720,7 +720,11 @@ TEST(ConfidentialTransactionContext, SequenceApiTestWithKey)
           "cVtoSAzA814NCpEjz1Gumv2c5jCQ1f8Axcd58NDeds8Wxrn9dMVP", NetType::kTestnet)));
   EXPECT_NO_THROW(txc.Verify(OutPoint(utxo2.txid, utxo2.vout)));
   EXPECT_NO_THROW(tx = txc.Finalize());
-  EXPECT_EQ(tx.GetDataSize(), 6624);
+  
+  EXPECT_TRUE(((tx.GetDataSize() == 6624) || (tx.GetDataSize() == 6623)));
+  if (tx.GetDataSize() == 6623) {
+    EXPECT_STREQ(tx.GetHex().c_str(), "");
+  }
   // EXPECT_STREQ(tx.GetHex().c_str(), "");
 }
 
