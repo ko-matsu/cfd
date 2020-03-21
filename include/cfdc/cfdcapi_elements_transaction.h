@@ -292,7 +292,7 @@ CFDC_API int CfdGetConfidentialTxInIndex(
     uint32_t* index);
 
 /**
- * @brief get tx-input index.
+ * @brief get tx-output index.
  * @param[in] handle                 cfd handle.
  * @param[in] tx_hex_string          tx hex.
  * @param[in] address                txout address.
@@ -635,27 +635,23 @@ CFDC_API int CfdGetConfidentialValueHex(
     char** value_hex);
 
 /* 後回し
-CFDC_API int CfdAddElementsWitnessStack(
-    void* handle, const char* tx_hex_string, const char* txid, uint32_t vout,
-    const char* hex_data, char** tx_string);
-CFDC_API int CfdUpdateConfidentialTxIn(
-    void* handle, const char* tx_hex_string, const char* txid, uint32_t vout,
-    const char* script_sig, uint32_t sequence, char** tx_string);
+CFDC_API int CfdAddConfidentialTxPeginInput(
+    void* handle, void* create_handle, const char* txid, uint32_t vout,
+    uint32_t sequence);
+CFDC_API int CfdAddConfidentialTxPegoutOutput(
+    void* handle, void* create_handle, const char* asset_string,
+    int64_t value_satoshi, const char* value_commitment, const char* address,
+    const char* direct_locking_script);
+
 CFDC_API int CfdAddPeginWitnessStack(
     void* handle, const char* tx_hex_string, const char* txid, uint32_t vout,
     const char* hex_data, char** tx_string);
 
+  * SetRawIssueAsset
+    - SetIssueAsset
+      - Asset, Token, EntropyをOUTで。
+      - TxOutIndexも。
 */
-
-#if 0
-/*
-        * SetRawIssueAsset
-          - SetIssueAsset
-            - Asset, Token, EntropyをOUTで。
-            - TxOutIndexも。
-        * get系
-*/
-#endif
 
 #ifdef __cplusplus
 #if 0
