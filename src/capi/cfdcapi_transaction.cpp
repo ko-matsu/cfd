@@ -146,8 +146,8 @@ void AddConfidentialTxData(
   }
   for (const auto& txout : txout_list) {
     tx->AddTxOut(
-        Amount(txout.amount), ConfidentialAssetId(txout.asset),
-        Script(txout.locking_script), ConfidentialNonce(txout.nonce));
+        Amount(txout.amount), txout.asset, Script(txout.locking_script),
+        txout.nonce);
   }
 }
 #endif  // CFD_DISABLE_ELEMENTS
@@ -300,18 +300,21 @@ int CfdAddTransactionOutput(
           "Failed to parameter. buffer state is illegal.");
     }
 
+    CfdCapiTxOutputData data;
     bool is_elements = false;
 #ifndef CFD_DISABLE_ELEMENTS
     is_elements = IsElementsNetType(buffer->net_type);
-    if (is_elements && IsEmptyString(asset_string)) {
-      warn(CFD_LOG_SOURCE, "asset is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. asset is null or empty.");
+    if (is_elements) {
+      if (IsEmptyString(asset_string)) {
+        warn(CFD_LOG_SOURCE, "asset is null or empty.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. asset is null or empty.");
+      }
+      data.asset = ConfidentialAssetId(asset_string);
     }
 #endif  // CFD_DISABLE_ELEMENTS
 
-    CfdCapiTxOutputData data;
     data.amount = value_satoshi;
     if (!IsEmptyString(address)) {
       Address addr;
