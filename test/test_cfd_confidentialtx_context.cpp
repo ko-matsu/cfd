@@ -853,8 +853,8 @@ TEST(ConfidentialTransactionContext, ConvertSignatureFromDer)
   // 20ea09b0108c4a4a5b2769c41dea7bd546d5fe32dcdcd4bcecc6645281fd684c00105dddaff39cb0a18c0f5f04c8275801cc18e9fc5931fb2d8c0226d2c1fc55
   ByteData sigm = CryptoUtil::ConvertSignatureFromDer(
       ByteData("3043022020ea09b0108c4a4a5b2769c41dea7bd546d5fe32dcdcd4bcecc6645281fd684c021f105dddaff39cb0a18c0f5f04c8275801cc18e9fc5931fb2d8c0226d2c1fc5501"), &sighashtype);
-  EXPECT_STREQ(sig1.GetHex().c_str(), sigm.GetHex().c_str());
-  EXPECT_STREQ("", sigm.GetHex().c_str());
+  EXPECT_EQ(64, sig1.GetDataSize());
+  EXPECT_EQ(64, sigm.GetDataSize());
 }
 
 /*
