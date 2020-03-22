@@ -114,6 +114,7 @@ using cfd::capi::ConvertNetType;
 using cfd::capi::CreateString;
 using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
+using cfd::capi::IsElementsNetType;
 using cfd::capi::IsEmptyString;
 using cfd::capi::kEmpty32Bytes;
 using cfd::capi::kMultisigMaxKeyNum;
