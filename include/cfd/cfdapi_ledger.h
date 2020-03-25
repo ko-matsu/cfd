@@ -51,6 +51,11 @@ class CFD_EXPORT LedgerApi {
       const ConfidentialTransactionContext& tx,
       const std::vector<LedgerMetaDataStackItem>& metadata_stack,
       bool skip_witness, bool is_authorization) const;
+
+  ByteData ConvertSendingFormat(
+      const ConfidentialTransactionContext& tx,
+      uint32_t kind, const std::map<OutPoint, UtxoData>& target_utxo_list,
+      const std::map<std::string, LedgerMetaDataStackItem>& append_output_list) const;
 #endif  // CFD_DISABLE_ELEMENTS
 };
 
