@@ -277,7 +277,7 @@ void ElementsTransactionJsonApi::DecodeRawTransaction(  // NOLINT
             Amount(static_cast<int64_t>(range_proof_info.min_value))
                 .GetSatoshiValue());
         tx_out_res.SetValue_maximum(
-            Amount(static_cast<int64_t>(range_proof_info.max_value, true))
+            Amount(static_cast<int64_t>(range_proof_info.max_value), true)
                 .GetSatoshiValue());
         tx_out_res.SetCt_exponent(range_proof_info.exponent);
         tx_out_res.SetCt_bits(range_proof_info.mantissa);
