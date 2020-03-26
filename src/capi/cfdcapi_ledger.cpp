@@ -166,7 +166,7 @@ int CfdAddTxOutMetaDataForLedger(
       buffer->metadata_stack->push_back(item);
     } else {
       if (index >= buffer->metadata_stack->size()) {
-        buffer->metadata_stack->resize(index);
+        buffer->metadata_stack->resize(index + 1);
       }
       LedgerMetaDataStackItem& buf_item = buffer->metadata_stack->at(index);
       buf_item = item;
