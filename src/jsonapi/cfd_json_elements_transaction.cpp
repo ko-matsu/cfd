@@ -325,7 +325,7 @@ void ElementsTransactionJsonApi::DecodeRawTransaction(  // NOLINT
     script_pub_key_res.SetType(
         TransactionJsonApi::ConvertLockingScriptTypeString(type));
     script_pub_key_res.SetReqSigs(
-        static_cast<const int>(extract_data.pushed_datas.size()));
+        static_cast<int>(extract_data.pushed_datas.size()));
 
     ElementsNetType elements_net_type = ConvertElementsNetType(request->GetNetwork());
     ElementsAddressFactory addr_factory(elements_net_type);
@@ -387,7 +387,7 @@ void ElementsTransactionJsonApi::DecodeRawTransaction(  // NOLINT
           TransactionJsonApi::ConvertLockingScriptTypeString(
               pegout_type));
       script_pub_key_res.SetPegout_reqSigs(
-          static_cast<const int>(pegout_extract_data.pushed_datas.size()));
+          static_cast<int>(pegout_extract_data.pushed_datas.size()));
 
       const NetType net_type = TransactionJsonApi::ConvertNetType(request->GetMainchainNetwork());
       AddressFactory btcaddr_factory(net_type);
