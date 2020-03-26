@@ -23,8 +23,10 @@
 using cfd::api::LedgerApi;
 using cfd::api::LedgerMetaDataStackItem;
 using cfd::core::ByteData;
+using cfd::core::ByteData256;
 using cfd::core::CfdError;
 using cfd::core::CfdException;
+using cfd::core::HashUtil;
 using cfd::core::NetType;
 using cfd::core::StringUtil;
 
@@ -184,6 +186,15 @@ int CfdFinalizeTxSerializeForLedger(
     void* handle, void* serialize_handle, int net_type,
     const char* tx_hex_string, bool skip_witness, bool is_authorization,
     char** serialize_hex) {
+  return CfdFinalizeTxSerializeHashForLedger(
+      handle, serialize_handle, net_type, tx_hex_string, skip_witness,
+      is_authorization, true, serialize_hex);
+}
+
+int CfdFinalizeTxSerializeHashForLedger(
+    void* handle, void* serialize_handle, int net_type,
+    const char* tx_hex_string, bool skip_witness, bool is_authorization,
+    bool is_sha256, char** serialize_hex) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -228,6 +239,10 @@ int CfdFinalizeTxSerializeForLedger(
       throw CfdException(
           CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
 #endif  // CFD_DISABLE_ELEMENTS
+    }
+    if (is_sha256) {
+      ByteData256 hashed_data = HashUtil::Sha256(serialize_data);
+      serialize_data = hashed_data.GetData();
     }
     *serialize_hex = CreateString(serialize_data.GetHex());
 
