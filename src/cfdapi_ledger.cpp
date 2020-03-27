@@ -69,6 +69,11 @@ ByteData LedgerApi::Serialize(
           txout.GetAsset().GetData(), txout.GetConfidentialValue().GetData(),
           txout.GetNonce().GetData(),
           txout.GetLockingScript().GetData().Serialize());
+    } else if (!txout.GetConfidentialValue().HasBlinding()) {
+      txout_bytes = txout_bytes.Concat(
+          ByteData(txout.GetAsset().GetHex()),
+          ByteData(txout.GetConfidentialValue().GetHex().substr(2)),
+          txout.GetLockingScript().GetData().Serialize());
     } else {
       txout_bytes = txout_bytes.Concat(
           ByteData(metadata.metadata1), ByteData(metadata.metadata2),
@@ -103,17 +108,19 @@ ByteData LedgerApi::Serialize(
   uint32_t txout_count = tx.GetTxOutCount();
   data.Push(ByteData::GetVariableInt(txout_count));
   for (uint32_t index = 0; index < txout_count; ++index) {
+    auto txout = tx.GetTxOut(index);
     if (metadata_stack.size() > index) {
       temp_data = serialize_output_function(
-          tx.GetTxOut(index), is_authorization, metadata_stack.at(index));
-    } else if (is_authorization) {
+          txout, is_authorization, metadata_stack.at(index));
+    } else if (
+        is_authorization && txout.GetConfidentialValue().HasBlinding()) {
       warn(CFD_LOG_SOURCE, "metadata empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
           "Failed to metadata. not set metadata with authrization.");
     } else {
-      temp_data = serialize_output_function(
-          tx.GetTxOut(index), is_authorization, empty_item);
+      temp_data =
+          serialize_output_function(txout, is_authorization, empty_item);
     }
     data.Push(temp_data);
   }
