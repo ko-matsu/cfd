@@ -681,9 +681,27 @@ TEST(cfdcapi_elements_transaction, BlindTransaction) {
   }
 
   if (ret == kCfdSuccess) {
-    ret = CfdAddBlindTxOutData(
-        handle, blind_handle, 3,
-        "03ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed879");
+    ret = CfdAddBlindTxOutByAddress(
+        handle, blind_handle,
+        "CTExCoUri8VzkxbbhqzgsruWJ5zYtmoFXxCWtjiSLAzcMbpEWhHmDrZ66bAb41VsmSKnvJWrq2cfjUw9");
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
+    ret = CfdSetBlindTxOption(
+        handle, blind_handle, kCfdBlindOptionMinimumRangeValue, 1);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
+    ret = CfdSetBlindTxOption(
+        handle, blind_handle, kCfdBlindOptionExponent, 0);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
+    ret = CfdSetBlindTxOption(
+        handle, blind_handle, kCfdBlindOptionMinimumBits, 52);
     EXPECT_EQ(kCfdSuccess, ret);
   }
 
@@ -694,7 +712,7 @@ TEST(cfdcapi_elements_transaction, BlindTransaction) {
 
   if (ret == kCfdSuccess) {
     // blind is contains random value.
-    // EXPECT_STREQ(ext_tx, tx_string);
+    // EXPECT_STREQ("", tx_string);
   }
 
   if (blind_handle != nullptr) {

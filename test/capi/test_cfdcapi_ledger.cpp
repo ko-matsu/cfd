@@ -117,6 +117,34 @@ TEST(cfdcapi_ledger, CfdSerializeHashTxForLedger) {
 
     ret = CfdFreeTxSerializeForLedger(handle, serialize_handle);
     EXPECT_EQ(kCfdSuccess, ret);
+    serialize_handle = nullptr;
+  }
+
+  // ignore unblind metadata test
+  if (ret == kCfdSuccess) {
+    ret = CfdInitializeTxSerializeForLedger(handle, &serialize_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
+    char* serialize_hex = nullptr;
+
+    // ignore fee(unblinded) metadata
+
+    ret = CfdAddTxOutMetaDataForLedger(
+        handle, serialize_handle, 1, metadata2_asset, metadata2_value, nullptr);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdFinalizeTxSerializeHashForLedger(
+        handle, serialize_handle, kCfdNetworkLiquidv1, kTxData, false, true, false, &serialize_hex);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kExpTxData, serialize_hex);
+      CfdFreeStringBuffer(serialize_hex);
+    }
+
+    ret = CfdFreeTxSerializeForLedger(handle, serialize_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
   }
 
   ret = CfdGetLastErrorCode(handle);
