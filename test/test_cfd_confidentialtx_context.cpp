@@ -495,7 +495,7 @@ TEST(ConfidentialTransactionContext, BlindTransaction)
   // confidential_key_list.push_back(token_address);
   EXPECT_NO_THROW(tx.BlindTransaction(
       utxo_info_map, issuance_key_map, confidential_key_list));
-  EXPECT_EQ(tx.GetHex().size(), 31188);
+  EXPECT_EQ(tx.GetHex().size(), 43998);
   std::vector<ConfidentialTxOutReference> txouts = tx.GetTxOutList();
   EXPECT_EQ(txouts.size(), 4);
   if (txouts.size() == 4) {
@@ -721,14 +721,10 @@ TEST(ConfidentialTransactionContext, SequenceApiTestWithKey)
           "cVtoSAzA814NCpEjz1Gumv2c5jCQ1f8Axcd58NDeds8Wxrn9dMVP", NetType::kTestnet)));
   EXPECT_NO_THROW(txc.Verify(OutPoint(utxo2.txid, utxo2.vout)));
   EXPECT_NO_THROW(tx = txc.Finalize());
-  
-  EXPECT_TRUE(((tx.GetDataSize() == 6624) || (tx.GetDataSize() == 6623)));
-  if (tx.GetDataSize() == 6623) {
-    // When signed and DER encoded by mingw, it may be 1 byte shorter.
-    // see: TEST(ConfidentialTransactionContext, ConvertSignatureFromDer)
-    // EXPECT_STREQ(tx.GetHex().c_str(), "");
+
+  if ((tx.GetDataSize() != 9185) && (tx.GetDataSize() != 9186) && (tx.GetDataSize() != 9187)) {
+    EXPECT_EQ(0, tx.GetDataSize());
   }
-  // EXPECT_STREQ(tx.GetHex().c_str(), "");
 }
 
 TEST(ConfidentialTransactionContext, SequenceApiTestWithScript)

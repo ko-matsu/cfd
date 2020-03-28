@@ -688,13 +688,31 @@ TEST(cfdcapi_elements_transaction, BlindTransaction) {
   }
 
   if (ret == kCfdSuccess) {
+    ret = CfdSetBlindTxOption(
+        handle, blind_handle, kCfdBlindOptionMinimumRangeValue, 1);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
+    ret = CfdSetBlindTxOption(
+        handle, blind_handle, kCfdBlindOptionExponent, 0);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
+    ret = CfdSetBlindTxOption(
+        handle, blind_handle, kCfdBlindOptionMinimumBits, 52);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
     ret = CfdFinalizeBlindTx(handle, blind_handle, base_tx, &tx_string);
     EXPECT_EQ(kCfdSuccess, ret);
   }
 
   if (ret == kCfdSuccess) {
     // blind is contains random value.
-    // EXPECT_STREQ(ext_tx, tx_string);
+    // EXPECT_STREQ("", tx_string);
   }
 
   if (blind_handle != nullptr) {

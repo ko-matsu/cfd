@@ -22,6 +22,15 @@ extern "C" {
 #include "cfdc/cfdcapi_transaction.h"
 
 /**
+ * @brief binding option.
+ */
+enum CfdBlindOption {
+  kCfdBlindOptionMinimumRangeValue = 1,  //!< blind option: minRangeValue
+  kCfdBlindOptionExponent = 2,           //!< blind option: exponent
+  kCfdBlindOptionMinimumBits = 3,        //!< blind option: minBits
+};
+
+/**
  * @brief create initialized elements transaction.
  * @param[in] handle        cfd handle.
  * @param[in] version       transaction version.
@@ -354,6 +363,17 @@ CFDC_API int CfdGetIssuanceBlindingKey(
  * @return CfdErrorCode
  */
 CFDC_API int CfdInitializeBlindTx(void* handle, void** blind_handle);
+
+/**
+ * @brief set blinding option parameter.
+ * @param[in] handle        cfd handle.
+ * @param[in] blind_handle  blinding handle.
+ * @param[in] key           option key. (see: CfdBlindOption)
+ * @param[in] value         option value.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetBlindTxOption(
+    void* handle, void* blind_handle, int key, int64_t value);
 
 /**
  * @brief add blinding data of txin.

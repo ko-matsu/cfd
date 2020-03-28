@@ -218,8 +218,8 @@ bool ConfidentialTransactionContext::IsFindTxOut(
 
 Address ConfidentialTransactionContext::GetTxOutAddress(uint32_t index) const {
   if (vout_.size() <= index) {
-    throw CfdException(CfdError::kCfdOutOfRangeError,
-        "vout out_of_range error.");
+    throw CfdException(
+        CfdError::kCfdOutOfRangeError, "vout out_of_range error.");
   }
   ElementsAddressFactory address_factory;
   return address_factory.GetAddressByLockingScript(
