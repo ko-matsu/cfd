@@ -71,7 +71,12 @@ struct TxInBlindParameters {
  */
 struct TxOutBlindKeys {
   uint32_t index = 0;   //!< txout index
-  Pubkey blinding_key;  //!< blinding key
+  Pubkey confidential_key;  //!< confidential key.
+  /**
+   * @brief confidential key.
+   * @deprecated
+   */
+  Pubkey blinding_key;
 };
 
 /**
