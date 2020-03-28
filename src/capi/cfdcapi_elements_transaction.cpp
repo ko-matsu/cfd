@@ -100,9 +100,9 @@ struct CfdCapiBlindTxData {
   std::vector<TxInBlindParameters>* txin_blind_keys;
   //! txout list
   std::vector<TxOutBlindKeys>* txout_blind_keys;
-  int64_t minimum_range_value;  // = 1,
-  int exponent;                 // = 0
-  int minimum_bits;             // = 36(old)
+  int64_t minimum_range_value;  //!< min range value. (default:1)
+  int exponent;                 //!< exponent. (default:0)
+  int minimum_bits;             //!< min bits. (default:36(old),52(new))
 };
 
 }  // namespace capi
