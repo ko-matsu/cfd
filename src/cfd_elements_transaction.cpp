@@ -216,12 +216,13 @@ bool ConfidentialTransactionContext::IsFindTxOut(
   }
 }
 
-Address ConfidentialTransactionContext::GetTxOutAddress(uint32_t index) const {
+Address ConfidentialTransactionContext::GetTxOutAddress(
+    uint32_t index, NetType net_type) const {
   if (vout_.size() <= index) {
     throw CfdException(
         CfdError::kCfdOutOfRangeError, "vout out_of_range error.");
   }
-  ElementsAddressFactory address_factory;
+  ElementsAddressFactory address_factory(net_type);
   return address_factory.GetAddressByLockingScript(
       vout_[index].GetLockingScript());
 }

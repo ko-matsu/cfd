@@ -170,10 +170,12 @@ class CFD_EXPORT ConfidentialTransactionContext
   bool IsFindTxOut(const Address& address, uint32_t* index = nullptr) const;
   /**
    * @brief Get txout address by index.
-   * @param[in] index  txout index.
+   * @param[in] index     txout index.
+   * @param[in] net_type  network type.
    * @return address
    */
-  Address GetTxOutAddress(uint32_t index) const;
+  Address GetTxOutAddress(
+      uint32_t index, NetType net_type = NetType::kLiquidV1) const;
 
   /**
    * @brief ConfidentialTransaction's AddTxIn.

@@ -95,6 +95,9 @@ TEST(ConfidentialTransactionContext, AddTxInOut)
   EXPECT_STREQ(txc.GetHex().c_str(), "020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c03f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac00000000");
   EXPECT_STREQ(addr.GetAddress().c_str(), "2deLw2MsbXTr44ZXKBS91midF2WzJPfQ8cz");
 
+  Address out1_addr = txc.GetTxOutAddress(1, NetType::kElementsRegtest);
+  EXPECT_STREQ(out1_addr.GetAddress().c_str(), "2deLw2MsbXTr44ZXKBS91midF2WzJPfQ8cz");
+
   uint32_t index = 0;
   EXPECT_TRUE(txc.IsFindTxIn(outpoint, &index));
   EXPECT_EQ(index, 1);

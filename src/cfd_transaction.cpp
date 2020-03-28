@@ -183,12 +183,13 @@ bool TransactionContext::IsFindTxOut(
   }
 }
 
-Address TransactionContext::GetTxOutAddress(uint32_t index) const {
+Address TransactionContext::GetTxOutAddress(
+    uint32_t index, NetType net_type) const {
   if (vout_.size() <= index) {
     throw CfdException(
         CfdError::kCfdOutOfRangeError, "vout out_of_range error.");
   }
-  AddressFactory address_factory;
+  AddressFactory address_factory(net_type);
   return address_factory.GetAddressByLockingScript(
       vout_[index].GetLockingScript());
 }
