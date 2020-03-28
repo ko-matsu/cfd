@@ -22,6 +22,15 @@ extern "C" {
 #include "cfdc/cfdcapi_transaction.h"
 
 /**
+ * @brief binding option.
+ */
+enum CfdBlindOption {
+  kCfdBlindOptionMinimumRangeValue = 1,  //!< blind option: minRangeValue
+  kCfdBlindOptionExponent = 2,           //!< blind option: exponent
+  kCfdBlindOptionMinimumBits = 3,        //!< blind option: minBits
+};
+
+/**
  * @brief create initialized elements transaction.
  * @param[in] handle        cfd handle.
  * @param[in] version       transaction version.
@@ -356,6 +365,17 @@ CFDC_API int CfdGetIssuanceBlindingKey(
 CFDC_API int CfdInitializeBlindTx(void* handle, void** blind_handle);
 
 /**
+ * @brief set blinding option parameter.
+ * @param[in] handle        cfd handle.
+ * @param[in] blind_handle  blinding handle.
+ * @param[in] key           option key. (see: CfdBlindOption)
+ * @param[in] value         option value.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetBlindTxOption(
+    void* handle, void* blind_handle, int key, int64_t value);
+
+/**
  * @brief add blinding data of txin.
  * @param[in] handle              cfd handle.
  * @param[in] blind_handle        blinding handle.
@@ -388,6 +408,16 @@ CFDC_API int CfdAddBlindTxInData(
 CFDC_API int CfdAddBlindTxOutData(
     void* handle, void* blind_handle, uint32_t index,
     const char* confidential_key);
+
+/**
+ * @brief add blinding data of txout.
+ * @param[in] handle                cfd handle.
+ * @param[in] blind_handle          blinding handle.
+ * @param[in] confidential_address  confidential address.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddBlindTxOutByAddress(
+    void* handle, void* blind_handle, const char* confidential_address);
 
 /**
  * @brief blinding transaction.
