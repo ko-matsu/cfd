@@ -1188,6 +1188,42 @@ int CfdAddBlindTxOutData(
   }
 }
 
+int CfdAddBlindTxOutByAddress(
+    void* handle, void* blind_handle, const char* confidential_address) {
+  try {
+    cfd::Initialize();
+    CheckBuffer(blind_handle, kPrefixBlindTxData);
+
+    CfdCapiBlindTxData* buffer =
+        static_cast<CfdCapiBlindTxData*>(blind_handle);
+    if (buffer->txout_blind_keys == nullptr) {
+      warn(CFD_LOG_SOURCE, "buffer state is illegal.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError,
+          "Failed to parameter. buffer state is illegal.");
+    }
+    if (confidential_address == nullptr) {
+      warn(CFD_LOG_SOURCE, "confidential address is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. confidential address is null.");
+    }
+
+    TxOutBlindKeys params;
+    params.confidential_address = std::string(confidential_address);
+    buffer->txout_blind_keys->push_back(params);
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
 int CfdSetBlindTxOption(
     void* handle, void* blind_handle, int key, int64_t value) {
   try {
@@ -1279,10 +1315,14 @@ int CfdFinalizeBlindTx(
       }
     }
 
+    ElementsAddressFactory address_factory;
     for (const auto& data : *buffer->txout_blind_keys) {
       if (data.confidential_key.IsValid()) {
         Address addr = ctxc.GetTxOutAddress(data.index);
         confidential_key_list.emplace_back(addr, data.confidential_key);
+      } else if (!data.confidential_address.empty()) {
+        confidential_key_list.push_back(
+            address_factory.GetConfidentialAddress(data.confidential_address));
       }
     }
 

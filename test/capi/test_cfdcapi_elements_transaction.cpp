@@ -681,9 +681,9 @@ TEST(cfdcapi_elements_transaction, BlindTransaction) {
   }
 
   if (ret == kCfdSuccess) {
-    ret = CfdAddBlindTxOutData(
-        handle, blind_handle, 3,
-        "03ce4c4eac09fe317f365e45c00ffcf2e9639bc0fd792c10f72cdc173c4e5ed879");
+    ret = CfdAddBlindTxOutByAddress(
+        handle, blind_handle,
+        "CTExCoUri8VzkxbbhqzgsruWJ5zYtmoFXxCWtjiSLAzcMbpEWhHmDrZ66bAb41VsmSKnvJWrq2cfjUw9");
     EXPECT_EQ(kCfdSuccess, ret);
   }
 

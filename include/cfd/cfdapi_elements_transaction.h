@@ -77,6 +77,7 @@ struct TxOutBlindKeys {
    * @deprecated
    */
   Pubkey blinding_key;
+  std::string confidential_address;  //!< confidential address
 };
 
 /**

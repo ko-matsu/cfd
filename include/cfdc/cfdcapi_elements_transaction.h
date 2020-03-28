@@ -410,6 +410,16 @@ CFDC_API int CfdAddBlindTxOutData(
     const char* confidential_key);
 
 /**
+ * @brief add blinding data of txout.
+ * @param[in] handle                cfd handle.
+ * @param[in] blind_handle          blinding handle.
+ * @param[in] confidential_address  confidential address.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddBlindTxOutByAddress(
+    void* handle, void* blind_handle, const char* confidential_address);
+
+/**
  * @brief blinding transaction.
  * @param[in] handle          cfd handle.
  * @param[in] blind_handle    blinding handle.
