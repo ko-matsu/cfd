@@ -114,8 +114,8 @@ int CfdInitializeTxSerializeForLedger(void* handle, void** serialize_handle) {
 int CfdAddTxOutMetaDataForLedger(
     void* handle, void* serialize_handle, uint32_t index,
     const char* metadata1, const char* metadata2, const char* metadata3) {
-  static constexpr uint32_t kAssetHexSize = 32 * 2;
-  static constexpr uint32_t kUnblindValueHexSize = 8 * 2;
+  static constexpr uint32_t kAssetHexSize = 33 * 2;
+  static constexpr uint32_t kValueHexSize = 33 * 2;
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -155,8 +155,8 @@ int CfdAddTxOutMetaDataForLedger(
 
     item.metadata1 =
         check_metadata_function(metadata1, kAssetHexSize, "asset metadata");
-    item.metadata2 = check_metadata_function(
-        metadata2, kUnblindValueHexSize, "value metadata");
+    item.metadata2 =
+        check_metadata_function(metadata2, kValueHexSize, "value metadata");
     if (!IsEmptyString(metadata3)) {
       // unused value
       // item.metadata3 = check_metadata_function(metadata3, 0);
