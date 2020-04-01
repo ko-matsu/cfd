@@ -311,7 +311,7 @@ std::string TransactionApiBase::AddMultisigSign(
     if (address_type == AddressType::kP2shP2wshAddress) {
       // set p2sh redeem script to unlockking script
       ScriptBuilder sb;
-      sb.AppendData(ScriptUtil::CreateP2shLockingScript(script));
+      sb.AppendData(ScriptUtil::CreateP2wshLockingScript(script));
       txc.SetUnlockingScript(txid, vout, sb.Build());
     }
   }
