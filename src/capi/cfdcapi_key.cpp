@@ -6,6 +6,7 @@
  */
 #ifndef CFD_DISABLE_CAPI
 #include <string>
+#include <vector>
 
 #include "capi/cfdc_internal.h"
 #include "cfd/cfd_common.h"
@@ -32,6 +33,7 @@ using cfd::core::CryptoUtil;
 using cfd::core::DescriptorKeyInfo;
 using cfd::core::ExtPrivkey;
 using cfd::core::ExtPubkey;
+using cfd::core::HDWallet;
 using cfd::core::NetType;
 using cfd::core::Privkey;
 using cfd::core::Pubkey;
@@ -39,6 +41,7 @@ using cfd::core::Script;
 using cfd::core::SigHashAlgorithm;
 using cfd::core::SigHashType;
 using cfd::core::SignatureUtil;
+using cfd::core::StringUtil;
 
 using cfd::core::logger::info;
 using cfd::core::logger::warn;
@@ -51,6 +54,16 @@ namespace capi {
 
 //! privkey uncompress size
 static constexpr size_t kPrivkeyWifUncompressSize = 51;
+//! prefix: GetMnemonicWordList
+constexpr const char* const kPrefixGetMnemonicWordList = "GetMnemonicList";
+/**
+ * @brief cfd-capi GetMnemonicWordList構造体.
+ */
+struct CfdCapiGetMnemonicWordList {
+  char prefix[kPrefixLength];  //!< buffer prefix
+  //! mnemonic word list
+  std::vector<std::string>* wordlist;
+};
 
 }  // namespace capi
 }  // namespace cfd
@@ -59,10 +72,15 @@ static constexpr size_t kPrivkeyWifUncompressSize = 51;
 // extern c-api
 // =============================================================================
 // API
+using cfd::capi::AllocBuffer;
+using cfd::capi::CfdCapiGetMnemonicWordList;
+using cfd::capi::CheckBuffer;
 using cfd::capi::ConvertNetType;
 using cfd::capi::CreateString;
+using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
 using cfd::capi::IsEmptyString;
+using cfd::capi::kPrefixGetMnemonicWordList;
 using cfd::capi::kPrivkeyWifUncompressSize;
 using cfd::capi::SetLastError;
 using cfd::capi::SetLastFatalError;
@@ -452,6 +470,124 @@ int CfdCreateExtkeyFromSeed(
   }
 }
 
+CFDC_API int CfdCreateExtkey(
+    void* handle, int network_type, int key_type, const char* parent_key,
+    const char* fingerprint, const char* key, const char* chain_code,
+    unsigned char depth, uint32_t child_number, char** extkey) {
+  try {
+    cfd::Initialize();
+    if (extkey == nullptr) {
+      warn(CFD_LOG_SOURCE, "extkey is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. extkey is null.");
+    }
+    if (IsEmptyString(key)) {
+      warn(CFD_LOG_SOURCE, "key is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. key is null or empty.");
+    }
+
+    cfd::core::NetType net_type = ConvertNetType(network_type, nullptr);
+    std::string key_str = key;
+    std::string chain_code_str = chain_code;
+    std::string parent_key_str;
+    if (!IsEmptyString(parent_key)) {
+      parent_key_str = parent_key;
+    }
+    std::string fingerprint_str;
+    if (!IsEmptyString(fingerprint)) {
+      fingerprint_str = fingerprint;
+    }
+
+    if (key_type == ExtKeyType::kExtPrivkey) {
+      Privkey privkey;
+      if (key_str.size() == (Privkey::kPrivkeySize * 2)) {
+        privkey = Privkey(key_str);
+      } else {
+        privkey = Privkey::FromWif(key_str, net_type);
+      }
+      if (fingerprint_str.empty()) {
+        Privkey parent_privkey;
+        if (parent_key_str.size() == (Privkey::kPrivkeySize * 2)) {
+          parent_privkey = Privkey(parent_key_str);
+        } else {
+          parent_privkey = Privkey::FromWif(parent_key_str, net_type);
+        }
+        ExtPrivkey extprivkey(
+            net_type, parent_privkey, privkey, ByteData256(chain_code_str),
+            depth, child_number);
+        *extkey = CreateString(extprivkey.ToString());
+      } else {
+        ExtPrivkey extprivkey(
+            net_type, ByteData(fingerprint_str), privkey,
+            ByteData256(chain_code_str), depth, child_number);
+        *extkey = CreateString(extprivkey.ToString());
+      }
+    } else {
+      if (fingerprint_str.empty()) {
+        ExtPubkey extpubkey(
+            net_type, Pubkey(parent_key_str), Pubkey(key_str),
+            ByteData256(chain_code_str), depth, child_number);
+        *extkey = CreateString(extpubkey.ToString());
+      } else {
+        ExtPubkey extpubkey(
+            net_type, ByteData(fingerprint_str), Pubkey(key_str),
+            ByteData256(chain_code_str), depth, child_number);
+        *extkey = CreateString(extpubkey.ToString());
+      }
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdCreateExtkeyFromParent(
+    void* handle, const char* extkey, uint32_t child_number, bool hardened,
+    int network_type, int key_type, char** child_extkey) {
+  try {
+    cfd::Initialize();
+    if (child_extkey == nullptr) {
+      warn(CFD_LOG_SOURCE, "child extkey is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. child extkey is null.");
+    }
+    if (IsEmptyString(extkey)) {
+      warn(CFD_LOG_SOURCE, "extkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. extkey is null or empty.");
+    }
+
+    cfd::core::NetType net_type = ConvertNetType(network_type, nullptr);
+    ExtKeyType output_key_type = static_cast<ExtKeyType>(key_type);
+    HDWalletApi api;
+    std::string key = api.CreateExtkeyFromParent(
+        extkey, net_type, output_key_type, child_number, hardened);
+    *child_extkey = CreateString(key);
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
 int CfdCreateExtkeyFromParentPath(
     void* handle, const char* extkey, const char* path, int network_type,
     int key_type, char** child_extkey) {
@@ -725,6 +861,198 @@ int CfdGetExtkeyInformation(
     SetLastFatalError(handle, "unknown error.");
   }
   FreeBufferOnError(&work_version, &work_fingerprint, &work_chain_code);
+  return result;
+}
+
+int CfdInitializeMnemonicWordList(
+    void* handle, const char* language, void** mnemonic_handle,
+    uint32_t* max_index) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  CfdCapiGetMnemonicWordList* buffer = nullptr;
+  try {
+    cfd::Initialize();
+    if (mnemonic_handle == nullptr) {
+      warn(CFD_LOG_SOURCE, "mnemonic handle is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. mnemonic handle is null.");
+    }
+
+    std::string lang;
+    if (!IsEmptyString(language)) {
+      lang = language;
+    }
+    HDWalletApi api;
+    std::vector<std::string> wordlist = api.GetMnemonicWordlist(lang);
+    if (max_index != nullptr) {
+      *max_index = static_cast<uint32_t>(wordlist.size());
+    }
+
+    buffer = static_cast<CfdCapiGetMnemonicWordList*>(AllocBuffer(
+        kPrefixGetMnemonicWordList, sizeof(CfdCapiGetMnemonicWordList)));
+    buffer->wordlist = new std::vector<std::string>();
+    buffer->wordlist->assign(wordlist.begin(), wordlist.end());
+    *mnemonic_handle = buffer;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  if (buffer != nullptr) CfdFreeDescriptorHandle(handle, buffer);
+  return result;
+}
+
+int CfdGetMnemonicWord(
+    void* handle, void* mnemonic_handle, uint32_t index,
+    char** mnemonic_word) {
+  try {
+    cfd::Initialize();
+    CheckBuffer(mnemonic_handle, kPrefixGetMnemonicWordList);
+    if (mnemonic_word == nullptr) {
+      warn(CFD_LOG_SOURCE, "mnemonic_word is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. mnemonic_word is null.");
+    }
+
+    CfdCapiGetMnemonicWordList* buffer =
+        static_cast<CfdCapiGetMnemonicWordList*>(mnemonic_handle);
+    if ((buffer->wordlist == nullptr) || (index >= buffer->wordlist->size())) {
+      warn(CFD_LOG_SOURCE, "index is maximum over.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError,
+          "Failed to parameter. index is maximum over.");
+    }
+
+    *mnemonic_word = CreateString((*buffer->wordlist)[index]);
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+int CfdFreeMnemonicWordList(void* handle, void* mnemonic_handle) {
+  try {
+    cfd::Initialize();
+    if (mnemonic_handle != nullptr) {
+      CfdCapiGetMnemonicWordList* mnemonic_struct =
+          static_cast<CfdCapiGetMnemonicWordList*>(mnemonic_handle);
+      if (mnemonic_struct->wordlist != nullptr) {
+        delete mnemonic_struct->wordlist;
+        mnemonic_struct->wordlist = nullptr;
+      }
+    }
+    FreeBuffer(
+        mnemonic_handle, kPrefixGetMnemonicWordList,
+        sizeof(CfdCapiGetMnemonicWordList));
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+int CfdConvertMnemonicToSeed(
+    void* handle, const char* mnemonic, const char* passphrase,
+    bool strict_check, const char* language, bool use_ideographic_space,
+    char** seed, char** entropy) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_entropy = nullptr;
+  try {
+    cfd::Initialize();
+    if (seed == nullptr) {
+      warn(CFD_LOG_SOURCE, "seed is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. seed is null.");
+    }
+    if (IsEmptyString(mnemonic)) {
+      warn(CFD_LOG_SOURCE, "mnemonic is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. mnemonic is null or empty.");
+    }
+
+    std::string lang = "en";
+    std::string passphrase_str;
+    if (!IsEmptyString(language)) lang = language;
+    if (!IsEmptyString(passphrase)) passphrase_str = passphrase;
+    std::vector<std::string> mnemonic_words = StringUtil::Split(mnemonic, " ");
+
+    ByteData entropy_data;
+    HDWalletApi api;
+    ByteData seed_data = api.ConvertMnemonicToSeed(
+        mnemonic_words, passphrase_str, strict_check, lang,
+        use_ideographic_space, &entropy_data);
+    work_entropy = CreateString(entropy_data.GetHex());
+
+    *seed = CreateString(seed_data.GetHex());
+    if (entropy != nullptr) *entropy = work_entropy;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_entropy);
+  return result;
+}
+
+int CfdConvertEntropyToMnemonic(
+    void* handle, const char* entropy, const char* language, char** mnemonic) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    if (mnemonic == nullptr) {
+      warn(CFD_LOG_SOURCE, "mnemonic is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. mnemonic is null.");
+    }
+    if (IsEmptyString(entropy)) {
+      warn(CFD_LOG_SOURCE, "entropy is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. entropy is null or empty.");
+    }
+
+    std::string lang = "en";
+    if (!IsEmptyString(language)) {
+      lang = language;
+    }
+
+    HDWalletApi api;
+    std::vector<std::string> word_list =
+        api.ConvertEntropyToMnemonic(ByteData(std::string(entropy)), lang);
+    std::string mnemonic_str;
+    for (const auto& word : word_list) {
+      if (!mnemonic_str.empty()) mnemonic_str += " ";
+      mnemonic_str += word;
+    }
+    *mnemonic = CreateString(mnemonic_str);
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
   return result;
 }
 

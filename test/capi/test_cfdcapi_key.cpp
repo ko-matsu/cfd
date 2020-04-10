@@ -280,7 +280,7 @@ TEST(cfdcapi_key, ExtkeyTest) {
   if (ret == kCfdSuccess) {
     EXPECT_STREQ("xprv9s21ZrQH143K38XAstQ4D3hCGbgydJgNff6CcwmkrWTBxksb2G4CsqAywJCKbTdywfCpmpJyxqf77iKK1ju1J982iP2PriifaNZLMbyPQCx", extprivkey1);
 
-    ret = CfdCreateExtkeyFromParentPath(handle, extprivkey1, "m/44'",
+    ret = CfdCreateExtkeyFromParent(handle, extprivkey1, 44, true,
         kNetwork, kCfdExtPrivkey, &extprivkey2);
     EXPECT_EQ(kCfdSuccess, ret);
   }
@@ -329,15 +329,37 @@ TEST(cfdcapi_key, ExtkeyTest) {
     char* chain_code = nullptr;
     uint32_t depth = 0;
     uint32_t child_number = 0;
-    ret = CfdGetExtkeyInformation(handle, extprivkey2, &version,
+    ret = CfdGetExtkeyInformation(handle, extprivkey3, &version,
         &fingerprint, &chain_code, &depth, &child_number);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ("0488ade4", version);
-      EXPECT_STREQ("03af54a0", fingerprint);
-      EXPECT_STREQ("16ddac07d3c3110f0292136af4bc476323e87b6da49ac0b8eef5bcde17e8a672", chain_code);
-      EXPECT_EQ(1, depth);
-      EXPECT_EQ(2147483692, child_number);
+      EXPECT_STREQ("8806118d", fingerprint);
+      EXPECT_STREQ("a3d58c40ac9c588529edb6cf9576241a6c2c919843bd97c3c26b35538d91a292", chain_code);
+      EXPECT_EQ(4, depth);
+      EXPECT_EQ(2, child_number);
+
+      char* get_extkey = nullptr;
+      ret = CfdCreateExtkey(handle, kNetwork, kCfdExtPrivkey, nullptr,
+          fingerprint, privkey, chain_code,
+          static_cast<unsigned char>(depth), child_number, &get_extkey);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret == kCfdSuccess) {
+        EXPECT_STREQ(extprivkey3, get_extkey);
+        CfdFreeStringBuffer(get_extkey);
+        get_extkey = nullptr;
+      }
+
+      ret = CfdCreateExtkey(handle, kNetwork, kCfdExtPubkey, nullptr,
+          fingerprint, pubkey, chain_code,
+          static_cast<unsigned char>(depth), child_number, &get_extkey);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret == kCfdSuccess) {
+        EXPECT_STREQ("xpub6EXtjFtcPwmae296sZGckBgbfCHnodfjWujbGK7hhzRybmWJhmgeusFbiiZyG1iSeiBcQ7diPeUC9vtP9wLS44bWpqH4kuQQD5N4gA3LaFE", get_extkey);
+        CfdFreeStringBuffer(get_extkey);
+        get_extkey = nullptr;
+      }
+
       CfdFreeStringBuffer(version);
       CfdFreeStringBuffer(fingerprint);
       CfdFreeStringBuffer(chain_code);
@@ -347,10 +369,83 @@ TEST(cfdcapi_key, ExtkeyTest) {
   CfdFreeStringBuffer(extprivkey1);
   CfdFreeStringBuffer(extprivkey2);
   CfdFreeStringBuffer(extprivkey3);
+  CfdFreeStringBuffer(extprivkey4);
+  CfdFreeStringBuffer(key_path_data);
   CfdFreeStringBuffer(extpubkey1);
   CfdFreeStringBuffer(privkey);
   CfdFreeStringBuffer(wif);
   CfdFreeStringBuffer(pubkey);
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+
+TEST(cfdcapi_key, MnemonicTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* mnemonic_word = nullptr;
+  char* mnemonic = nullptr;
+  void* mnemonic_handle = nullptr;
+  uint32_t max_index = 0;
+  ret = CfdInitializeMnemonicWordList(handle, "en", &mnemonic_handle, &max_index);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_EQ(2048, max_index);
+  if (ret == kCfdSuccess) {
+    ret = CfdGetMnemonicWord(handle, mnemonic_handle, 3, &mnemonic_word);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("about", mnemonic_word);
+      CfdFreeStringBuffer(mnemonic_word);
+      mnemonic_word = nullptr;
+    }
+
+    ret = CfdFreeMnemonicWordList(handle, mnemonic_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  char* seed = nullptr;
+  char* entropy = nullptr;
+  const char* test_mnemonic = "horn tenant knee talent sponsor spell gate clip pulse soap slush warm silver nephew swap uncle crack brave";
+  const char* exp_entropy = "6d9be1ee6ebd27a258115aad99b7317b9c8d28b6d76431c3";
+  ret = CfdConvertMnemonicToSeed(handle, test_mnemonic, "TREZOR", true, "en", false, &seed, &entropy);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("fd579828af3da1d32544ce4db5c73d53fc8acc4ddb1e3b251a31179cdb71e853c56d2fcb11aed39898ce6c34b10b5382772db8796e52837b54468aeb312cfc3d", seed);
+    EXPECT_STREQ(exp_entropy, entropy);
+    CfdFreeStringBuffer(seed);
+    CfdFreeStringBuffer(entropy);
+  }
+
+  ret = CfdConvertMnemonicToSeed(handle, test_mnemonic, "abcde", true, "en", false, &seed, &entropy);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("fd3bb1e11eb0e3e59e8ba4d6eefca06446c504123f73096142766ad4803e19e777091973655b5cd3e951d72fda51be48f9ae231bab59d3a37f547ffc73dc00b5", seed);
+    EXPECT_STREQ(exp_entropy, entropy);
+    CfdFreeStringBuffer(seed);
+    CfdFreeStringBuffer(entropy);
+  }
+
+  ret = CfdConvertEntropyToMnemonic(handle, exp_entropy, "en", &mnemonic);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(test_mnemonic, mnemonic);
+    CfdFreeStringBuffer(mnemonic);
+    mnemonic = nullptr;
+  }
 
   ret = CfdGetLastErrorCode(handle);
   if (ret != kCfdSuccess) {

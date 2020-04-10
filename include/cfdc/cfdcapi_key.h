@@ -179,7 +179,45 @@ CFDC_API int CfdCreateExtkeyFromSeed(
     char** extkey);
 
 /**
- * @brief create extkey from parent path.
+ * @brief create extkey from direct info.
+ * @param[in] handle          cfd handle.
+ * @param[in] network_type    network type.
+ * @param[in] key_type        extkey type.
+ * @param[in] parent_key      parent key. (If there is no fingerprint)
+ * @param[in] fingerprint     fingerprint.
+ * @param[in] key             public or private key.
+ * @param[in] chain_code      chain code.
+ * @param[in] depth           depth.
+ * @param[in] child_number    child key number.
+ * @param[out] extkey         extkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCreateExtkey(
+    void* handle, int network_type, int key_type, const char* parent_key,
+    const char* fingerprint, const char* key, const char* chain_code,
+    unsigned char depth, uint32_t child_number, char** extkey);
+
+/**
+ * @brief derive extkey from number.
+ * @param[in] handle          cfd handle.
+ * @param[in] extkey          parent extkey.
+ * @param[in] child_number    child key number.
+ * @param[in] hardened        hardened flag.
+ * @param[in] network_type    network type.
+ * @param[in] key_type        extkey type.
+ * @param[out] child_extkey   child extkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCreateExtkeyFromParent(
+    void* handle, const char* extkey, uint32_t child_number, bool hardened,
+    int network_type, int key_type, char** child_extkey);
+
+/**
+ * @brief derive extkey from path.
  * @param[in] handle          cfd handle.
  * @param[in] extkey          parent extkey.
  * @param[in] path            create key path.(ex: 0/0h/0'/0)
@@ -275,27 +313,73 @@ CFDC_API int CfdGetExtkeyInformation(
     void* handle, const char* extkey, char** version, char** fingerprint,
     char** chain_code, uint32_t* depth, uint32_t* child_number);
 
-#if 0
-/*
-class CFD_EXPORT HDWalletApi {
- public:
-  std::vector<std::string> GetMnemonicWordlist(
-      const std::string& language) const;
+/**
+ * @brief initialize getting mnemonic word list.
+ * @param[in] handle            cfd handle.
+ * @param[in] language          language. (default: en)
+ * @param[out] mnemonic_handle  get mnemonic word handle.
+ *   Call 'CfdFreeMnemonicWordList' after you are finished using it.
+ * @param[out] max_index        mnemonic word list num.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdInitializeMnemonicWordList(
+    void* handle, const char* language, void** mnemonic_handle,
+    uint32_t* max_index);
 
-  ByteData ConvertMnemonicToSeed(
-      const std::vector<std::string>& mnemonic, const std::string& passphrase,
-      bool strict_check = true, const std::string& language = "en",
-      bool use_ideographic_space = false, ByteData* entropy = nullptr) const;
+/**
+ * @brief get mnemonic word.
+ * @param[in] handle            cfd handle.
+ * @param[in] mnemonic_handle   get mnemonic word handle.
+ * @param[in] index             index.
+ * @param[out] mnemonic_word    mnemonic word.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetMnemonicWord(
+    void* handle, void* mnemonic_handle, uint32_t index, char** mnemonic_word);
 
-  std::vector<std::string> ConvertEntropyToMnemonic(
-      const ByteData& entropy, const std::string& language) const;
+/**
+ * @brief free getting mnemonic word list.
+ * @param[in] handle            cfd handle.
+ * @param[in] mnemonic_handle   get mnemonic word handle.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdFreeMnemonicWordList(void* handle, void* mnemonic_handle);
 
-  std::string CreateExtkeyFromParent(
-      const std::string& extkey, NetType net_type, ExtKeyType output_key_type,
-      uint32_t child_number, bool hardened) const;
-};
-*/
-#endif
+/**
+ * @brief convert mnemonic to seed.
+ * @param[in] handle                 cfd handle.
+ * @param[in] mnemonic               mnemonic.
+ * @param[in] passphrase             passphrase.
+ * @param[in] strict_check           strict check flag.
+ * @param[in] language               language. (default: en)
+ * @param[in] use_ideographic_space  use ideographic space.
+ * @param[out] seed                  seed.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] entropy               mnemonic word entropy.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdConvertMnemonicToSeed(
+    void* handle, const char* mnemonic, const char* passphrase,
+    bool strict_check, const char* language, bool use_ideographic_space,
+    char** seed, char** entropy);
+
+/**
+ * @brief convert entropy to mnemonic.
+ * @param[in] handle          cfd handle.
+ * @param[in] entropy         mnemonic word entropy.
+ * @param[in] language        language. (default: en)
+ * @param[out] mnemonic       mnemonic.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdConvertEntropyToMnemonic(
+    void* handle, const char* entropy, const char* language, char** mnemonic);
 
 #ifdef __cplusplus
 #if 0
