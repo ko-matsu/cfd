@@ -1996,7 +1996,7 @@ CFDC_API int CfdVerifyConfidentialTxSign(
       warn(CFD_LOG_SOURCE, "txid is null or empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. signature is null or empty.");
+          "Failed to parameter. txid is null or empty.");
     }
     ConfidentialTransactionContext ctxc(tx_hex);
     OutPoint outpoint(Txid(txid), vout);
