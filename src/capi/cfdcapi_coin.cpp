@@ -64,8 +64,6 @@ namespace capi {
 
 //! prefix: CoinSelection
 constexpr const char* const kPrefixCoinSelection = "CoinSelection";
-//! asset max size
-constexpr uint32_t kAssetSize = 33;
 
 /**
  * @brief cfd-capi TargetAsset構造体.
@@ -219,12 +217,6 @@ int CfdAddCoinSelectionUtxo(
   try {
     cfd::Initialize();
     CheckBuffer(coin_select_handle, kPrefixCoinSelection);
-    if (coin_select_handle == nullptr) {
-      warn(CFD_LOG_SOURCE, "coinselect handle is null.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. coinselect handle is null.");
-    }
     if (IsEmptyString(txid)) {
       warn(CFD_LOG_SOURCE, "txid is null or empty.");
       throw CfdException(
@@ -283,12 +275,6 @@ int CfdAddCoinSelectionAmount(
   try {
     cfd::Initialize();
     CheckBuffer(coin_select_handle, kPrefixCoinSelection);
-    if (coin_select_handle == nullptr) {
-      warn(CFD_LOG_SOURCE, "coinselect handle is null.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. coinselect handle is null.");
-    }
 
     CfdCapiCoinSelection* buffer =
         static_cast<CfdCapiCoinSelection*>(coin_select_handle);
@@ -343,12 +329,6 @@ int CfdFinalizeCoinSelection(
   try {
     cfd::Initialize();
     CheckBuffer(coin_select_handle, kPrefixCoinSelection);
-    if (coin_select_handle == nullptr) {
-      warn(CFD_LOG_SOURCE, "coinselect handle is null.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. coinselect handle is null.");
-    }
 
     CfdCapiCoinSelection* buffer =
         static_cast<CfdCapiCoinSelection*>(coin_select_handle);
@@ -590,6 +570,12 @@ int CfdAddTxInForEstimateFee(
   try {
     cfd::Initialize();
     CheckBuffer(fee_handle, kPrefixEstimateFeeData);
+    if (IsEmptyString(txid)) {
+      warn(CFD_LOG_SOURCE, "txid is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. txid is null or empty.");
+    }
     if (IsEmptyString(descriptor)) {
       warn(CFD_LOG_SOURCE, "descriptor is null or empty.");
       throw CfdException(

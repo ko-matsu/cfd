@@ -62,6 +62,9 @@ struct CfdCapiPrefixTemplate {
   char prefix[kPrefixLength];  //!< buffer prefix
 };
 
+//! asset max size
+constexpr uint32_t kAssetSize = 33;
+
 //! prefix: MultisigSign
 constexpr const char* const kPrefixMultisigSignData = "MultisigSign";
 //! multisig max key num

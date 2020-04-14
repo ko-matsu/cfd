@@ -11,6 +11,8 @@
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_script.h"
 
+extern std::vector<Utxo> CfdGetElementsUtxoListByC(bool use_asset);
+
 /**
  * @brief testing class.
  */
@@ -262,3 +264,196 @@ TEST(cfdcapi_transaction, CfdCreateSighash) {
   ret = CfdFreeHandle(handle);
   EXPECT_EQ(kCfdSuccess, ret);
 }
+
+
+// FundRawTransaction(BTC) =====================================================
+
+TEST(cfdcapi_transaction, FundRawTransaction_BTC1) {
+  constexpr const char* kDescriptor = "sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x";
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  auto convert_to_byte = [](const uint8_t* byte_array, size_t size) -> ByteData {
+    std::vector<uint8_t> bytes(size);
+    memcpy(bytes.data(), byte_array, bytes.size());
+    return ByteData(bytes);
+  };
+
+  void* fund_handle = nullptr;
+  std::vector<Utxo> utxos = CfdGetElementsUtxoListByC(false);
+  int64_t tx_fee_amount = 2000;
+  double effective_fee_rate = 20;
+  double long_term_fee_rate = 20;
+  double dust_fee_rate = -1;
+  int64_t knapsack_min_change = -1;
+
+
+
+
+
+
+
+
+
+
+  ret = CfdInitializeCoinSelection(
+    handle, static_cast<uint32_t>(utxos.size()), 3,
+    "", tx_fee_amount,
+    effective_fee_rate, long_term_fee_rate, dust_fee_rate,
+    knapsack_min_change, &fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_NE(nullptr, fund_handle);
+
+  if (ret == kCfdSuccess) {
+    for (int32_t index = 0; index < static_cast<int32_t>(utxos.size()); ++index) {
+      const Utxo& utxo = utxos[index];
+      ByteData txid = convert_to_byte(utxo.txid, sizeof(utxo.txid));
+      ret = CfdAddCoinSelectionUtxo(
+          handle, fund_handle, index,
+          Txid(ByteData256(txid.GetBytes())).GetHex().c_str(), utxo.vout,
+          utxo.amount,
+          "",
+          kDescriptor);
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+
+    ret = CfdAddCoinSelectionAmount(handle, fund_handle, 0, 180000000, "");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    int64_t utxo_fee_amount = 0;
+    ret = CfdFinalizeCoinSelection(handle, fund_handle, &utxo_fee_amount);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(7200, utxo_fee_amount);
+
+    int32_t utxo_index = 0;
+    std::vector<int32_t> indexes;
+    for (uint32_t index = 0; index < utxos.size(); ++index) {
+      ret = CfdGetSelectedCoinIndex(
+          handle, fund_handle, index, &utxo_index);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (utxo_index == -1) {
+        break;
+      }
+      indexes.push_back(utxo_index);
+    }
+    EXPECT_EQ(4, indexes.size());
+
+    if (indexes.size() == 4) {
+      EXPECT_EQ(1, indexes[0]);
+      EXPECT_EQ(3, indexes[1]);
+      EXPECT_EQ(10, indexes[2]);
+      EXPECT_EQ(6, indexes[3]);
+      /*
+      req:
+            A,  115800000
+            B,  347180050
+            C,   37654200
+      res:
+        8:  B,  346430050
+        7:  B,     750000
+        10: C,   37654200
+        1:  A,   78125000
+        3:  A,   39062500
+      */
+    }
+
+    int64_t amount = 0;
+    ret = CfdGetSelectedCoinAssetAmount(handle, fund_handle, 0, &amount);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(181760100, amount);
+  }
+  ret = CfdFreeFundRawTxHandle(handle, fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+// FundRawTransaction(multi Asset) =====================================================
+
+#ifndef CFD_DISABLE_ELEMENTS
+TEST(cfdcapi_transaction, FundRawTransaction_Asset1) {
+  constexpr const char* kDescriptor = "sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x";
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  auto convert_to_byte = [](const uint8_t* byte_array, size_t size) -> ByteData {
+    std::vector<uint8_t> bytes(size);
+    memcpy(bytes.data(), byte_array, bytes.size());
+    return ByteData(bytes);
+  };
+
+  void* fund_handle = nullptr;
+  std::vector<Utxo> utxos = CfdGetElementsUtxoListByC(true);
+  int64_t tx_fee_amount = 2000;
+  double effective_fee_rate = -1;
+  double long_term_fee_rate = -1;
+  double dust_fee_rate = -1;
+  int64_t knapsack_min_change = -1;
+
+  ret = CfdInitializeCoinSelection(
+    handle, static_cast<uint32_t>(utxos.size()), 3,
+    exp_dummy_asset_ca.GetHex().c_str(), tx_fee_amount,
+    effective_fee_rate, long_term_fee_rate, dust_fee_rate,
+    knapsack_min_change, &fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_NE(nullptr, fund_handle);
+
+  if (ret == kCfdSuccess) {
+    for (int32_t index = 0; index < static_cast<int32_t>(utxos.size()); ++index) {
+      const Utxo& utxo = utxos[index];
+      ByteData txid = convert_to_byte(utxo.txid, sizeof(utxo.txid));
+      ret = CfdAddCoinSelectionUtxo(
+          handle, fund_handle, index,
+          Txid(ByteData256(txid.GetBytes())).GetHex().c_str(), utxo.vout,
+          utxo.amount,
+          convert_to_byte(utxo.asset, sizeof(utxo.asset)).GetHex().c_str(),
+          kDescriptor);
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+
+    ret = CfdAddCoinSelectionAmount(handle, fund_handle, 0, 115800000,
+         exp_dummy_asset_ca.GetHex().c_str());
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdAddCoinSelectionAmount(handle, fund_handle, 1, 347180040,
+        exp_dummy_asset_cb.GetHex().c_str());
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdAddCoinSelectionAmount(handle, fund_handle, 2, 37654100,
+        exp_dummy_asset_cc.GetHex().c_str());
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    int64_t utxo_fee_amount = 0;
+    ret = CfdFinalizeCoinSelection(handle, fund_handle, &utxo_fee_amount);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(9000, utxo_fee_amount);
+
+    int32_t utxo_index = 0;
+    std::vector<int32_t> indexes;
+    for (uint32_t index = 0; index < utxos.size(); ++index) {
+      ret = CfdGetSelectedCoinIndex(
+          handle, fund_handle, index, &utxo_index);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (utxo_index == -1) {
+        break;
+      }
+      indexes.push_back(utxo_index);
+    }
+    EXPECT_EQ(5, indexes.size());
+
+    char* address = nullptr;
+    ret = CfdGetAppendTxOutFundRawTx(handle, fund_handle, 0, &address);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("a", address);
+    CfdFreeStringBuffer(address);
+  }
+  ret = CfdFreeFundRawTxHandle(handle, fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+#endif  // CFD_DISABLE_ELEMENTS
