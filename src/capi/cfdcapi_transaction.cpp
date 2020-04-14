@@ -16,9 +16,9 @@
 #include "cfd/cfd_elements_transaction.h"
 #include "cfd/cfd_transaction.h"
 #include "cfd/cfd_transaction_common.h"
-#include "cfd/cfdapi_key.h"
 #include "cfd/cfdapi_coin.h"
 #include "cfd/cfdapi_elements_transaction.h"
+#include "cfd/cfdapi_key.h"
 #include "cfd/cfdapi_transaction.h"
 #include "cfdc/cfdcapi_common.h"
 #include "cfdc/cfdcapi_transaction.h"
@@ -93,9 +93,9 @@ constexpr const char* const kPrefixFundRawTxData = "FundRawTxData";
  */
 struct CfdCapiFundTargetAmount {
   // coinselection option
-  std::string asset;              //!< target asset
-  int64_t amount;                 //!< target amount
-  std::string reserved_address;   //!< reserved address
+  std::string asset;             //!< target asset
+  int64_t amount;                //!< target amount
+  std::string reserved_address;  //!< reserved address
 };
 
 /**
@@ -118,6 +118,7 @@ struct CfdCapiFundRawTxData {
   //! input utxo list for elements
   std::vector<ElementsUtxoAndOption>* input_elements_utxos;
 #endif  // CFD_DISABLE_ELEMENTS
+  //! txout's append address list.
   std::vector<std::string>* append_txout_addresses;
   //! target list
   std::vector<CfdCapiFundTargetAmount>* targets;  //!< target list
@@ -1704,8 +1705,8 @@ int CfdInitializeFundRawTx(
 #ifndef CFD_DISABLE_ELEMENTS
     buffer->input_elements_utxos = new std::vector<ElementsUtxoAndOption>();
 #endif  // CFD_DISABLE_ELEMENTS
-    buffer->targets = new std::vector<CfdCapiFundTargetAmount>(
-        target_asset_count);
+    buffer->targets =
+        new std::vector<CfdCapiFundTargetAmount>(target_asset_count);
     buffer->append_txout_addresses = new std::vector<std::string>();
     *fund_handle = buffer;
     return CfdErrorCode::kCfdSuccess;
@@ -1722,10 +1723,9 @@ int CfdInitializeFundRawTx(
 
 int CfdAddTxInForFundRawTx(
     void* handle, void* fund_handle, const char* txid, uint32_t vout,
-    int64_t amount,
-    const char* descriptor, const char* asset, bool is_issuance,
-    bool is_blind_issuance, bool is_pegin, uint32_t pegin_btc_tx_size,
-    const char* fedpeg_script) {
+    int64_t amount, const char* descriptor, const char* asset,
+    bool is_issuance, bool is_blind_issuance, bool is_pegin,
+    uint32_t pegin_btc_tx_size, const char* fedpeg_script) {
   try {
     cfd::Initialize();
     CheckBuffer(fund_handle, kPrefixFundRawTxData);
@@ -1843,8 +1843,8 @@ int CfdAddUtxoForFundRawTx(
 }
 
 int CfdAddTargetAmountForFundRawTx(
-    void* handle, void* fund_handle, uint32_t asset_index,
-    int64_t amount, const char* asset, const char* reserved_address) {
+    void* handle, void* fund_handle, uint32_t asset_index, int64_t amount,
+    const char* asset, const char* reserved_address) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -1889,8 +1889,8 @@ int CfdAddTargetAmountForFundRawTx(
 }
 
 int CfdSetOptionFundRawTx(
-    void* handle, void* fund_handle, int key, 
-    int64_t int64_value, double double_value, bool bool_value) {
+    void* handle, void* fund_handle, int key, int64_t int64_value,
+    double double_value, bool bool_value) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -1899,23 +1899,23 @@ int CfdSetOptionFundRawTx(
         static_cast<CfdCapiFundRawTxData*>(fund_handle);
 
     switch (key) {
-    case kCfdFundTxIsBlind:
-      buffer->is_blind = bool_value;
-      break;
-    case kCfdFundTxDustFeeRate:
-      buffer->dust_fee_rate = double_value;
-      break;
-    case kCfdFundTxLongTermFeeRate:
-      buffer->long_term_fee_rate = double_value;
-      break;
-    case kCfdFundTxKnapsackMinChange:
-      buffer->knapsack_min_change = int64_value;
-      break;
-    default:
-      warn(CFD_LOG_SOURCE, "illegal key {}.", key);
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. key is illegal.");
+      case kCfdFundTxIsBlind:
+        buffer->is_blind = bool_value;
+        break;
+      case kCfdFundTxDustFeeRate:
+        buffer->dust_fee_rate = double_value;
+        break;
+      case kCfdFundTxLongTermFeeRate:
+        buffer->long_term_fee_rate = double_value;
+        break;
+      case kCfdFundTxKnapsackMinChange:
+        buffer->knapsack_min_change = int64_value;
+        break;
+      default:
+        warn(CFD_LOG_SOURCE, "illegal key {}.", key);
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. key is illegal.");
     }
 
     return CfdErrorCode::kCfdSuccess;
@@ -1931,8 +1931,8 @@ int CfdSetOptionFundRawTx(
 
 int CfdFinalizeFundRawTx(
     void* handle, void* fund_handle, const char* tx_hex,
-    double effective_fee_rate, int64_t* tx_fee,
-    uint32_t* append_txout_count, char** output_tx_hex) {
+    double effective_fee_rate, int64_t* tx_fee, uint32_t* append_txout_count,
+    char** output_tx_hex) {
   int result = CfdErrorCode::kCfdUnknownError;
 #ifndef CFD_DISABLE_ELEMENTS
   auto convert_to_asset = [](const uint8_t* asset) -> ConfidentialAssetId {
@@ -1980,19 +1980,17 @@ int CfdFinalizeFundRawTx(
       AmountMap map_target_value;
       std::map<std::string, std::string> reserve_txout_address;
       for (const auto& target : *(buffer->targets)) {
-        map_target_value.emplace(target.asset,
-            Amount::CreateBySatoshiAmount(target.amount));
-        reserve_txout_address.emplace(target.asset,
-            target.reserved_address);
+        map_target_value.emplace(
+            target.asset, Amount::CreateBySatoshiAmount(target.amount));
+        reserve_txout_address.emplace(target.asset, target.reserved_address);
       }
 
       ElementsTransactionApi api;
       ConfidentialTransactionController ctxc = api.FundRawTransaction(
           tx_hex, *buffer->utxos, map_target_value,
-          *buffer->input_elements_utxos, reserve_txout_address,
-          fee_asset, buffer->is_blind, effective_fee_rate, &tx_fee_value,
-          &filter, &option_params, buffer->append_txout_addresses,
-          buffer->net_type);
+          *buffer->input_elements_utxos, reserve_txout_address, fee_asset,
+          buffer->is_blind, effective_fee_rate, &tx_fee_value, &filter,
+          &option_params, buffer->append_txout_addresses, buffer->net_type);
       if (output_tx_hex != nullptr) {
         *output_tx_hex = CreateString(ctxc.GetHex());
       }
@@ -2006,9 +2004,8 @@ int CfdFinalizeFundRawTx(
       TransactionApi api;
       TransactionController txc = api.FundRawTransaction(
           tx_hex, *buffer->utxos, target_value, *buffer->input_utxos,
-          target.reserved_address, effective_fee_rate, &tx_fee_value,
-          &filter, &option_params, buffer->append_txout_addresses,
-          buffer->net_type);
+          target.reserved_address, effective_fee_rate, &tx_fee_value, &filter,
+          &option_params, buffer->append_txout_addresses, buffer->net_type);
       if (output_tx_hex != nullptr) {
         *output_tx_hex = CreateString(txc.GetHex());
       }
@@ -2018,8 +2015,8 @@ int CfdFinalizeFundRawTx(
       *tx_fee = tx_fee_value.GetSatoshiValue();
     }
     if (append_txout_count != nullptr) {
-      *append_txout_count = static_cast<uint32_t>(
-          buffer->append_txout_addresses->size());
+      *append_txout_count =
+          static_cast<uint32_t>(buffer->append_txout_addresses->size());
     }
 
     result = CfdErrorCode::kCfdSuccess;
@@ -2057,8 +2054,7 @@ int CfdGetAppendTxOutFundRawTx(
           "Failed to parameter. target addresses is maximum over.");
     }
 
-    *append_address = CreateString(
-        buffer->append_txout_addresses->at(index));
+    *append_address = CreateString(buffer->append_txout_addresses->at(index));
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -2100,8 +2096,8 @@ int CfdFreeFundRawTxHandle(void* handle, void* fund_handle) {
         fund_struct->targets = nullptr;
       }
     }
-    FreeBuffer(fund_handle, kPrefixFundRawTxData,
-        sizeof(CfdCapiFundRawTxData));
+    FreeBuffer(
+        fund_handle, kPrefixFundRawTxData, sizeof(CfdCapiFundRawTxData));
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);

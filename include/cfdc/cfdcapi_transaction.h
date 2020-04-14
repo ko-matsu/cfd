@@ -417,13 +417,16 @@ CFDC_API int CfdGetTxOutIndex(
 
 /**
  * @brief Initialize handle for fundrawtransaction.
- * @param[in] handle        cfd handle.
- * @param[out] fund_handle   handle for fundrawtransaction.
+ * @param[in] handle              cfd handle.
+ * @param[in] network_type        network type.
+ * @param[in] target_asset_count  target asset count.
+ * @param[in] fee_asset           fee asset. (elements only)
+ * @param[out] fund_handle        handle for fundrawtransaction.
  * @return CfdErrorCode
  */
 CFDC_API int CfdInitializeFundRawTx(
-    void* handle, int network_type, uint32_t target_asset_count, const char* fee_asset,
-    void** fund_handle);
+    void* handle, int network_type, uint32_t target_asset_count,
+    const char* fee_asset, void** fund_handle);
 
 /**
  * @brief Add transaction input's utxo for fundrawtransaction.
@@ -443,10 +446,9 @@ CFDC_API int CfdInitializeFundRawTx(
  */
 CFDC_API int CfdAddTxInForFundRawTx(
     void* handle, void* fund_handle, const char* txid, uint32_t vout,
-    int64_t amount,
-    const char* descriptor, const char* asset, bool is_issuance,
-    bool is_blind_issuance, bool is_pegin, uint32_t pegin_btc_tx_size,
-    const char* fedpeg_script);
+    int64_t amount, const char* descriptor, const char* asset,
+    bool is_issuance, bool is_blind_issuance, bool is_pegin,
+    uint32_t pegin_btc_tx_size, const char* fedpeg_script);
 
 /**
  * @brief Add utxo for fundrawtransaction.
@@ -474,8 +476,8 @@ CFDC_API int CfdAddUtxoForFundRawTx(
  * @return CfdErrorCode
  */
 CFDC_API int CfdAddTargetAmountForFundRawTx(
-    void* handle, void* fund_handle, uint32_t asset_index,
-    int64_t amount, const char* asset, const char* reserved_address);
+    void* handle, void* fund_handle, uint32_t asset_index, int64_t amount,
+    const char* asset, const char* reserved_address);
 
 /**
  * @brief set fundrawtransaction's option.
@@ -488,8 +490,8 @@ CFDC_API int CfdAddTargetAmountForFundRawTx(
  * @return CfdErrorCode
  */
 CFDC_API int CfdSetOptionFundRawTx(
-    void* handle, void* fund_handle, int key, 
-    int64_t int64_value, double double_value, bool bool_value);
+    void* handle, void* fund_handle, int key, int64_t int64_value,
+    double double_value, bool bool_value);
 
 /**
  * @brief Finalize fundrawtransaction api call.
@@ -507,8 +509,8 @@ CFDC_API int CfdSetOptionFundRawTx(
  */
 CFDC_API int CfdFinalizeFundRawTx(
     void* handle, void* fund_handle, const char* tx_hex,
-    double effective_fee_rate, int64_t* tx_fee,
-    uint32_t* append_txout_count, char** output_tx_hex);
+    double effective_fee_rate, int64_t* tx_fee, uint32_t* append_txout_count,
+    char** output_tx_hex);
 
 /**
  * @brief Get using txout address for fundrawtransaction.
