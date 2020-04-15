@@ -153,9 +153,11 @@ TEST(cfdcapi_coin, EstimateFeeTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+#ifndef CFD_DISABLE_ELEMENTS
 static ConfidentialAssetId exp_dummy_asset_ca("aa00000000000000000000000000000000000000000000000000000000000000");
 static ConfidentialAssetId exp_dummy_asset_cb("bb00000000000000000000000000000000000000000000000000000000000000");
 static ConfidentialAssetId exp_dummy_asset_cc("cc00000000000000000000000000000000000000000000000000000000000000");
+#endif  // CFD_DISABLE_ELEMENTS
 
 std::vector<Utxo> CfdGetElementsUtxoListByC(bool use_asset) {
   std::vector<Utxo> utxos;
