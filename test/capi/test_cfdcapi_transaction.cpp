@@ -2,14 +2,23 @@
 
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "capi/cfdc_internal.h"
+#include "cfd/cfd_transaction_common.h"
 #include "cfdc/cfdcapi_common.h"
 #include "cfdc/cfdcapi_elements_transaction.h"
 #include "cfdc/cfdcapi_key.h"
 #include "cfdc/cfdcapi_transaction.h"
+#include "cfdcore/cfdcore_bytedata.h"
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_script.h"
+
+using cfd::Utxo;
+using cfd::core::ByteData;
+using cfd::core::ByteData256;
+
+extern std::vector<Utxo> CfdGetElementsUtxoListByC(bool use_asset);
 
 /**
  * @brief testing class.
@@ -262,3 +271,284 @@ TEST(cfdcapi_transaction, CfdCreateSighash) {
   ret = CfdFreeHandle(handle);
   EXPECT_EQ(kCfdSuccess, ret);
 }
+
+
+// FundRawTransaction(BTC) =====================================================
+
+TEST(cfdcapi_transaction, FundRawTransaction_BTC1) {
+  constexpr const char* kDescriptor = "sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x";
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  auto convert_to_byte = [](const uint8_t* byte_array, size_t size) -> std::string {
+    std::vector<uint8_t> bytes(size);
+    memcpy(bytes.data(), byte_array, bytes.size());
+    std::vector<uint8_t> reverse_buffer(bytes.crbegin(), bytes.crend());
+    return ByteData(reverse_buffer).GetHex();
+  };
+
+  void* fund_handle = nullptr;
+  std::vector<Utxo> utxos = CfdGetElementsUtxoListByC(true);
+  double effective_fee_rate = 10.0;
+  double long_term_fee_rate = 10.0;
+  double dust_fee_rate = -1;
+  int64_t knapsack_min_change = -1;
+
+  void* create_handle = nullptr;
+  ret = CfdInitializeTransaction(
+      handle, kCfdNetworkMainnet, 1, 17, nullptr, &create_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == create_handle));
+
+  char* tx = nullptr;
+  int64_t amount = 112340000;
+  const char* txid1 = "9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff";
+  uint32_t vout1 = 0;
+  if (ret == kCfdSuccess) {
+    ret = CfdAddTransactionInput(handle, create_handle, txid1, vout1, 0xfffffffe);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdAddTransactionOutput(
+        handle, create_handle, amount, "bc1qcevcszwsnmd2ew857n2mnwq7gsf62ujrutrfch",
+        nullptr, nullptr);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdFinalizeTransaction(handle, create_handle, &tx);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("0100000001fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff01202cb20600000000160014c6598809d09edaacb8f4f4d5b9b81e4413a5724311000000", tx);
+    ret = CfdFreeTransactionHandle(handle, create_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  uint32_t target_asset_count = 1;
+  if (ret == kCfdSuccess) {
+    ret = CfdInitializeFundRawTx(
+        handle, kCfdNetworkMainnet, target_asset_count, nullptr, &fund_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_NE(nullptr, fund_handle);
+  }
+
+  if (ret == kCfdSuccess) {
+    for (const auto& utxo : utxos) {
+      std::string txid = convert_to_byte(utxo.txid, sizeof(utxo.txid));
+      ret = CfdAddUtxoForFundRawTx(
+          handle, fund_handle,
+          Txid(txid).GetHex().c_str(), utxo.vout,
+          utxo.amount,
+          kDescriptor,
+          "");
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+
+    ret = CfdAddTxInForFundRawTx(handle, fund_handle,
+        "9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff", 0,
+        amount,  kDescriptor, "", false, false, false, 0, "");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTargetAmountForFundRawTx(handle, fund_handle, 0, 65976100,
+        "", "bc1qdnf34k9c255nfa9anjx0sj5ne0t6f80p72wpce");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxIsBlind,
+        0, 0, true);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxDustFeeRate,
+        0, dust_fee_rate, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxLongTermFeeRate,
+        0, long_term_fee_rate, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxKnapsackMinChange,
+        knapsack_min_change, 0, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    int64_t tx_fee_amount = 0;
+    uint32_t append_txout_count = 0;
+    char* output_tx_hex = nullptr;
+    ret = CfdFinalizeFundRawTx(handle, fund_handle, tx,
+        effective_fee_rate, &tx_fee_amount, &append_txout_count,
+        &output_tx_hex);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(3420, tx_fee_amount);
+    EXPECT_EQ(1, append_txout_count);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("0100000003fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff0ad4a335556c64c3e2599c3a4c3ddff5b28f616fa55cf2323d2ae642eef74a8f0000000000feffffff010b0000000000000000000000000000000000000000000000000000000000000000000000feffffff02202cb20600000000160014c6598809d09edaacb8f4f4d5b9b81e4413a5724388bcee03000000001600146cd31ad8b8552934f4bd9c8cf84a93cbd7a49de111000000", output_tx_hex);
+    }
+
+    char* address = nullptr;
+    ret = CfdGetAppendTxOutFundRawTx(handle, fund_handle, 0, &address);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("bc1qdnf34k9c255nfa9anjx0sj5ne0t6f80p72wpce", address);
+  }
+  ret = CfdFreeFundRawTxHandle(handle, fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  CfdFreeStringBuffer(tx);
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+// FundRawTransaction(multi Asset) =====================================================
+
+#ifndef CFD_DISABLE_ELEMENTS
+static constexpr const char* exp_dummytx_asset_ca = "aa00000000000000000000000000000000000000000000000000000000000000";
+static constexpr const char* exp_dummytx_asset_cb = "bb00000000000000000000000000000000000000000000000000000000000000";
+static constexpr const char* exp_dummytx_asset_cc = "cc00000000000000000000000000000000000000000000000000000000000000";
+
+// reserved address key
+// {    // ex1qdnf34k9c255nfa9anjx0sj5ne0t6f80p5rne4e, bc1qdnf34k9c255nfa9anjx0sj5ne0t6f80p72wpce
+//   pubkey: '0367ebd58ffca93a4f4a2a9c3cc24009101f39449e0993ca08b05fdbfb6e32a01b',
+//   privkey: 'cTmuwbL1JXexLBLUoQd2nVo3mggkgkJ1RSRYj7cbiUsa5CYeQCkr'
+// }, { // ex1q3tlca6nma70vvrf46up5ktjguxqwj0zamt7ktn
+//   pubkey: '0202acaad1eee2b86a44687825e535d61a67f9276db720165fc296cdb1f6f92b9a',
+//   privkey: 'cNaupUdFeVnWoWvqP9tStbpLKdTtUe2zgAm7L6vFxQVhk2JwgzRQ'
+// }, { // ex1q0xdg60c3y5dk5m05hg2k52xavjkedx53t3k40m
+//   pubkey: '02ba35856676b525fead8de496d15ed080bd8442cc2672f5cac81be1fd29e92fba',
+//   privkey: 'cP12ycK4NMfT1Nur6HcQMvbiihMYquESYv5nE7jvHXpwK57Mj9Ey'
+// }
+
+// addr: ex1qcevcszwsnmd2ew857n2mnwq7gsf62ujrkz734h, bc1qcevcszwsnmd2ew857n2mnwq7gsf62ujrutrfch
+// pubkey: '03ac6b4b32eb27ec1c13c6180dce6b0016e46a070bdac96b4d76f5da16ab66ae8f',
+// privkey: 'cSzUivMfRpXotHt27jTKpP6uJyxmQFbkMkQnvMPSq4gBdySxFvAR'
+
+TEST(cfdcapi_transaction, FundRawTransaction_Asset1) {
+  constexpr const char* kDescriptor = "sh(wpkh([ef735203/0'/0'/7']022c2409fbf657ba25d97bb3dab5426d20677b774d4fc7bd3bfac27ff96ada3dd1))#4z2vy08x";
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  auto convert_to_byte = [](const uint8_t* byte_array, size_t size) -> std::string {
+    if (size == 32) {
+      std::vector<uint8_t> bytes(size);
+      memcpy(bytes.data(), byte_array, bytes.size());
+      std::vector<uint8_t> reverse_buffer(bytes.crbegin(), bytes.crend());
+      return ByteData(reverse_buffer).GetHex();
+    } else {
+      std::vector<uint8_t> bytes(32);
+      memcpy(bytes.data(), byte_array + 1, bytes.size());
+      std::vector<uint8_t> reverse_buffer(bytes.crbegin(), bytes.crend());
+      return ByteData(reverse_buffer).GetHex();
+    }
+  };
+
+  void* fund_handle = nullptr;
+  std::vector<Utxo> utxos = CfdGetElementsUtxoListByC(true);
+  double effective_fee_rate = -1;
+  double long_term_fee_rate = -1;
+  double dust_fee_rate = -1;
+  int64_t knapsack_min_change = -1;
+
+  void* create_handle = nullptr;
+  ret = CfdInitializeTransaction(
+      handle, kCfdNetworkLiquidv1, 1, 17, nullptr, &create_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == create_handle));
+
+  char* tx = nullptr;
+  int64_t amount = 112340000;
+  const char* txid1 = "9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff";
+  uint32_t vout1 = 0;
+  if (ret == kCfdSuccess) {
+    ret = CfdAddTransactionInput(handle, create_handle, txid1, vout1, 0xfffffffe);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdAddTransactionOutput(
+        handle, create_handle, amount, "ex1qcevcszwsnmd2ew857n2mnwq7gsf62ujrkz734h",
+        nullptr, exp_dummytx_asset_ca);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdFinalizeTransaction(handle, create_handle, &tx);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("010000000001fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff010100000000000000000000000000000000000000000000000000000000000000aa010000000006b22c2000160014c6598809d09edaacb8f4f4d5b9b81e4413a5724311000000", tx);
+    ret = CfdFreeTransactionHandle(handle, create_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  uint32_t target_asset_count = 3;
+  if (ret == kCfdSuccess) {
+    ret = CfdInitializeFundRawTx(
+        handle, kCfdNetworkLiquidv1, target_asset_count,
+        exp_dummytx_asset_ca, &fund_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_NE(nullptr, fund_handle);
+  }
+
+  if (ret == kCfdSuccess) {
+    for (const auto& utxo : utxos) {
+      std::string txid = convert_to_byte(utxo.txid, sizeof(utxo.txid));
+      ret = CfdAddUtxoForFundRawTx(
+          handle, fund_handle,
+          Txid(txid).GetHex().c_str(), utxo.vout,
+          utxo.amount,
+          kDescriptor,
+          convert_to_byte(utxo.asset, sizeof(utxo.asset)).c_str());
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+
+    ret = CfdAddTxInForFundRawTx(handle, fund_handle,
+        "9f96ade4b41d5433f4eda31e1738ec2b36f6e7d1420d94a6af99801a88f7f7ff", 0,
+        amount,  kDescriptor, exp_dummytx_asset_ca,
+        false, false, false, 0, "");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTargetAmountForFundRawTx(handle, fund_handle, 0, 115800000,
+        exp_dummytx_asset_ca, "ex1qdnf34k9c255nfa9anjx0sj5ne0t6f80p5rne4e");
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdAddTargetAmountForFundRawTx(handle, fund_handle, 1, 347180040,
+        exp_dummytx_asset_cb, "ex1q3tlca6nma70vvrf46up5ktjguxqwj0zamt7ktn");
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdAddTargetAmountForFundRawTx(handle, fund_handle, 2, 37654100,
+        exp_dummytx_asset_cc, "ex1q0xdg60c3y5dk5m05hg2k52xavjkedx53t3k40m");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxIsBlind,
+        0, 0, true);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxDustFeeRate,
+        0, dust_fee_rate, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxLongTermFeeRate,
+        0, long_term_fee_rate, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxKnapsackMinChange,
+        knapsack_min_change, 0, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    int64_t tx_fee_amount = 0;
+    uint32_t append_txout_count = 0;
+    char* output_tx_hex = nullptr;
+    ret = CfdFinalizeFundRawTx(handle, fund_handle, tx,
+        effective_fee_rate, &tx_fee_amount, &append_txout_count,
+        &output_tx_hex);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(67540, tx_fee_amount);
+    EXPECT_EQ(3, append_txout_count);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("010000000006fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff0a9a33750a810cd384ca5d93b09513f1eb5d93c669091b29eef710d2391ff7300000000000feffffff0ad4a335556c64c3e2599c3a4c3ddff5b28f616fa55cf2323d2ae642eef74a8f0000000000feffffff030b0000000000000000000000000000000000000000000000000000000000000000000000feffffff020b0000000000000000000000000000000000000000000000000000000000000000000000feffffff010c0000000000000000000000000000000000000000000000000000000000000000000000feffffff050100000000000000000000000000000000000000000000000000000000000000aa010000000006b22c2000160014c6598809d09edaacb8f4f4d5b9b81e4413a572430100000000000000000000000000000000000000000000000000000000000000aa0100000000000107d400000100000000000000000000000000000000000000000000000000000000000000bb010000000014b18c12001600148aff8eea7bef9ec60d35d7034b2e48e180e93c5d0100000000000000000000000000000000000000000000000000000000000000cc0100000000023e8eb800160014799a8d3f11251b6a6df4ba156a28dd64ad969a910100000000000000000000000000000000000000000000000000000000000000aa010000000006fb1bd8001600146cd31ad8b8552934f4bd9c8cf84a93cbd7a49de111000000", output_tx_hex);
+    }
+
+    for (uint32_t index = 0; index < append_txout_count; ++index) {
+      char* address = nullptr;
+      ret = CfdGetAppendTxOutFundRawTx(handle, fund_handle, index, &address);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret == kCfdSuccess) {
+        if (index == 0) {
+          EXPECT_STREQ("ex1q3tlca6nma70vvrf46up5ktjguxqwj0zamt7ktn", address);
+        } else if (index == 1) {
+          EXPECT_STREQ("ex1q0xdg60c3y5dk5m05hg2k52xavjkedx53t3k40m", address);
+        } else if (index == 2) {
+          EXPECT_STREQ("ex1qdnf34k9c255nfa9anjx0sj5ne0t6f80p5rne4e", address);
+        }
+      }
+      CfdFreeStringBuffer(address);
+    }
+  }
+  ret = CfdFreeFundRawTxHandle(handle, fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  CfdFreeStringBuffer(tx);
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+#endif  // CFD_DISABLE_ELEMENTS
