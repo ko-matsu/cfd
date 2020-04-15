@@ -302,9 +302,10 @@ int CfdGetPrivkeyFromWif(
           "Failed to parameter. wif is null or empty.");
     }
 
+    size_t wif_len = strnlen(wif, kPrivkeyWifUncompressSize + 1);
     cfd::core::NetType net_type = ConvertNetType(network_type, nullptr);
     Privkey key = Privkey::FromWif(
-        wif, net_type, (strlen(wif) != kPrivkeyWifUncompressSize));
+        wif, net_type, (wif_len != kPrivkeyWifUncompressSize));
     *privkey = CreateString(key.GetHex());
 
     return CfdErrorCode::kCfdSuccess;

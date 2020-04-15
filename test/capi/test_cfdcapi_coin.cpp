@@ -157,7 +157,7 @@ static ConfidentialAssetId exp_dummy_asset_ca("aa0000000000000000000000000000000
 static ConfidentialAssetId exp_dummy_asset_cb("bb00000000000000000000000000000000000000000000000000000000000000");
 static ConfidentialAssetId exp_dummy_asset_cc("cc00000000000000000000000000000000000000000000000000000000000000");
 
-static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
+std::vector<Utxo> CfdGetElementsUtxoListByC(bool use_asset) {
   std::vector<Utxo> utxos;
   {
     Txid txid("7ca81dd22c934747f4f5ab7844178445fe931fb248e0704c062b8f4fbd3d500a");
@@ -166,8 +166,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 312500000;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_ca.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -177,8 +179,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 78125000;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_ca.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -188,8 +192,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 1250000000;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_ca.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -199,8 +205,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 39062500;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_ca.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -210,8 +218,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 156250000;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_ca.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -221,8 +231,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 2500000000;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_ca.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -232,8 +244,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 26918400;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_cb.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -243,8 +257,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 750000;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_cb.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -254,8 +270,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 346430050;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_cb.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -265,8 +283,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 18476350;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_cb.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -276,8 +296,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 37654200;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_cc.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
   {
@@ -287,8 +309,10 @@ static std::vector<Utxo> GetElementsUtxoListByC(bool use_asset) {
     memcpy(utxo.txid, txid.GetData().GetBytes().data(), 32);
     utxo.vout = 0;
     utxo.amount = 127030000;
+#ifndef CFD_DISABLE_ELEMENTS
     if (use_asset)
       memcpy(utxo.asset, exp_dummy_asset_cc.GetData().GetBytes().data(), sizeof(utxo.asset));
+#endif  // CFD_DISABLE_ELEMENTS
     utxos.push_back(utxo);
   }
 /*
@@ -324,7 +348,7 @@ TEST(cfdcapi_coin, CfCoinSelection_BTC1) {
   };
 
   void* coin_select_handle = nullptr;
-  std::vector<Utxo> utxos = GetElementsUtxoListByC(false);
+  std::vector<Utxo> utxos = CfdGetElementsUtxoListByC(false);
   int64_t tx_fee_amount = 2000;
   double effective_fee_rate = 20;
   double long_term_fee_rate = 20;
@@ -421,7 +445,7 @@ TEST(cfdcapi_coin, CfCoinSelection_Asset1) {
   };
 
   void* coin_select_handle = nullptr;
-  std::vector<Utxo> utxos = GetElementsUtxoListByC(true);
+  std::vector<Utxo> utxos = CfdGetElementsUtxoListByC(true);
   int64_t tx_fee_amount = 2000;
   double effective_fee_rate = -1;
   double long_term_fee_rate = -1;
