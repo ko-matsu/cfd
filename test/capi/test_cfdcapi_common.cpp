@@ -319,6 +319,50 @@ TEST(cfdcapi_common, CfdRequestExecuteJson_elementsdecodetx) {
 }
 #endif  // CFD_DISABLE_ELEMENTS
 
+TEST(cfdcapi_common, CfdSerializeByteData) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+
+  ret = CfdSerializeByteData(handle, "0123456789ab", &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("060123456789ab", output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdSerializeByteData(handle, "", &output);
+  EXPECT_EQ(kCfdIllegalArgumentError, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("00", output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  const char* target = "111111111111111111112222222222222222222233333333333333333333444444444444444444445555555555555555555566666666666666666666777777777777777777778888888888888888888899999999999999999999aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddddddddddddddddd111111111111111111112222222222222222222233333333333333333333444444444444444444445555555555555555555566666666666666666666777777777777777777778888888888888888888899999999999999999999aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddddddddddddddddd";
+  const char* exp = "fd0401111111111111111111112222222222222222222233333333333333333333444444444444444444445555555555555555555566666666666666666666777777777777777777778888888888888888888899999999999999999999aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddddddddddddddddd111111111111111111112222222222222222222233333333333333333333444444444444444444445555555555555555555566666666666666666666777777777777777777778888888888888888888899999999999999999999aaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbccccccccccccccccccccdddddddddddddddddddd";
+  ret = CfdSerializeByteData(handle, target, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdSerializeByteData(handle, "", nullptr);
+  EXPECT_EQ(kCfdIllegalArgumentError, ret);
+
+  ret = CfdSerializeByteData(handle, nullptr, &output);
+  EXPECT_EQ(kCfdIllegalArgumentError, ret);
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 // last test.
 /* comment out.
 TEST(cfdcapi_common, CfdFinalize) {

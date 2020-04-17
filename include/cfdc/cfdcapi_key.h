@@ -164,6 +164,144 @@ CFDC_API int CfdGetPubkeyFromPrivkey(
     char** pubkey);
 
 /**
+ * @brief Compress pubkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          pubkey hex.
+ * @param[out] output         pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCompressPubkey(
+    void* handle, const char* pubkey, char** output);
+
+/**
+ * @brief Uncompress pubkey. (prefix is 0x04 only.)
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          pubkey hex.
+ * @param[out] output         pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdUncompressPubkey(
+    void* handle, const char* pubkey, char** output);
+
+/**
+ * @brief Initialize combine pubkey handle.
+ * @param[in] handle            cfd handle.
+ * @param[out] combine_handle   combine handle.
+ *   Call 'CfdFreeCombinePubkeyHandle' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdInitializeCombinePubkey(void* handle, void** combine_handle);
+
+/**
+ * @brief Add combine target pubkey.
+ * @param[in] handle            cfd handle.
+ * @param[out] combine_handle   combine handle.
+ * @param[in] pubkey            pubkey hex.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddCombinePubkey(
+    void* handle, void* combine_handle, const char* pubkey);
+
+/**
+ * @brief Combine pubkey.
+ * @param[in] handle            cfd handle.
+ * @param[out] combine_handle   combine handle.
+ * @param[out] output           pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdFinalizeCombinePubkey(
+    void* handle, void* combine_handle, char** output);
+
+/**
+ * @brief Free combine pubkey handle.
+ * @param[in] handle            cfd handle.
+ * @param[out] combine_handle   combine handle.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdFreeCombinePubkeyHandle(void* handle, void* combine_handle);
+
+/**
+ * @brief Add tweak to pubkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          pubkey hex.
+ * @param[in] tweak           tweak data hex. (32-byte (64-charactors))
+ * @param[out] output         pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdPubkeyTweakAdd(
+    void* handle, const char* pubkey, const char* tweak, char** output);
+
+/**
+ * @brief Multiplication tweak to pubkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          pubkey hex.
+ * @param[in] tweak           tweak data hex. (32-byte (64-charactors))
+ * @param[out] output         pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdPubkeyTweakMul(
+    void* handle, const char* pubkey, const char* tweak, char** output);
+
+/**
+ * @brief Negate pubkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          pubkey hex.
+ * @param[out] output         pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdNegatePubkey(void* handle, const char* pubkey, char** output);
+
+/**
+ * @brief Add tweak to privkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] privkey         privkey hex.
+ * @param[in] tweak           tweak data hex. (32-byte (64-charactors))
+ * @param[out] output         privkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdPrivkeyTweakAdd(
+    void* handle, const char* privkey, const char* tweak, char** output);
+
+/**
+ * @brief Multiplication tweak to privkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] privkey         privkey hex.
+ * @param[in] tweak           tweak data hex. (32-byte (64-charactors))
+ * @param[out] output         privkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdPrivkeyTweakMul(
+    void* handle, const char* privkey, const char* tweak, char** output);
+
+/**
+ * @brief Negate privkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] privkey         privkey hex.
+ * @param[out] output         privkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdNegatePrivkey(
+    void* handle, const char* privkey, char** output);
+
+/**
  * @brief create extkey from seed.
  * @param[in] handle          cfd handle.
  * @param[in] seed_hex        seed data(hex).
