@@ -581,4 +581,34 @@ extern "C" int CfdRequestExecuteJson(
 #endif  // CFD_DISABLE_JSONAPI
 }
 
+int CfdSerializeByteData(void* handle, const char* buffer, char** output) {
+  try {
+    cfd::Initialize();
+    if (cfd::capi::IsEmptyString(buffer)) {
+      warn(CFD_LOG_SOURCE, "buffer is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. buffer is null or empty.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+
+    ByteData data(buffer);
+    *output = cfd::capi::CreateString(data.Serialize().GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
 #endif  // CFD_DISABLE_CAPI

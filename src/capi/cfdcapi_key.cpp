@@ -56,6 +56,8 @@ namespace capi {
 static constexpr size_t kPrivkeyWifUncompressSize = 51;
 //! prefix: GetMnemonicWordList
 constexpr const char* const kPrefixGetMnemonicWordList = "GetMnemonicList";
+//! prefix: CombinePubkey
+constexpr const char* const kPrefixCombinePubkey = "CombinePubkey";
 /**
  * @brief cfd-capi GetMnemonicWordList構造体.
  */
@@ -63,6 +65,15 @@ struct CfdCapiGetMnemonicWordList {
   char prefix[kPrefixLength];  //!< buffer prefix
   //! mnemonic word list
   std::vector<std::string>* wordlist;
+};
+
+/**
+ * @brief cfd-capi CfdCapiCombinePubkey構造体.
+ */
+struct CfdCapiCombinePubkey {
+  char prefix[kPrefixLength];  //!< buffer prefix
+  //! pubkey list
+  std::vector<std::string>* pubkey_list;
 };
 
 }  // namespace capi
@@ -73,6 +84,7 @@ struct CfdCapiGetMnemonicWordList {
 // =============================================================================
 // API
 using cfd::capi::AllocBuffer;
+using cfd::capi::CfdCapiCombinePubkey;
 using cfd::capi::CfdCapiGetMnemonicWordList;
 using cfd::capi::CheckBuffer;
 using cfd::capi::ConvertNetType;
@@ -80,6 +92,7 @@ using cfd::capi::CreateString;
 using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
 using cfd::capi::IsEmptyString;
+using cfd::capi::kPrefixCombinePubkey;
 using cfd::capi::kPrefixGetMnemonicWordList;
 using cfd::capi::kPrivkeyWifUncompressSize;
 using cfd::capi::SetLastError;
@@ -421,6 +434,412 @@ int CfdGetPubkeyFromPrivkey(
       key = api.GetPubkeyFromPrivkey(privkey, is_compressed);
     }
     *pubkey = CreateString(key);
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+CFDC_API int CfdCompressPubkey(
+    void* handle, const char* pubkey, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+
+    Pubkey key(pubkey);
+    *output = CreateString(key.Compress().GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdUncompressPubkey(
+    void* handle, const char* pubkey, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+
+    Pubkey key(pubkey);
+    *output = CreateString(key.Uncompress().GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdInitializeCombinePubkey(void* handle, void** combine_handle) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  CfdCapiCombinePubkey* buffer = nullptr;
+  try {
+    cfd::Initialize();
+    if (combine_handle == nullptr) {
+      warn(CFD_LOG_SOURCE, "combine handle is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. combine handle is null.");
+    }
+
+    buffer = static_cast<CfdCapiCombinePubkey*>(
+        AllocBuffer(kPrefixCombinePubkey, sizeof(CfdCapiCombinePubkey)));
+    buffer->pubkey_list = new std::vector<std::string>();
+    *combine_handle = buffer;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  if (buffer != nullptr) CfdFreeCombinePubkeyHandle(handle, buffer);
+  return result;
+}
+
+int CfdAddCombinePubkey(
+    void* handle, void* combine_handle, const char* pubkey) {
+  try {
+    cfd::Initialize();
+    CheckBuffer(combine_handle, kPrefixCombinePubkey);
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+
+    CfdCapiCombinePubkey* buffer =
+        static_cast<CfdCapiCombinePubkey*>(combine_handle);
+    if (buffer->pubkey_list == nullptr) {
+      warn(CFD_LOG_SOURCE, "pubkey_list is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to parameter. pubkey_list is null.");
+    }
+    Pubkey key(pubkey);
+    buffer->pubkey_list->push_back(key.GetHex());
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+int CfdFinalizeCombinePubkey(
+    void* handle, void* combine_handle, char** output) {
+  try {
+    cfd::Initialize();
+    CheckBuffer(combine_handle, kPrefixCombinePubkey);
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+
+    CfdCapiCombinePubkey* buffer =
+        static_cast<CfdCapiCombinePubkey*>(combine_handle);
+    if ((buffer->pubkey_list == nullptr) || buffer->pubkey_list->empty()) {
+      warn(CFD_LOG_SOURCE, "pubkey_list is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to parameter. pubkey_list is null or empty.");
+    }
+    std::vector<Pubkey> key_list;
+    key_list.reserve(buffer->pubkey_list->size());
+    for (const auto& pubkey : *buffer->pubkey_list) {
+      key_list.emplace_back(pubkey);
+    }
+    Pubkey key = Pubkey::CombinePubkey(key_list);
+    *output = CreateString(key.GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+int CfdFreeCombinePubkeyHandle(void* handle, void* combine_handle) {
+  try {
+    cfd::Initialize();
+    if (combine_handle != nullptr) {
+      CfdCapiCombinePubkey* combine_struct =
+          static_cast<CfdCapiCombinePubkey*>(combine_handle);
+      if (combine_struct->pubkey_list != nullptr) {
+        delete combine_struct->pubkey_list;
+        combine_struct->pubkey_list = nullptr;
+      }
+    }
+    FreeBuffer(
+        combine_handle, kPrefixCombinePubkey, sizeof(CfdCapiCombinePubkey));
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+int CfdPubkeyTweakAdd(
+    void* handle, const char* pubkey, const char* tweak, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+    if (IsEmptyString(tweak)) {
+      warn(CFD_LOG_SOURCE, "tweak is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak is null or empty.");
+    }
+
+    Pubkey key(pubkey);
+    ByteData256 tweak_data(tweak);
+    *output = CreateString(key.CreateTweakAdd(tweak_data).GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdPubkeyTweakMul(
+    void* handle, const char* pubkey, const char* tweak, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+    if (IsEmptyString(tweak)) {
+      warn(CFD_LOG_SOURCE, "tweak is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak is null or empty.");
+    }
+
+    Pubkey key(pubkey);
+    ByteData256 tweak_data(tweak);
+    *output = CreateString(key.CreateTweakMul(tweak_data).GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdNegatePubkey(void* handle, const char* pubkey, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+
+    Pubkey key(pubkey);
+    *output = CreateString(key.CreateNegate().GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdPrivkeyTweakAdd(
+    void* handle, const char* privkey, const char* tweak, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(privkey)) {
+      warn(CFD_LOG_SOURCE, "privkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. privkey is null or empty.");
+    }
+    if (IsEmptyString(tweak)) {
+      warn(CFD_LOG_SOURCE, "tweak is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak is null or empty.");
+    }
+
+    Privkey key(privkey);
+    ByteData256 tweak_data(tweak);
+    *output = CreateString(key.CreateTweakAdd(tweak_data).GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdPrivkeyTweakMul(
+    void* handle, const char* privkey, const char* tweak, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(privkey)) {
+      warn(CFD_LOG_SOURCE, "privkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. privkey is null or empty.");
+    }
+    if (IsEmptyString(tweak)) {
+      warn(CFD_LOG_SOURCE, "tweak is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak is null or empty.");
+    }
+
+    Privkey key(privkey);
+    ByteData256 tweak_data(tweak);
+    *output = CreateString(key.CreateTweakMul(tweak_data).GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdNegatePrivkey(void* handle, const char* privkey, char** output) {
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (IsEmptyString(privkey)) {
+      warn(CFD_LOG_SOURCE, "privkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. privkey is null or empty.");
+    }
+
+    Privkey key(privkey);
+    *output = CreateString(key.CreateNegate().GetHex());
 
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {

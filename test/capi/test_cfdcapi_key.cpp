@@ -256,6 +256,258 @@ TEST(cfdcapi_key, PrivkeyAndPubkeyTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_key, CompressUncompressTest) {
+  const char* key_uncompressed = "076468efc14b8512007bb720d6e7d4217a6686095a79b57e50dd48355110422955400e1a8f159b5dcea116049d09eb756b80d52aeaabb195b343cf713f62f01a73";
+  const char* ext_key_uncompressed = "046468efc14b8512007bb720d6e7d4217a6686095a79b57e50dd48355110422955400e1a8f159b5dcea116049d09eb756b80d52aeaabb195b343cf713f62f01a73";
+  const char* ext_key_compressed = "036468efc14b8512007bb720d6e7d4217a6686095a79b57e50dd48355110422955";
+
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+
+  ret = CfdCompressPubkey(handle, key_uncompressed, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(ext_key_compressed, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdUncompressPubkey(handle, ext_key_compressed, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(ext_key_uncompressed, output);
+    CfdFreeStringBuffer(output);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_key, CombinePubkeysTest1) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  void* combine_handle = nullptr;
+  ret = CfdInitializeCombinePubkey(handle, &combine_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    ret = CfdAddCombinePubkey(handle, combine_handle,
+        "03662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddCombinePubkey(handle, combine_handle,
+        "0261e37f277f02a977b4f11eb5055abab4990bbf8dee701119d88df382fcc1fafe");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdFinalizeCombinePubkey(handle, combine_handle, &output);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("022a66efd1ea9b1ad3acfcc62a5ce8c756fa6fc3917fce3d4952a8701244ed1049", output);
+      CfdFreeStringBuffer(output);
+    }
+
+    ret = CfdFreeCombinePubkeyHandle(handle, combine_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_key, CombinePubkeysTest2) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  void* combine_handle = nullptr;
+  ret = CfdInitializeCombinePubkey(handle, &combine_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    ret = CfdAddCombinePubkey(handle, combine_handle,
+        "03662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddCombinePubkey(handle, combine_handle,
+        "0261e37f277f02a977b4f11eb5055abab4990bbf8dee701119d88df382fcc1fafe");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddCombinePubkey(handle, combine_handle,
+        "022a66efd1ea9b1ad3acfcc62a5ce8c756fa6fc3917fce3d4952a8701244ed1049");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddCombinePubkey(handle, combine_handle,
+        "026356a05be3fcf52a57e133b7fb1cdb52a1bf14ef43f7d053e79b2ac98d5c2dd3");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdFinalizeCombinePubkey(handle, combine_handle, &output);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("03a5ba2faabc8966bb1b1525f5ecbd0205b357a70d8a26446224c92fffeb1ac8ca", output);
+      CfdFreeStringBuffer(output);
+    }
+
+    ret = CfdFreeCombinePubkeyHandle(handle, combine_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_key, PubkeyTweakConversionTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  const char* pubkey = "03662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9";
+  const char* tweak = "98430d10471cf697e2661e31ceb8720750b59a85374290e175799ba5dd06508e";
+
+  // test for adding tweak
+  {
+    char* tweak_added = nullptr;
+    ret = CfdPubkeyTweakAdd(handle, pubkey, tweak, &tweak_added);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(tweak_added, "02b05cf99a2f556177a38f5108445472316e87eb4f5b243d79d7e5829d3d53babc");
+      CfdFreeStringBuffer(tweak_added);
+    }
+  }
+
+  // test for multiplying tweak
+  {
+    char* tweak_mul = nullptr;
+
+    ret = CfdPubkeyTweakMul(handle, pubkey, tweak, &tweak_mul);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(tweak_mul, "0305d10e760a529d0523e98892d2deff59b91593a0d670bd82271cfa627c9e7e18");
+      CfdFreeStringBuffer(tweak_mul);
+    }
+  }
+
+  {
+    char* negate = nullptr;
+
+    ret = CfdNegatePubkey(handle, pubkey, &negate);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(negate, "02662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9");
+      CfdFreeStringBuffer(negate);
+    }
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_key, PrivkeyTweakConversionTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  const char* privkey = "036b13c5a0dd9935fe175b2b9ff86585c231e734b2148149d788a941f1f4f566";
+  const char* tweak = "98430d10471cf697e2661e31ceb8720750b59a85374290e175799ba5dd06508e";
+
+  // test for adding tweak
+  {
+    char* priv_tweak_added = nullptr;
+    ret = CfdPrivkeyTweakAdd(handle, privkey, tweak, &priv_tweak_added);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(priv_tweak_added, "9bae20d5e7fa8fcde07d795d6eb0d78d12e781b9e957122b4d0244e7cefb45f4");
+      CfdFreeStringBuffer(priv_tweak_added);
+    }
+  }
+
+  // test for multiplying tweak
+  {
+    char* priv_tweak_mul = nullptr;
+
+    ret = CfdPrivkeyTweakMul(handle, privkey, tweak, &priv_tweak_mul);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(priv_tweak_mul, "aa71b12accba23b49761a7521e661f07a7e5742ac48cf708b8f9497b3a72a957");
+      CfdFreeStringBuffer(priv_tweak_mul);
+    }
+  }
+
+  {
+    char* negate = nullptr;
+
+    ret = CfdNegatePrivkey(handle, privkey, &negate);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(negate, "fc94ec3a5f2266ca01e8a4d460079a78f87cf5b1fd341ef1e849b54ade414bdb");
+      CfdFreeStringBuffer(negate);
+    }
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+
 TEST(cfdcapi_key, ExtkeyTest) {
   void* handle = NULL;
   int ret = CfdCreateHandle(&handle);
