@@ -45,6 +45,73 @@ CFDC_API int CfdCalculateEcSignature(
     int network_type, bool has_grind_r, char** signature);
 
 /**
+ * @brief Verify if a signature with respect to a public key and a message.
+ * @param[in] handle          cfd handle.
+ * @param[in] sighash         The signature hash.
+ * @param[in] pubkey          The public key to verify the signature against.
+ * @param[in] signature       The 64byte signature to verify.
+ * @return true if the signature is valid, false if not.
+ */
+CFDC_API int CfdVerifyEcSignature(
+    void* handle, const char* sighash, const char* pubkey,
+    const char* signature);
+
+/**
+ * @brief calcurate schnorr signature.
+ * @param[in] handle          cfd handle.
+ * @param[in] oracle_privkey  oracle privkey hex.
+ * @param[in] k_value         k-value(privkey).
+ * @param[in] message         32byte message data.
+ * @param[out] signature      signature.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCalculateSchnorrSignature(
+    void* handle, const char* oracle_privkey, const char* k_value,
+    const char* message, char** signature);
+
+/**
+ * @brief calcurate schnorr signature with nonce.
+ * @param[in] handle          cfd handle.
+ * @param[in] oracle_privkey  oracle privkey hex.
+ * @param[in] k_value         k-value(privkey).
+ * @param[in] message         32byte message data.
+ * @param[out] signature      signature.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCalculateSchnorrSignatureWithNonce(
+    void* handle, const char* oracle_privkey, const char* k_value,
+    const char* message, char** signature);
+
+/**
+ * @brief Verify if a signature with respect to a public key and a message.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          The public key to verify the signature against.
+ * @param[in] signature       The 64byte signature to verify.
+ * @param[in] message         The 32byte message to sign.
+ * @return true if the signature is valid, false if not.
+ */
+CFDC_API int CfdVerifySchnorrSignature(
+    void* handle, const char* pubkey, const char* signature,
+    const char* message);
+
+/**
+ * @brief Verify if a signature with respect to a public key and a message.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          The public key to verify the signature against.
+ * @param[in] nonce           The nonce.
+ * @param[in] signature       The 32byte signature to verify.
+ * @param[in] message         The 32byte message to sign.
+ * @return true if the signature is valid, false if not.
+ */
+CFDC_API int CfdVerifySchnorrSignatureWithNonce(
+    void* handle, const char* pubkey, const char* nonce, const char* signature,
+    const char* message);
+
+/**
  * @brief encode ec signature by der encoding.
  * @param[in] handle                  cfd handle.
  * @param[in] signature               compact signature string.
@@ -300,6 +367,33 @@ CFDC_API int CfdPrivkeyTweakMul(
  */
 CFDC_API int CfdNegatePrivkey(
     void* handle, const char* privkey, char** output);
+
+/**
+ * @brief function for schnorr public key.
+ * @param[in] handle          cfd handle.
+ * @param[in] oracle_pubkey   the public key of the oracle.
+ * @param[in] oracle_r_point  the R point for the event.
+ * @param[in] message         the message for the outcome.
+ * @param[out] output         schnorr public key hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetSchnorrPubkey(
+    void* handle, const char* oracle_pubkey, const char* oracle_r_point,
+    const char* message, char** output);
+
+/**
+ * @brief get schnorr public nonce.
+ * @param[in] handle          cfd handle.
+ * @param[in] privkey         privkey hex.
+ * @param[out] nonce          public nonce hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetSchnorrPublicNonce(
+    void* handle, const char* privkey, char** nonce);
 
 /**
  * @brief create extkey from seed.
