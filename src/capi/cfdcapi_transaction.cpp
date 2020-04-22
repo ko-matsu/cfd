@@ -2053,7 +2053,6 @@ int CfdAddTargetAmountForFundRawTx(
     }
 
     CfdCapiFundTargetAmount object;
-    memset(&object, 0, sizeof(object));
     object.amount = amount;
     object.reserved_address = reserved_address;
     if (!IsEmptyString(asset)) {
