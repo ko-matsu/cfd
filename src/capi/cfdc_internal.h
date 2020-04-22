@@ -169,6 +169,20 @@ CFDC_API bool IsElementsNetType(int network_type);
 CFDC_API cfd::core::AddressType ConvertHashToAddressType(int hash_type);
 
 /**
+ * @brief convert to address type.
+ * @param[in] address_type  address type.
+ * @return AddressType
+ */
+CFDC_API cfd::core::AddressType ConvertAddressType(int address_type);
+
+/**
+ * @brief get witness version.
+ * @param[in] hash_type  hash type.
+ * @return WitnessVersion
+ */
+CFDC_API cfd::core::WitnessVersion GetWitnessVersion(int hash_type);
+
+/**
  * @brief is empty string.
  * @param[in] message  string text.
  * @retval true   empty string

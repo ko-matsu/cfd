@@ -8,6 +8,12 @@
 #include "cfdc/cfdcapi_address.h"
 #include "capi/cfdc_internal.h"
 #include "cfdcore/cfdcore_exception.h"
+#include "cfdcore/cfdcore_key.h"
+#include "cfdcore/cfdcore_util.h"
+
+using cfd::core::HashUtil;
+using cfd::core::StringUtil;
+using cfd::core::Privkey;
 
 /**
  * @brief testing class.
@@ -708,6 +714,186 @@ TEST(cfdcapi_key, MnemonicTest) {
     CfdFreeStringBuffer(str_buffer);
     str_buffer = NULL;
   }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_key, CombineMultipleMessages) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  constexpr uint32_t kOracleNum = 3;
+  // Arrange
+  Privkey oracle_privkey_obj(
+      "0000000000000000000000000000000000000000000000000000000000000001");
+  std::string oracle_privkey_str = oracle_privkey_obj.GetHex();
+  const char* oracle_privkey = oracle_privkey_str.c_str();
+  std::string oracle_pubkey_str = oracle_privkey_obj.GeneratePubkey().GetHex();
+  const char* oracle_pubkey = oracle_pubkey_str.c_str();
+  const char* oracle_k_values[] = {
+      "0000000000000000000000000000000000000000000000000000000000000002",
+      "0000000000000000000000000000000000000000000000000000000000000003",
+      "0000000000000000000000000000000000000000000000000000000000000004"};
+  char* oracle_r_points[kOracleNum];
+  std::vector<std::string> messages = {"W", "I", "N"};
+  Privkey local_fund_privkey_obj(
+      "0000000000000000000000000000000000000000000000000000000000000006");
+  std::string local_fund_privkey_str = local_fund_privkey_obj.GetHex();
+  const char* local_fund_privkey = local_fund_privkey_str.c_str();
+  std::string local_fund_pubkey_str = local_fund_privkey_obj.GeneratePubkey().GetHex();
+  const char* local_fund_pubkey = local_fund_pubkey_str.c_str();
+
+  Privkey local_sweep_privkey_obj(
+      "0000000000000000000000000000000000000000000000000000000000000006");
+  // std::string local_sweep_privkey_str = local_sweep_privkey_obj.GetHex();
+  // const char* local_sweep_privkey = local_sweep_privkey_str.c_str();
+  std::string local_sweep_pubkey_str = local_sweep_privkey_obj.GeneratePubkey().GetHex();
+  // const char* local_sweep_pubkey = local_sweep_pubkey_str.c_str();
+
+  auto combine_func = [](void* handle, const char* src, const char* dst, char** output) -> int {
+    void* combine_handle = nullptr;
+    int ret = CfdInitializeCombinePubkey(handle, &combine_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret != kCfdSuccess) return ret;
+
+    ret = CfdAddCombinePubkey(handle, combine_handle, src);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      ret = CfdAddCombinePubkey(handle, combine_handle, dst);
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+    if (ret == kCfdSuccess) {
+      ret = CfdFinalizeCombinePubkey(handle, combine_handle, output);
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+    CfdFreeCombinePubkeyHandle(handle, combine_handle);
+    return ret;
+  };
+
+  memset(oracle_r_points, 0, sizeof(oracle_r_points));
+  for (uint32_t i = 0; i < kOracleNum; ++i) {
+    ret = CfdGetSchnorrPublicNonce(handle, oracle_k_values[i], &oracle_r_points[i]);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret != kCfdSuccess) break;
+  }
+
+  // Act
+  char* signatures[kOracleNum];
+  memset(signatures, 0, sizeof(signatures));
+  if (ret == kCfdSuccess) {
+    for (uint32_t i = 0; i < kOracleNum; ++i) {
+      auto hash = HashUtil::Sha256(messages[i]).GetHex();
+      ret = CfdCalculateSchnorrSignatureWithNonce(
+          handle, oracle_privkey, oracle_k_values[i], hash.c_str(), &signatures[i]);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret != kCfdSuccess) break;
+    }
+  }
+
+  char* pubkeys[kOracleNum];
+  memset(pubkeys, 0, sizeof(pubkeys));
+  if (ret == kCfdSuccess) {
+    for (uint32_t i = 0; i < kOracleNum; ++i) {
+      auto hash = HashUtil::Sha256(messages[i]).GetHex();
+      ret = CfdGetSchnorrPubkey(handle, oracle_pubkey,
+          oracle_r_points[i], hash.c_str(), &pubkeys[i]);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret != kCfdSuccess) break;
+    }
+  }
+
+  char* committed_key = nullptr;
+  char* combine_pubkey = nullptr;
+  char* combined_pubkey = nullptr;
+  if (ret == kCfdSuccess) {
+    void* combine_handle = nullptr;
+    ret = CfdInitializeCombinePubkey(handle, &combine_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      for (uint32_t i = 0; i < kOracleNum; ++i) {
+        ret = CfdAddCombinePubkey(handle, combine_handle, pubkeys[i]);
+        EXPECT_EQ(kCfdSuccess, ret);
+        if (ret != kCfdSuccess) break;
+      }
+      if (ret == kCfdSuccess) {
+        ret = CfdFinalizeCombinePubkey(handle, combine_handle, &committed_key);
+        EXPECT_EQ(kCfdSuccess, ret);
+      }
+      CfdFreeCombinePubkeyHandle(handle, combine_handle);
+    }
+  }
+  if (ret == kCfdSuccess) {
+    // auto committed_key = pubkey;
+    ret = combine_func(handle, local_fund_pubkey, committed_key, &combine_pubkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+  char* hash_pubkey = nullptr;
+  if (ret == kCfdSuccess) {
+    //auto hashPub = Privkey(HashUtil::Sha256(local_sweep_pubkey.GetData()))
+    //  .GeneratePubkey();
+    std::string privkey_str = HashUtil::Sha256(StringUtil::StringToByte(local_sweep_pubkey_str)).GetHex();
+    ret = CfdGetPubkeyFromPrivkey(
+    handle, privkey_str.c_str(), nullptr, true, &hash_pubkey);
+  }
+  if (ret == kCfdSuccess) {
+    ret = combine_func(handle, combine_pubkey, hash_pubkey, &combined_pubkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+  CfdFreeStringBuffer(hash_pubkey);
+  CfdFreeStringBuffer(committed_key);
+  CfdFreeStringBuffer(combine_pubkey);
+
+  // auto tweak_priv = DlcUtil::GetTweakedPrivkey(signatures, local_fund_privkey,
+  //                                              local_sweep_pubkey);
+  char* tweaked_key = nullptr;
+  if (ret == kCfdSuccess) {
+    const char* target_tweaked_key = local_fund_privkey;
+    char* temp_tweaked_key = nullptr;
+    for (uint32_t i = 0; i < kOracleNum; ++i) {
+      ret = CfdPrivkeyTweakAdd(
+          handle, target_tweaked_key, signatures[i], &temp_tweaked_key);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret != kCfdSuccess) break;
+      if (tweaked_key != nullptr) {
+        CfdFreeStringBuffer(tweaked_key);
+        tweaked_key = nullptr;
+      }
+      tweaked_key = temp_tweaked_key;
+      target_tweaked_key = temp_tweaked_key;
+    }
+  }
+
+  char* tweak_priv = nullptr;
+  if (ret == kCfdSuccess) {
+    auto hashstr = HashUtil::Sha256(StringUtil::StringToByte(local_sweep_pubkey_str)).GetHex();
+    ret = CfdPrivkeyTweakAdd(handle, tweaked_key, hashstr.c_str(), &tweak_priv);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  char* tweak_pub = nullptr;
+  if (ret == kCfdSuccess) {
+    ret = CfdGetPubkeyFromPrivkey(
+        handle, tweak_priv, nullptr, true, &tweak_pub);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      // Assert
+      EXPECT_STREQ(tweak_pub, combined_pubkey);
+    }
+  }
+
+  for (uint32_t i = 0; i < kOracleNum; ++i) {
+    CfdFreeStringBuffer(oracle_r_points[i]);
+    CfdFreeStringBuffer(signatures[i]);
+    CfdFreeStringBuffer(pubkeys[i]);
+  }
+
+  CfdFreeStringBuffer(combined_pubkey);
+  CfdFreeStringBuffer(tweaked_key);
+  CfdFreeStringBuffer(tweak_priv);
+  CfdFreeStringBuffer(tweak_pub);
 
   ret = CfdFreeHandle(handle);
   EXPECT_EQ(kCfdSuccess, ret);
