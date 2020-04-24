@@ -69,11 +69,13 @@ ByteData LedgerApi::Serialize(
         txin.GetInflationKeys().IsEmpty()) {
       issuance->Push(ByteData("00"));
     } else {
+      ByteData asset = txin.GetIssuanceAmount().GetData();
+      if (asset.IsEmpty()) asset = ByteData("00");
+      ByteData token = txin.GetInflationKeys().GetData();
+      if (token.IsEmpty()) token = ByteData("00");
       ByteData issuance_bytes;
       issuance_bytes = issuance_bytes.Concat(
-          txin.GetBlindingNonce(), txin.GetAssetEntropy(),
-          txin.GetIssuanceAmount().GetData(),
-          txin.GetInflationKeys().GetData());
+          txin.GetBlindingNonce(), txin.GetAssetEntropy(), asset, token);
       issuance->Push(issuance_bytes);
     }
     return txin_bytes;
