@@ -353,7 +353,7 @@ int CfdFinalizeCoinSelection(
     Amount utxo_fee_value;
     CoinSelection select_object;
     UtxoFilter filter;
-    Amount tx_fee_value;
+    Amount tx_fee_value(buffer->tx_fee_amount);
     std::vector<Utxo> utxo_list;
     if (buffer->is_elements) {
 #ifndef CFD_DISABLE_ELEMENTS
