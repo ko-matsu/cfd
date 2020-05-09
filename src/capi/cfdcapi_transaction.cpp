@@ -1879,7 +1879,7 @@ int CfdInitializeFundRawTx(
           "Failed to parameter. network type is not bitcoin.");
     }
     obj.is_blind = false;
-    obj.long_term_fee_rate = (obj.is_elements) ? 0.115 : 20.0;
+    obj.long_term_fee_rate = (obj.is_elements) ? 0.15 : 20.0;
     obj.dust_fee_rate = 3.0;
     obj.knapsack_min_change = -1;
 
