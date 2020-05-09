@@ -1232,6 +1232,7 @@ int CfdVerifyTxSign(
       ConfidentialTransactionContext tx(tx_hex);
       if (!IsEmptyString(value_bytedata)) {
         utxo.value_commitment = ConfidentialValue(value_bytedata);
+        utxos[0] = utxo;
       }
       tx.GetTxInIndex(outpoint);
       tx.CollectInputUtxo(utxos);
