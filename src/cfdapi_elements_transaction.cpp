@@ -755,7 +755,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
         // At the time of reissuance, add to map if it is not registered asset.
         txin_amount_map.emplace(asset, txin.GetIssuanceAmount().GetAmount());
       } else {
-        // At the time of reissuance, add to map if it is not registered asset of utxo.
+        // At the time of reissuance,
+        // add to map if it is not registered asset of utxo.
         OutPoint outpoint(txin.GetTxid(), txin.GetVout());
         std::vector<OutPoint>& outpoint_list = asset_utxo_map[asset];
         if (std::find(outpoint_list.begin(), outpoint_list.end(), outpoint) ==
