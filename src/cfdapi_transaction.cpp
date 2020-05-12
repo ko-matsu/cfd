@@ -2,8 +2,7 @@
 /**
  * @file cfdapi_transaction.cpp
  *
- * @brief \~english implementation file for transaction operation that uses cfd-api
- *   \~japanese cfd-apiで利用するTransaction作成の実装ファイル
+ * @brief implementation file for transaction operation that uses cfd-api
  */
 
 #include <algorithm>
@@ -44,7 +43,7 @@ using cfd::core::logger::info;
 using cfd::core::logger::warn;
 
 // -----------------------------------------------------------------------------
-// ファイル内関数
+// In-file function
 // -----------------------------------------------------------------------------
 /**
    * @brief Create a TransactionController object.
@@ -85,7 +84,7 @@ TransactionController TransactionApi::AddRawTransaction(
   const uint32_t kDisableLockTimeSequence =
       TransactionController::GetLockTimeDisabledSequence();
   for (TxIn txin : txins) {
-    // TxInのunlocking_scriptは空で作成
+    // TxIn unlocking_script make be empty.
     if (kDisableLockTimeSequence == txin.GetSequence()) {
       txc.AddTxIn(txin.GetTxid(), txin.GetVout(), txc.GetDefaultSequence());
     } else {
@@ -334,6 +333,22 @@ TransactionController TransactionApi::FundRawTransaction(
     }
   }
 
+  std::vector<UtxoData> utxodata_list;
+  utxodata_list.reserve(utxos.size());
+  for (const auto& utxo : utxos) {
+    bool isFind = false;
+    for (const auto& txin : txin_list) {
+      if ((txin.GetTxid().Equals(utxo.txid)) &&
+          (utxo.vout == txin.GetVout())) {
+        isFind = true;
+        break;
+      }
+    }
+    if (!isFind) {
+      utxodata_list.push_back(utxo);
+    }
+  }
+
   Amount fee;
   if (option.GetEffectiveFeeBaserate() != 0) {
     fee = EstimateFee(
@@ -361,7 +376,7 @@ TransactionController TransactionApi::FundRawTransaction(
 
   // execute coinselection
   CoinApi coin_api;
-  std::vector<Utxo> utxo_list = UtxoUtil::ConvertToUtxo(utxos);
+  std::vector<Utxo> utxo_list = UtxoUtil::ConvertToUtxo(utxodata_list);
   Amount txin_total_amount = txin_amount;
   std::vector<Utxo> selected_coins;
   if (target_amount > 0 || fee > 0) {
@@ -406,7 +421,7 @@ TransactionController TransactionApi::FundRawTransaction(
       for (const Utxo& coin : selected_coins) {
         memcpy(txid_bytes.data(), coin.txid, txid_bytes.size());
         txid = Txid(ByteData256(txid_bytes));
-        for (const UtxoData& utxo : utxos) {
+        for (const UtxoData& utxo : utxodata_list) {
           if (txid.Equals(utxo.txid) && (coin.vout == utxo.vout)) {
             new_selected_utxos.push_back(utxo);
             break;

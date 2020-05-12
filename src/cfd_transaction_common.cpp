@@ -102,6 +102,7 @@ void UtxoUtil::ConvertToUtxo(
         std::vector<AddressFormatData> elements_prefixes =
             cfd::core::GetElementsAddressFormatList();
         addr_prefixes = elements_prefixes;
+        net_type = NetType::kLiquidV1;
       }
 #endif  // CFD_DISABLE_ELEMENTS
       if (!utxo_data.address.GetAddress().empty()) {
