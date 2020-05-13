@@ -801,6 +801,11 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           CfdError::kCfdIllegalArgumentError, "Empty fee asset.");
     }
     use_fee = true;
+    std::string asset = fee_asset.GetHex();
+    if (std::find(asset_list.begin(), asset_list.end(), asset) ==
+        asset_list.end()) {
+      asset_list.push_back(asset);  // insert fee asset
+    }
     // feeの存在確認と、fee領域の確保
     if (fee_index == -1) {
       // txoutにfee追加
@@ -818,36 +823,32 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   // ** fee assetは誤差を少なくする為fee以外のtxoutを追加してから計算する **
   std::map<std::string, Amount> target_values = map_target_value;
   std::map<std::string, Amount> select_require_values;
-  Amount fee_asset_target_value;
   for (auto& asset : asset_list) {
     if (target_values.find(asset) == target_values.end()) {
       continue;
     }
     bool is_fee_asset = (asset == fee_asset.GetHex());
+    if (use_fee && is_fee_asset) {
+      continue;
+    }
     Amount txin_amount = txin_amount_map[asset];
     Amount tx_amount = tx_amount_map[asset];
     Amount target_value = target_values[asset];
     Amount diff_amount = Amount();
-    if (use_fee && is_fee_asset) {
-      tx_amount += fee;
-    }
 
     if (txin_amount > tx_amount) {
       diff_amount = txin_amount - tx_amount;
       if (diff_amount < target_value) {
         // txinの余剰分でtarget分が満たされない場合、満たされない分をコインセレクト
         target_value -= diff_amount;
+      } else {
+        target_value = Amount(0);  // 不足分がない場合はtxinから全額補う
       }
     } else if (txin_amount < tx_amount) {
       // txoutの不足分を計算
       diff_amount = tx_amount - txin_amount;
       // txoutの不足分を合わせてコインセレクト
       target_value += diff_amount;
-    }
-    if (use_fee && is_fee_asset) {
-      // fee assetであった場合は、CoinSelectionの対象から除外
-      fee_asset_target_value = target_value;
-      continue;
     }
     if (target_value != 0) {
       select_require_values[asset] = target_value;
@@ -1002,10 +1003,40 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           "Failed to FundRawTransaction. "
           "Input address and network is unmatch.");
     }
+    Amount fee_asset_target_value;
+    {
+      Amount txin_amount;
+      Amount tx_amount;
+      Amount target_value;
+      if (txin_amount_map.find(fee_asset_str) != txin_amount_map.end()) {
+        txin_amount = txin_amount_map[fee_asset_str];
+      }
+      if (tx_amount_map.find(fee_asset_str) != tx_amount_map.end()) {
+        tx_amount = tx_amount_map[fee_asset_str];
+      }
+      if (target_values.find(fee_asset_str) != target_values.end()) {
+        target_value = target_values[fee_asset_str];
+      }
+      Amount diff_amount;
+      if (txin_amount > tx_amount) {
+        diff_amount = txin_amount - tx_amount;
+        if (diff_amount < target_value) {
+          // txinの余剰分でtarget分が満たされない場合、満たされない分をコインセレクト
+          target_value -= diff_amount;
+        } else {
+          target_value = Amount();  // 不足分がない場合はtxinから全額補う
+        }
+      } else if (txin_amount < tx_amount) {
+        // txoutの不足分を計算
+        diff_amount = tx_amount - txin_amount;
+        // txoutの不足分を合わせてコインセレクト
+        target_value += diff_amount;
+      }
+      fee_asset_target_value = target_value;
+    }
 
     Amount new_fee;
-    // Tx更新があった場合、fee再計算
-    if (append_txout_amount_map.size() > 0) {
+    {
       // dummyのtx作成
       ConfidentialTransactionContext txc_dummy(ctxc.GetHex());
       // fee再計算用に選択済みUTXO情報をElements用Utxoに再設定
@@ -1030,7 +1061,6 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
           is_blind_estimate_fee, option.GetEffectiveFeeBaserate());
 
-      fee_asset_target_value -= fee;
       fee_asset_target_value += new_fee;
     }
 
