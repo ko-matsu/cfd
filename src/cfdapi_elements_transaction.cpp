@@ -843,7 +843,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
         // txinの余剰分でtarget分が満たされない場合、満たされない分をコインセレクト
         target_value -= diff_amount;
       } else {
-        target_value = Amount(0);  // 不足分がない場合はtxinから全額補う
+        target_value = Amount();  // 不足分がない場合はtxinから全額補う
         isForceCheck = true;  // CoinSelect対象として処理する必要あり
       }
     } else if (txin_amount < tx_amount) {
@@ -1039,7 +1039,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           is_blind_estimate_fee, option.GetEffectiveFeeBaserate());
       // add dummy txout（余剰額のTxOut追加考慮）
       txc_dummy.AddTxOut(
-          address, Amount(1), ConfidentialAssetId(fee_asset_str));
+          address, Amount(int64_t{0}), ConfidentialAssetId(fee_asset_str));
       fee = ElementsTransactionApi::EstimateFee(
           txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
           is_blind_estimate_fee, option.GetEffectiveFeeBaserate());
