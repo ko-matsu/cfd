@@ -1039,7 +1039,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           is_blind_estimate_fee, option.GetEffectiveFeeBaserate());
       // add dummy txout（余剰額のTxOut追加考慮）
       txc_dummy.AddTxOut(
-          address, Amount(int64_t{0}), ConfidentialAssetId(fee_asset_str));
+          address, Amount(1), ConfidentialAssetId(fee_asset_str));
       fee = ElementsTransactionApi::EstimateFee(
           txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
           is_blind_estimate_fee, option.GetEffectiveFeeBaserate());

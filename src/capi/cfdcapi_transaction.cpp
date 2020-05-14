@@ -300,7 +300,7 @@ int CfdInitializeTransaction(
     buffer = static_cast<CfdCapiCreateTransactionData*>(AllocBuffer(
         kPrefixCreateTxData, sizeof(CfdCapiCreateTransactionData)));
     buffer->net_type = net_type;
-    buffer->base_tx_hex = base_tx;
+    buffer->base_tx_hex = CreateString(base_tx);
     buffer->txin_list = new std::vector<CfdCapiTxInputData>();
     buffer->txout_list = new std::vector<CfdCapiTxOutputData>();
     *create_handle = buffer;
@@ -446,12 +446,12 @@ int CfdFinalizeTransaction(
     bool is_bitcoin = false;
     ConvertNetType(buffer->net_type, &is_bitcoin);
     if (is_bitcoin) {
-      TransactionContext tx(buffer->base_tx_hex);
+      TransactionContext tx(std::string(buffer->base_tx_hex));
       AddTxData(&tx, *buffer->txin_list, *buffer->txout_list);
       *tx_hex_string = CreateString(tx.GetHex());
     } else {
 #ifndef CFD_DISABLE_ELEMENTS
-      ConfidentialTransactionContext tx(buffer->base_tx_hex);
+      ConfidentialTransactionContext tx(std::string(buffer->base_tx_hex));
       AddConfidentialTxData(&tx, *buffer->txin_list, *buffer->txout_list);
       *tx_hex_string = CreateString(tx.GetHex());
 #else
@@ -485,6 +485,10 @@ int CfdFreeTransactionHandle(void* handle, void* create_handle) {
       if (create_tx_struct->txout_list != nullptr) {
         delete create_tx_struct->txout_list;
         create_tx_struct->txout_list = nullptr;
+      }
+      if (create_tx_struct->base_tx_hex != nullptr) {
+        free(create_tx_struct->base_tx_hex);
+        create_tx_struct->base_tx_hex = nullptr;
       }
     }
     FreeBuffer(
@@ -2005,6 +2009,7 @@ int CfdAddUtxoForFundRawTx(
     utxo.vout = vout;
     utxo.amount = Amount(amount);
     utxo.descriptor = std::string(descriptor);
+    utxo.address_type = AddressType::kP2shAddress;  // force init
     if (buffer->is_elements) {
 #ifndef CFD_DISABLE_ELEMENTS
       if (IsEmptyString(asset)) {

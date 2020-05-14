@@ -116,7 +116,7 @@ struct CfdCapiTxOutputData {
 struct CfdCapiCreateTransactionData {
   char prefix[kPrefixLength];                    //!< buffer prefix
   int net_type;                                  //!< network type
-  std::string base_tx_hex;                       //!< base tx hex
+  char* base_tx_hex;                             //!< base tx hex
   std::vector<CfdCapiTxInputData>* txin_list;    //!< txin list
   std::vector<CfdCapiTxOutputData>* txout_list;  //!< txout list
 };

@@ -116,6 +116,17 @@ TEST(cfdcapi_transaction, GetTransaction) {
       handle, kCfdNetworkMainnet, exp_tx, &txid, &wtxid, &size, &vsize,
       &weight, &version, &locktime);
   EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_EQ(800, size);
+  EXPECT_EQ(316, vsize);
+  EXPECT_EQ(1262, weight);
+  EXPECT_EQ(1, version);
+  EXPECT_EQ(0, locktime);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("27eae69aff1dd4388c0fa05cbbfe9a3983d1b0b5811ebcd4199b86f299370aac", txid);
+    EXPECT_STREQ("65dab5dd46a501fc695822c73d779067f2feb7c49dc47d39f86fdb2e3960b3bd", wtxid);
+    CfdFreeStringBuffer(txid);
+    CfdFreeStringBuffer(wtxid);
+  }
 
   char* txin_txid = nullptr;
   char* script_sig = nullptr;
@@ -497,12 +508,16 @@ TEST(cfdcapi_transaction, FundRawTransaction_BTC1) {
     EXPECT_EQ(1, append_txout_count);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ("0100000003fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff0ad4a335556c64c3e2599c3a4c3ddff5b28f616fa55cf2323d2ae642eef74a8f0000000000feffffff010b0000000000000000000000000000000000000000000000000000000000000000000000feffffff02202cb20600000000160014c6598809d09edaacb8f4f4d5b9b81e4413a5724388bcee03000000001600146cd31ad8b8552934f4bd9c8cf84a93cbd7a49de111000000", output_tx_hex);
+      CfdFreeStringBuffer(output_tx_hex);
     }
 
     char* address = nullptr;
     ret = CfdGetAppendTxOutFundRawTx(handle, fund_handle, 0, &address);
     EXPECT_EQ(kCfdSuccess, ret);
     EXPECT_STREQ("bc1qdnf34k9c255nfa9anjx0sj5ne0t6f80p72wpce", address);
+    if (ret == kCfdSuccess) {
+      CfdFreeStringBuffer(address);
+    }
   }
   ret = CfdFreeFundRawTxHandle(handle, fund_handle);
   EXPECT_EQ(kCfdSuccess, ret);
@@ -649,6 +664,7 @@ TEST(cfdcapi_transaction, FundRawTransaction_Asset1) {
     EXPECT_EQ(3, append_txout_count);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ("010000000006fff7f7881a8099afa6940d42d1e7f6362bec38171ea3edf433541db4e4ad969f0000000000feffffff0a9a33750a810cd384ca5d93b09513f1eb5d93c669091b29eef710d2391ff7300000000000feffffff0ad4a335556c64c3e2599c3a4c3ddff5b28f616fa55cf2323d2ae642eef74a8f0000000000feffffff030b0000000000000000000000000000000000000000000000000000000000000000000000feffffff020b0000000000000000000000000000000000000000000000000000000000000000000000feffffff010c0000000000000000000000000000000000000000000000000000000000000000000000feffffff050100000000000000000000000000000000000000000000000000000000000000aa010000000006b22c2000160014c6598809d09edaacb8f4f4d5b9b81e4413a572430100000000000000000000000000000000000000000000000000000000000000aa010000000000014c8000000100000000000000000000000000000000000000000000000000000000000000bb010000000014b18c12001600148aff8eea7bef9ec60d35d7034b2e48e180e93c5d0100000000000000000000000000000000000000000000000000000000000000cc0100000000023e8eb800160014799a8d3f11251b6a6df4ba156a28dd64ad969a910100000000000000000000000000000000000000000000000000000000000000aa010000000006fad72c001600146cd31ad8b8552934f4bd9c8cf84a93cbd7a49de111000000", output_tx_hex);
+      CfdFreeStringBuffer(output_tx_hex);
     }
 
     for (uint32_t index = 0; index < append_txout_count; ++index) {
