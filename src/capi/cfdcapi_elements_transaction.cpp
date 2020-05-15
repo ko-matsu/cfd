@@ -1045,6 +1045,47 @@ int CfdGetIssuanceBlindingKey(
   }
 }
 
+int CfdGetDefaultBlindingKey(
+    void* handle, const char* master_blinding_key,
+    const char* locking_script, char** blinding_key) {
+  try {
+    cfd::Initialize();
+    if (IsEmptyString(master_blinding_key)) {
+      warn(CFD_LOG_SOURCE, "master blinding key is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. master blinding key is null or empty.");
+    }
+    if (IsEmptyString(locking_script)) {
+      warn(CFD_LOG_SOURCE, "locking script is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. locking script is null or empty.");
+    }
+    if (blinding_key == nullptr) {
+      warn(CFD_LOG_SOURCE, "blinding key is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. blinding key is null.");
+    }
+
+    Privkey privkey = ElementsConfidentialAddress::GetBlindingKey(
+        Privkey(std::string(master_blinding_key)),
+        Script(std::string(locking_script)));
+    *blinding_key = CreateString(privkey.GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
 int CfdInitializeBlindTx(void* handle, void** blind_handle) {
   CfdCapiBlindTxData* buffer = nullptr;
   try {
