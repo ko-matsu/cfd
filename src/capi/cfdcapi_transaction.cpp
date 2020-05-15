@@ -17,7 +17,6 @@
 #include "cfd/cfd_elements_transaction.h"
 #include "cfd/cfd_transaction.h"
 #include "cfd/cfd_transaction_common.h"
-#include "cfd/cfdapi_coin.h"
 #include "cfd/cfdapi_elements_transaction.h"
 #include "cfd/cfdapi_key.h"
 #include "cfd/cfdapi_transaction.h"

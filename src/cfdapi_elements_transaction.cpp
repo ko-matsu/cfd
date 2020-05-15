@@ -532,16 +532,19 @@ Privkey ElementsTransactionApi::GetIssuanceBlindingKey(
 Amount ElementsTransactionApi::EstimateFee(
     const std::string& tx_hex, const std::vector<ElementsUtxoAndOption>& utxos,
     const ConfidentialAssetId& fee_asset, Amount* tx_fee, Amount* utxo_fee,
-    bool is_blind, double effective_fee_rate) const {
+    bool is_blind, double effective_fee_rate, int exponent,
+    int minimum_bits) const {
   uint64_t fee_rate = static_cast<uint64_t>(floor(effective_fee_rate * 1000));
   return EstimateFee(
-      tx_hex, utxos, fee_asset, tx_fee, utxo_fee, is_blind, fee_rate);
+      tx_hex, utxos, fee_asset, tx_fee, utxo_fee, is_blind, fee_rate, exponent,
+      minimum_bits);
 }
 
 Amount ElementsTransactionApi::EstimateFee(
     const std::string& tx_hex, const std::vector<ElementsUtxoAndOption>& utxos,
     const ConfidentialAssetId& fee_asset, Amount* tx_fee, Amount* utxo_fee,
-    bool is_blind, uint64_t effective_fee_rate) const {
+    bool is_blind, uint64_t effective_fee_rate, int exponent,
+    int minimum_bits) const {
   ConfidentialTransactionController txc(tx_hex);
 
   if (fee_asset.IsEmpty()) {
@@ -567,12 +570,13 @@ Amount ElementsTransactionApi::EstimateFee(
     txc.AddTxOutFee(Amount::CreateBySatoshiAmount(1), fee_asset);  // dummy fee
   }
 
-  uint32_t tx_vsize = txc.GetVsizeIgnoreTxIn(is_blind);
+  uint32_t tx_vsize = txc.GetVsizeIgnoreTxIn(is_blind, exponent, minimum_bits);
 
   uint32_t size = 0;
   uint32_t witness_size = 0;
   uint32_t wit_size = 0;
   uint32_t txin_size = 0;
+  uint32_t rangeproof_size_cache = 0;
   ElementsAddressApi address_api;
   for (const auto& utxo : utxos) {
     uint32_t pegin_btc_tx_size = 0;
@@ -602,10 +606,44 @@ Amount ElementsTransactionApi::EstimateFee(
     } else {
       redeem_script = utxo.utxo.redeem_script;
     }
+    const Script* scriptsig_template = nullptr;
+    if ((!redeem_script.IsEmpty()) &&
+        (!utxo.utxo.scriptsig_template.IsEmpty())) {
+      scriptsig_template = &utxo.utxo.scriptsig_template;
+    }
+    bool is_issuance = utxo.is_issuance;
+    bool is_reissuance = false;
+    bool is_blind_issuance = utxo.is_blind_issuance;
+    try {
+      auto ref = txc.GetTxIn(utxo.utxo.txid, utxo.utxo.vout);
+      if (utxo.is_issuance && utxo.is_blind_issuance) {
+        if ((!ref.GetAssetEntropy().IsEmpty()) &&
+            (!ref.GetBlindingNonce().IsEmpty())) {
+          is_reissuance = true;
+        }
+      } else if ((!utxo.is_issuance) && (!utxo.is_blind_issuance)) {
+        if (!ref.GetAssetEntropy().IsEmpty()) {
+          is_issuance = true;
+          is_blind_issuance = is_blind;
+          if (!ref.GetBlindingNonce().IsEmpty()) {
+            is_reissuance = true;
+            is_blind_issuance = true;
+          }
+        }
+      }
+      if ((!utxo.is_pegin) && (ref.GetPeginWitnessStackNum() >= 6)) {
+        std::vector<ByteData> pegin_stack = ref.GetPeginWitness().GetWitness();
+        pegin_btc_tx_size = pegin_stack[4].GetSerializeSize();
+        fedpeg_script = Script(pegin_stack[3]);
+      }
+    } catch (const CfdException& except) {
+      // do nothing
+    }
 
     ConfidentialTxIn::EstimateTxInSize(
         addr_type, redeem_script, pegin_btc_tx_size, fedpeg_script,
-        utxo.is_issuance, utxo.is_blind_issuance, &wit_size, &txin_size);
+        is_issuance, is_blind_issuance, &wit_size, &txin_size, is_reissuance,
+        scriptsig_template, exponent, minimum_bits, &rangeproof_size_cache);
     size += txin_size;
     witness_size += wit_size;
   }
@@ -649,6 +687,9 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     option.SetLongTermFeeBaserate(effective_fee_rate);
   }
   option.SetFeeAsset(fee_asset);
+  int exponent = 0;
+  int minimum_bits = 0;
+  option.GetBlindInfo(&exponent, &minimum_bits);
 
   ElementsAddressFactory addr_factory(net_type);
   if (prefix_list) {
@@ -814,7 +855,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     }
     fee = EstimateFee(
         ctxc.GetHex(), selected_txin_utxos, fee_asset, nullptr, nullptr,
-        is_blind_estimate_fee, option.GetEffectiveFeeBaserate());
+        is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
+        minimum_bits);
     if (estimate_fee) *estimate_fee = fee;
   }
 
@@ -858,9 +900,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   }
 
   // execute coinselection
-  CoinApi coin_api;
   CoinSelection coin_select;
-  std::vector<Utxo> utxo_list = coin_api.ConvertToUtxo(utxodata_list);
+  std::vector<Utxo> utxo_list = UtxoUtil::ConvertToUtxo(utxodata_list);
   std::map<std::string, Amount> amount_map;
   std::vector<Utxo> selected_coins;
   Amount utxo_fee;
@@ -1036,13 +1077,15 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
       }
       min_fee = ElementsTransactionApi::EstimateFee(
           txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
-          is_blind_estimate_fee, option.GetEffectiveFeeBaserate());
+          is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
+          minimum_bits);
       // add dummy txout（余剰額のTxOut追加考慮）
       txc_dummy.AddTxOut(
           address, Amount(1), ConfidentialAssetId(fee_asset_str));
       fee = ElementsTransactionApi::EstimateFee(
           txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
-          is_blind_estimate_fee, option.GetEffectiveFeeBaserate());
+          is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
+          minimum_bits);
     }
 
     Amount dust_amount = option.GetConfidentialDustFeeAmount(address);

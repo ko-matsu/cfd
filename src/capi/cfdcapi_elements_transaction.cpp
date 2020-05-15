@@ -16,7 +16,6 @@
 #include "cfd/cfd_elements_address.h"
 #include "cfd/cfd_elements_transaction.h"
 #include "cfd/cfd_transaction_common.h"
-#include "cfd/cfdapi_coin.h"
 #include "cfd/cfdapi_elements_transaction.h"
 #include "cfd/cfdapi_key.h"
 #include "cfdc/cfdcapi_common.h"
@@ -1046,8 +1045,8 @@ int CfdGetIssuanceBlindingKey(
 }
 
 int CfdGetDefaultBlindingKey(
-    void* handle, const char* master_blinding_key,
-    const char* locking_script, char** blinding_key) {
+    void* handle, const char* master_blinding_key, const char* locking_script,
+    char** blinding_key) {
   try {
     cfd::Initialize();
     if (IsEmptyString(master_blinding_key)) {

@@ -245,8 +245,13 @@ Amount TransactionApi::EstimateFee(
     } else {
       redeem_script = utxo.redeem_script;
     }
+    const Script* scriptsig_template = nullptr;
+    if ((!redeem_script.IsEmpty()) && (!utxo.scriptsig_template.IsEmpty())) {
+      scriptsig_template = &utxo.scriptsig_template;
+    }
 
-    TxIn::EstimateTxInSize(addr_type, redeem_script, &wit_size, &nowit_size);
+    TxIn::EstimateTxInSize(
+        addr_type, redeem_script, &wit_size, &nowit_size, scriptsig_template);
     size += nowit_size;
     witness_size += wit_size;
   }
@@ -375,7 +380,6 @@ TransactionController TransactionApi::FundRawTransaction(
   }
 
   // execute coinselection
-  CoinApi coin_api;
   std::vector<Utxo> utxo_list = UtxoUtil::ConvertToUtxo(utxodata_list);
   Amount txin_total_amount = txin_amount;
   std::vector<Utxo> selected_coins;

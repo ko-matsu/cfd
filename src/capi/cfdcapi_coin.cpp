@@ -16,7 +16,6 @@
 #include "cfd/cfd_elements_address.h"
 #include "cfd/cfd_utxo.h"
 #include "cfd/cfdapi_address.h"
-#include "cfd/cfdapi_coin.h"
 #include "cfd/cfdapi_elements_transaction.h"
 #include "cfd/cfdapi_transaction.h"
 #include "cfdc/cfdcapi_coin.h"
