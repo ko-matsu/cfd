@@ -221,7 +221,8 @@ void CoinSelectionOption::InitializeConfidentialTxSizeInfo() {
   ConfidentialTxOut ctxout(
       wpkh_script, ConfidentialAssetId(), ConfidentialValue());
   ConfidentialTxOutReference txout(ctxout);
-  change_output_size_ = txout.GetSerializeVsize(true);
+  change_output_size_ =
+      txout.GetSerializeVsize(true, exponent_, minimum_bits_);
   change_spend_size_ = ConfidentialTxIn::EstimateTxInVsize(
       AddressType::kP2wpkhAddress, Script(), 0, Script(), false, false);
 }

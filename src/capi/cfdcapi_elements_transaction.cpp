@@ -1100,9 +1100,9 @@ int CfdInitializeBlindTx(void* handle, void** blind_handle) {
         AllocBuffer(kPrefixBlindTxData, sizeof(CfdCapiBlindTxData)));
     buffer->txin_blind_keys = new std::vector<TxInBlindParameters>();
     buffer->txout_blind_keys = new std::vector<TxOutBlindKeys>();
-    buffer->minimum_range_value = 1;  // = 1,
-    buffer->exponent = 0;             // = 0
-    buffer->minimum_bits = 36;        // = 36(old)
+    buffer->minimum_range_value = 1;                 // = 1,
+    buffer->exponent = 0;                            // = 0
+    buffer->minimum_bits = cfd::capi::kMinimumBits;  // = 36(old)
 
     *blind_handle = buffer;
     return CfdErrorCode::kCfdSuccess;
@@ -1267,6 +1267,7 @@ int CfdAddBlindTxOutByAddress(
 
 int CfdSetBlindTxOption(
     void* handle, void* blind_handle, int key, int64_t value) {
+  int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
     CheckBuffer(blind_handle, kPrefixBlindTxData);
@@ -1291,14 +1292,13 @@ int CfdSetBlindTxOption(
 
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
-    return SetLastError(handle, except);
+    result = SetLastError(handle, except);
   } catch (const std::exception& std_except) {
     SetLastFatalError(handle, std_except.what());
-    return CfdErrorCode::kCfdUnknownError;
   } catch (...) {
     SetLastFatalError(handle, "unknown error.");
-    return CfdErrorCode::kCfdUnknownError;
   }
+  return result;
 }
 
 int CfdFinalizeBlindTx(

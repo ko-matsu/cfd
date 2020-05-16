@@ -1563,6 +1563,47 @@ TEST(cfdcapi_elements_transaction, CfdGetConfidentialValueHex) {
     char* str_buffer = NULL;
     ret = CfdGetLastErrorMessage(handle, &str_buffer);
     EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_elements_transaction, CfdGetDefaultBlindingKey) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  if (ret == kCfdSuccess) {
+    const char* master_blinding_key =
+        "881a1ab07e99ab0626b4d93b3dddfd16cbc04342ee71aab4da7093e7b853fd80";
+    // ert1q0zln07l8vgm5qf4jhzz00668lfs7xssdlxlysh
+    const char* locking_script = "001478bf37fbe762374026b2b884f7eb47fa61e3420d";
+
+    char* blinding_key = nullptr;
+    ret = CfdGetDefaultBlindingKey(
+        handle, master_blinding_key, locking_script, &blinding_key);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(
+          "95af1be4f929e182442c9f3aa55a3cacde69d1182677f3afd618cdfb4a588742",
+          blinding_key);
+      CfdFreeStringBuffer(blinding_key);
+    }
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
   }
 
   ret = CfdFreeHandle(handle);

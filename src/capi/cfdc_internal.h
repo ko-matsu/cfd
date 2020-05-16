@@ -50,6 +50,9 @@ using cfd::core::CfdException;
 constexpr const char* const kEmpty32Bytes =
     "0000000000000000000000000000000000000000000000000000000000000000";
 
+//! blinding minimum bits (current is old value)
+constexpr uint32_t kMinimumBits = 36;
+
 //! prefix size
 constexpr const uint32_t kPrefixLength = 16;
 //! prefix: handle data
