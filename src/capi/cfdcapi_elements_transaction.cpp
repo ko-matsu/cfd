@@ -1335,12 +1335,6 @@ int CfdFinalizeBlindTx(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. txin blind data is empty.");
     }
-    if (buffer->txout_blind_keys->empty()) {
-      warn(CFD_LOG_SOURCE, "txout blind data is empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. txout blind data is empty.");
-    }
 
     std::map<OutPoint, BlindParameter> utxo_info_map;
     std::map<OutPoint, IssuanceBlindingKeyPair> issuance_key_map;
