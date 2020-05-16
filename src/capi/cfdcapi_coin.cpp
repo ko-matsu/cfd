@@ -355,7 +355,9 @@ int CfdSetOptionCoinSelection(
         buffer->exponent = static_cast<int>(int64_value);
         break;
       case CfdCoinSelectionOption::kCfdCoinSelectionMinimumBits:
-        buffer->minimum_bits = static_cast<int>(int64_value);
+        if (int64_value >= 0) {
+          buffer->minimum_bits = static_cast<int>(int64_value);
+        }
         break;
       default:
         warn(
@@ -726,7 +728,9 @@ int CfdSetOptionEstimateFee(
         buffer->exponent = static_cast<int>(int64_value);
         break;
       case CfdEstimateFeeOption::kCfdEstimateFeeMinimumBits:
-        buffer->minimum_bits = static_cast<int>(int64_value);
+        if (int64_value >= 0) {
+          buffer->minimum_bits = static_cast<int>(int64_value);
+        }
         break;
       default:
         warn(

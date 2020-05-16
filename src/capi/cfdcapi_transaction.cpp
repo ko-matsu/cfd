@@ -2136,7 +2136,9 @@ int CfdSetOptionFundRawTx(
         buffer->exponent = static_cast<int>(int64_value);
         break;
       case kCfdFundTxBlindMinimumBits:
-        buffer->minimum_bits = static_cast<int>(int64_value);
+        if (int64_value >= 0) {
+          buffer->minimum_bits = static_cast<int>(int64_value);
+        }
         break;
       default:
         warn(CFD_LOG_SOURCE, "illegal key {}.", key);
