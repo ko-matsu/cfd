@@ -16,6 +16,7 @@
 #include "cfdcore/cfdcore_amount.h"
 #include "cfdcore/cfdcore_coin.h"
 #include "cfdcore/cfdcore_descriptor.h"
+#include "cfdcore/cfdcore_elements_transaction.h"
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_logger.h"
@@ -46,7 +47,12 @@ using cfd::core::ScriptUtil;
 using cfd::core::SigHashType;
 using cfd::core::SignatureUtil;
 using cfd::core::Txid;
+using cfd::core::TxIn;
 using cfd::core::logger::warn;
+
+#ifndef CFD_DISABLE_ELEMENTS
+using cfd::core::ConfidentialTxIn;
+#endif  // CFD_DISABLE_ELEMENTS
 
 // -----------------------------------------------------------------------------
 // Define
@@ -93,6 +99,7 @@ void UtxoUtil::ConvertToUtxo(
 
     // convert from descriptor
     std::vector<uint8_t> locking_script_bytes;
+    uint16_t signature_need_len = 72;
     if (!utxo_data.descriptor.empty()) {
       NetType net_type = NetType::kMainnet;
       std::vector<AddressFormatData> addr_prefixes =
@@ -102,6 +109,7 @@ void UtxoUtil::ConvertToUtxo(
         std::vector<AddressFormatData> elements_prefixes =
             cfd::core::GetElementsAddressFormatList();
         addr_prefixes = elements_prefixes;
+        net_type = NetType::kLiquidV1;
       }
 #endif  // CFD_DISABLE_ELEMENTS
       if (!utxo_data.address.GetAddress().empty()) {
@@ -116,12 +124,12 @@ void UtxoUtil::ConvertToUtxo(
         DescriptorScriptReference script_ref = desc.GetReference();
         output.locking_script = script_ref.GetLockingScript();
         locking_script_bytes = output.locking_script.GetData().GetBytes();
-        utxo->address_type = static_cast<uint16_t>(output.address_type);
         if (script_ref.GetScriptType() !=
             DescriptorScriptType::kDescriptorScriptRaw) {
           output.address_type = script_ref.GetAddressType();
           output.address = script_ref.GenerateAddress(net_type);
         }
+        utxo->address_type = static_cast<uint16_t>(output.address_type);
       }
     }
 
@@ -160,37 +168,58 @@ void UtxoUtil::ConvertToUtxo(
             utxo->locking_script, locking_script_bytes.data(),
             utxo->script_length);
       }
+      if (output.scriptsig_template.IsEmpty()) {
+        try {
+          uint32_t require_num = 0;
+          ScriptUtil::ExtractPubkeysFromMultisigScript(
+              output.locking_script, &require_num);
+          if (require_num != 0) {
+            signature_need_len = signature_need_len * require_num + 2;
+          }
+        } catch (const CfdException& except) {
+          // do nothing
+        }
+      } else {  // size from scriptsig template
+        utxo->script_length = static_cast<uint16_t>(
+            output.scriptsig_template.GetData().GetDataSize());
+        signature_need_len = 0;
+      }
     }
 
-    switch (utxo->address_type) {
-      case AddressType::kP2wpkhAddress:
-        utxo->witness_size_max = 71 + 33 + 2;
-        // fall-through
-      case AddressType::kP2shP2wpkhAddress:
-        utxo->uscript_size_max = 20 + 2;
-        break;
-      case AddressType::kP2wshAddress:
-        utxo->witness_size_max = 71 + utxo->script_length + 2;
-        // fall-through
-      case AddressType::kP2shP2wshAddress:
-        utxo->uscript_size_max = 32 + 2;
-        break;
-      case AddressType::kP2pkhAddress:
-        utxo->uscript_size_max = 71 + 33 + 3;
-        break;
-      case AddressType::kP2shAddress:
-      default:
-        utxo->uscript_size_max = 71 + utxo->script_length + 3;
-        break;
+    uint32_t wit_size = 0;
+    uint32_t txin_size = 0;
+    const Script* scriptsig_template = nullptr;
+    if (!output.scriptsig_template.IsEmpty()) {
+      scriptsig_template = &output.scriptsig_template;
     }
 
 #ifndef CFD_DISABLE_ELEMENTS
     if (!utxo_data.asset.IsEmpty()) {
       std::vector<uint8_t> asset = utxo_data.asset.GetData().GetBytes();
       memcpy(utxo->asset, asset.data(), sizeof(utxo->asset));
-      // utxo->blinded = false;
+      utxo->blinded = utxo_data.asset.HasBlinding();
+
+      ConfidentialTxIn::EstimateTxInSize(
+          output.address_type, output.locking_script, 0, Script(), false,
+          false, &wit_size, &txin_size, false, scriptsig_template);
+      utxo->witness_size_max = wit_size;
+      txin_size -= static_cast<uint32_t>(TxIn::kMinimumTxInSize);
+      utxo->witness_size_max = static_cast<uint16_t>(wit_size);
+      utxo->uscript_size_max = static_cast<uint16_t>(txin_size);
     }
 #endif  // CFD_DISABLE_ELEMENTS
+
+    if ((wit_size == 0) && (txin_size == 0)) {
+      wit_size = 0;
+      txin_size = 0;
+      TxIn::EstimateTxInSize(
+          output.address_type, output.locking_script, &wit_size, &txin_size,
+          scriptsig_template);
+      utxo->witness_size_max = wit_size;
+      txin_size -= static_cast<uint32_t>(TxIn::kMinimumTxInSize);
+      utxo->witness_size_max = static_cast<uint16_t>(wit_size);
+      utxo->uscript_size_max = static_cast<uint16_t>(txin_size);
+    }
 
     if (dest != nullptr) {
       *dest = output;
