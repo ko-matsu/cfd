@@ -99,7 +99,6 @@ void UtxoUtil::ConvertToUtxo(
 
     // convert from descriptor
     std::vector<uint8_t> locking_script_bytes;
-    uint16_t signature_need_len = 72;
     if (!utxo_data.descriptor.empty()) {
       NetType net_type = NetType::kMainnet;
       std::vector<AddressFormatData> addr_prefixes =
@@ -121,13 +120,19 @@ void UtxoUtil::ConvertToUtxo(
       Descriptor desc =
           Descriptor::Parse(utxo_data.descriptor, &addr_prefixes);
       if (desc.GetNeedArgumentNum() == 0) {
-        DescriptorScriptReference script_ref = desc.GetReference();
+        std::vector<DescriptorScriptReference> ref_list =
+            desc.GetReferenceAll();
+        DescriptorScriptReference& script_ref = ref_list[0];
         output.locking_script = script_ref.GetLockingScript();
         locking_script_bytes = output.locking_script.GetData().GetBytes();
         if (script_ref.GetScriptType() !=
             DescriptorScriptType::kDescriptorScriptRaw) {
           output.address_type = script_ref.GetAddressType();
           output.address = script_ref.GenerateAddress(net_type);
+          if (ref_list[ref_list.size() - 1].HasRedeemScript()) {
+            output.redeem_script =
+                ref_list[ref_list.size() - 1].GetRedeemScript();
+          }
         }
         utxo->address_type = static_cast<uint16_t>(output.address_type);
       }
@@ -168,22 +173,6 @@ void UtxoUtil::ConvertToUtxo(
             utxo->locking_script, locking_script_bytes.data(),
             utxo->script_length);
       }
-      if (output.scriptsig_template.IsEmpty()) {
-        try {
-          uint32_t require_num = 0;
-          ScriptUtil::ExtractPubkeysFromMultisigScript(
-              output.locking_script, &require_num);
-          if (require_num != 0) {
-            signature_need_len = signature_need_len * require_num + 2;
-          }
-        } catch (const CfdException& except) {
-          // do nothing
-        }
-      } else {  // size from scriptsig template
-        utxo->script_length = static_cast<uint16_t>(
-            output.scriptsig_template.GetData().GetDataSize());
-        signature_need_len = 0;
-      }
     }
 
     uint32_t wit_size = 0;
@@ -200,9 +189,8 @@ void UtxoUtil::ConvertToUtxo(
       utxo->blinded = utxo_data.asset.HasBlinding();
 
       ConfidentialTxIn::EstimateTxInSize(
-          output.address_type, output.locking_script, 0, Script(), false,
+          output.address_type, output.redeem_script, 0, Script(), false,
           false, &wit_size, &txin_size, false, scriptsig_template);
-      utxo->witness_size_max = wit_size;
       txin_size -= static_cast<uint32_t>(TxIn::kMinimumTxInSize);
       utxo->witness_size_max = static_cast<uint16_t>(wit_size);
       utxo->uscript_size_max = static_cast<uint16_t>(txin_size);
@@ -213,9 +201,8 @@ void UtxoUtil::ConvertToUtxo(
       wit_size = 0;
       txin_size = 0;
       TxIn::EstimateTxInSize(
-          output.address_type, output.locking_script, &wit_size, &txin_size,
+          output.address_type, output.redeem_script, &wit_size, &txin_size,
           scriptsig_template);
-      utxo->witness_size_max = wit_size;
       txin_size -= static_cast<uint32_t>(TxIn::kMinimumTxInSize);
       utxo->witness_size_max = static_cast<uint16_t>(wit_size);
       utxo->uscript_size_max = static_cast<uint16_t>(txin_size);
