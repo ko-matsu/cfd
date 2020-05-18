@@ -43,6 +43,7 @@ static CoinSelectionOption GetBitcoinOption() {
   return option;
 }
 
+// FIXME Utxo illegal creating. need set witness_size_max, uscript_size_max
 static std::vector<Utxo> GetBitcoinUtxoList() {
   std::vector<Utxo> utxos;
   {
@@ -696,6 +697,7 @@ static CoinSelectionOption GetElementsOption() {
   return option;
 }
 
+// FIXME Utxo illegal creating. need set witness_size_max, uscript_size_max
 static std::vector<Utxo> GetElementsUtxoList() {
   std::vector<Utxo> utxos;
   {
