@@ -2109,9 +2109,90 @@ int CfdGetConfidentialValueHex(
 
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
-    if (result != CfdErrorCode::kCfdSignVerificationError) {
-      result = SetLastError(handle, except);
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetAssetCommitment(
+    void* handle, const char* asset, const char* asset_blind_factor,
+    char** asset_commitment) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    if (asset_commitment == nullptr) {
+      warn(CFD_LOG_SOURCE, "asset commitment is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. asset commitment is null.");
     }
+    if (IsEmptyString(asset)) {
+      warn(CFD_LOG_SOURCE, "asset is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. asset is null or empty.");
+    }
+    if (IsEmptyString(asset_blind_factor)) {
+      warn(CFD_LOG_SOURCE, "asset blind vactor is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. asset blind vactor is null or empty.");
+    }
+    ConfidentialAssetId asset_obj(asset);
+    BlindFactor abf(asset_blind_factor);
+    ConfidentialAssetId commitment = ConfidentialAssetId::GetCommitment(
+        asset_obj, abf);
+    *asset_commitment = CreateString(commitment.GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetValueCommitment(
+    void* handle, int64_t value_satoshi, const char* asset_commitment,
+    const char* value_blind_vactor, char** value_commitment) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    if (value_commitment == nullptr) {
+      warn(CFD_LOG_SOURCE, "value commitment is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. value commitment is null.");
+    }
+    if (IsEmptyString(asset_commitment)) {
+      warn(CFD_LOG_SOURCE, "asset commitment is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. asset commitment is null or empty.");
+    }
+    if (IsEmptyString(value_blind_vactor)) {
+      warn(CFD_LOG_SOURCE, "value blind vactor is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. value blind vactor is null or empty.");
+    }
+    Amount amount(value_satoshi);
+    ConfidentialAssetId asset(asset_commitment);
+    BlindFactor vbf(value_blind_vactor);
+    ConfidentialValue commitment = ConfidentialValue::GetCommitment(
+        amount, asset, vbf);
+    *value_commitment = CreateString(commitment.GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
   } catch (const std::exception& std_except) {
     SetLastFatalError(handle, std_except.what());
   } catch (...) {
