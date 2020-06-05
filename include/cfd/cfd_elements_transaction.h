@@ -75,8 +75,8 @@ struct IssuanceOutputParameter {
  * @brief blind parameter's confidential key.
  */
 struct ConfidentialKeyBlindParameter {
-  uint32_t index;
-  Pubkey confidential_key;
+  uint32_t index;           //!< txout index
+  Pubkey confidential_key;  //!< confidential key
 };
 
 /**
