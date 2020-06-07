@@ -16,6 +16,16 @@ else()
 set(USE_GIT_SSH   OFF)
 endif()
 
+if($ENV{CFD_CMAKE_GIT_SKIP_UPDATE})
+if($ENV{CFD_CMAKE_GIT_SKIP_UPDATE} STREQUAL "1")
+set(GIT_SKIP_UPDATE   ON)
+else()
+set(GIT_SKIP_UPDATE   OFF)
+endif()
+else()
+set(GIT_SKIP_UPDATE   OFF)
+endif()
+
 # load file
 set(EXTERNAL_LOCAL_FILENAME  local_resource/external_project_local_setting.config)
 set(LOCAL_VERSION_FILE  ${CMAKE_SOURCE_DIR}/${EXTERNAL_LOCAL_FILENAME})
