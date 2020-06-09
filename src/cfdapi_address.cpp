@@ -348,6 +348,10 @@ DescriptorScriptData AddressApi::ParseOutputDescriptor(
             multisig_keys = child.GetKeyList();
             multisig_req_num = child.GetReqNum();
             is_loop = false;
+          } else if (
+              child.GetScriptType() ==
+              DescriptorScriptType::kDescriptorScriptMiniscript) {
+            is_loop = false;
           }
           break;
         // case DescriptorScriptType::kDescriptorScriptPk:
