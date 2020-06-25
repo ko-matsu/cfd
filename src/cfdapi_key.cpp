@@ -53,55 +53,51 @@ Privkey KeyApi::CreateKeyPair(
 std::string KeyApi::GetPubkeyFromPrivkey(
     const std::string& privkey, bool is_compressed) const {
   Privkey key;
+  NetType net_type = NetType::kMainnet;
 
-  for (uint8_t net_index = 0; net_index < kNetTypesNum; ++net_index) {
-    try {
-      key = Privkey::FromWif(privkey, kWifNetTypes[net_index], is_compressed);
-      break;
-    } catch (const CfdException& except) {
-      std::string errmsg(except.what());
-      if (errmsg.find(kWifError) == std::string::npos) {
-        throw except;
-      }
-    }
-  }
-
-  if (key.IsInvalid()) {
-    key = Privkey(ByteData(privkey));
+  bool has_wif = Privkey::HasWif(privkey, &net_type, nullptr);
+  if (has_wif) {
+    key = Privkey::FromWif(privkey, net_type, is_compressed);
+  } else {
+    key = Privkey(privkey);
   }
   return key.GeneratePubkey(is_compressed).GetHex();
 }
 
 Privkey KeyApi::GetPrivkeyFromWif(
     const std::string& wif, NetType* net_type, bool* is_compressed) const {
-  static const bool kCompress[2] = {true, false};
-  static const uint8_t kListNum = 2;
-
   Privkey key;
-  for (uint8_t compress_index = 0; compress_index < kListNum;
-       ++compress_index) {
-    for (uint8_t net_index = 0; net_index < kNetTypesNum; ++net_index) {
-      try {
-        key = Privkey::FromWif(
-            wif, kWifNetTypes[net_index], kCompress[compress_index]);
-        if (net_type != nullptr) *net_type = kWifNetTypes[net_index];
-        if (is_compressed != nullptr) {
-          *is_compressed = kCompress[compress_index];
-        }
-        break;
-      } catch (const CfdException& except) {
-        std::string errmsg(except.what());
-        if (errmsg.find(kWifError) == std::string::npos) {
-          throw except;
-        }
-      }
-    }
+  bool is_compress = true;
+  NetType temp_net_type = NetType::kMainnet;
+
+  bool has_wif = Privkey::HasWif(wif, &temp_net_type, &is_compress);
+  if (has_wif) {
+    key = Privkey::FromWif(wif, temp_net_type, is_compress);
+    if (net_type != nullptr) *net_type = temp_net_type;
+    if (is_compressed != nullptr) *is_compressed = is_compress;
   }
 
-  if (key.IsInvalid()) {
+  if (!key.IsValid()) {
     throw CfdException(
         CfdError::kCfdIllegalArgumentError,
         "Failed to GetPrivkeyFromWif. Wif format error.");
+  }
+  return key;
+}
+
+Privkey KeyApi::GetPrivkey(
+    const std::string& privkey, NetType* net_type, bool* is_compressed) const {
+  Privkey key;
+  bool is_compress = true;
+  NetType temp_net_type = NetType::kMainnet;
+
+  bool has_wif = Privkey::HasWif(privkey, &temp_net_type, &is_compress);
+  if (has_wif) {
+    key = Privkey::FromWif(privkey, temp_net_type, is_compress);
+    if (net_type != nullptr) *net_type = temp_net_type;
+    if (is_compressed != nullptr) *is_compressed = is_compress;
+  } else {
+    key = Privkey(privkey);
   }
   return key;
 }
