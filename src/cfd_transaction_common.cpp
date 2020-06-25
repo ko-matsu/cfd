@@ -304,6 +304,14 @@ SignParameter::SignParameter(const ScriptOperator& op_code)
   data_ = ByteData(list);
 }
 
+SignParameter::SignParameter(const SignParameter& sign_parameter) {
+  data_ = sign_parameter.GetData();
+  data_type_ = sign_parameter.GetDataType();
+  related_pubkey_ = sign_parameter.GetRelatedPubkey();
+  der_encode_ = sign_parameter.IsDerEncode();
+  sighash_type_ = sign_parameter.GetSigHashType();
+}
+
 SignParameter& SignParameter::operator=(const SignParameter& sign_parameter) {
   data_ = sign_parameter.GetData();
   data_type_ = sign_parameter.GetDataType();
