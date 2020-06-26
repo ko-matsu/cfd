@@ -310,6 +310,7 @@ SignParameter::SignParameter(const SignParameter& sign_parameter) {
   related_pubkey_ = sign_parameter.GetRelatedPubkey();
   der_encode_ = sign_parameter.IsDerEncode();
   sighash_type_ = sign_parameter.GetSigHashType();
+  op_code_ = sign_parameter.GetOpCode();
 }
 
 SignParameter& SignParameter::operator=(const SignParameter& sign_parameter) {
@@ -318,6 +319,7 @@ SignParameter& SignParameter::operator=(const SignParameter& sign_parameter) {
   related_pubkey_ = sign_parameter.GetRelatedPubkey();
   der_encode_ = sign_parameter.IsDerEncode();
   sighash_type_ = sign_parameter.GetSigHashType();
+  op_code_ = sign_parameter.GetOpCode();
   return *this;
 }
 
