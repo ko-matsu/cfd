@@ -25,13 +25,6 @@ using cfd::core::CfdException;
 using cfd::core::NetType;
 using cfd::core::Privkey;
 
-/// wif format error message.
-static constexpr const char* kWifError = "Error WIF to Private key.";
-/// wif format net types.
-static const NetType kWifNetTypes[] = {NetType::kMainnet, NetType::kTestnet};
-/// wif format net types num.
-static constexpr const uint8_t kNetTypesNum = 2;
-
 Privkey KeyApi::CreateKeyPair(
     bool is_compressed, Pubkey* pubkey, std::string* wif, NetType net_type) {
   // generate random private key
