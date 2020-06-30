@@ -6,6 +6,8 @@
  *   \~japanese cfd-apiで利用するConfidential Transaction操作の実装ファイル
  */
 #ifndef CFD_DISABLE_ELEMENTS
+#include "cfd/cfdapi_elements_transaction.h"
+
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -13,9 +15,15 @@
 #include <string>
 #include <vector>
 
+#include "cfd/cfd_address.h"
+#include "cfd/cfd_elements_address.h"
 #include "cfd/cfd_elements_transaction.h"
 #include "cfd/cfd_fee.h"
-#include "cfd_manager.h"  // NOLINT
+#include "cfd/cfdapi_address.h"
+#include "cfd/cfdapi_elements_address.h"
+#include "cfd/cfdapi_transaction.h"
+#include "cfd_manager.h"              // NOLINT
+#include "cfdapi_transaction_base.h"  // NOLINT
 #include "cfdcore/cfdcore_amount.h"
 #include "cfdcore/cfdcore_bytedata.h"
 #include "cfdcore/cfdcore_coin.h"
@@ -27,14 +35,6 @@
 #include "cfdcore/cfdcore_script.h"
 #include "cfdcore/cfdcore_transaction.h"
 #include "cfdcore/cfdcore_util.h"
-
-#include "cfd/cfd_address.h"
-#include "cfd/cfd_elements_address.h"
-#include "cfd/cfdapi_address.h"
-#include "cfd/cfdapi_elements_address.h"
-#include "cfd/cfdapi_elements_transaction.h"
-#include "cfd/cfdapi_transaction.h"
-#include "cfdapi_transaction_base.h"  // NOLINT
 
 namespace cfd {
 namespace api {
