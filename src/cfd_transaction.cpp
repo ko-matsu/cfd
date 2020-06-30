@@ -5,12 +5,14 @@
  * @brief \~english implementation of classes related to transaction operation
  *   \~japanese Transaction操作の関連クラスの実装ファイル
  */
+#include "cfd/cfd_transaction.h"
+
 #include <algorithm>
 #include <string>
 #include <vector>
 
 #include "cfd/cfd_address.h"
-#include "cfd/cfd_transaction.h"
+#include "cfd_transaction_internal.h"  // NOLINT
 #include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_amount.h"
 #include "cfdcore/cfdcore_coin.h"
@@ -19,8 +21,6 @@
 #include "cfdcore/cfdcore_logger.h"
 #include "cfdcore/cfdcore_script.h"
 #include "cfdcore/cfdcore_transaction.h"
-
-#include "cfd_transaction_internal.h"  // NOLINT
 
 namespace cfd {
 

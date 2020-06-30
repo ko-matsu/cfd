@@ -5,6 +5,8 @@
  * @brief cfd-capiで利用するKey操作の実装ファイル
  */
 #ifndef CFD_DISABLE_CAPI
+#include "cfdc/cfdcapi_key.h"
+
 #include <string>
 #include <vector>
 
@@ -13,7 +15,6 @@
 #include "cfd/cfdapi_hdwallet.h"
 #include "cfd/cfdapi_key.h"
 #include "cfdc/cfdcapi_common.h"
-#include "cfdc/cfdcapi_key.h"
 #include "cfdcore/cfdcore_common.h"
 #include "cfdcore/cfdcore_descriptor.h"
 #include "cfdcore/cfdcore_hdwallet.h"

@@ -5,6 +5,8 @@
  * @brief \~english implementation of transaction utility class.
  *   \~japanese Transaction Utilityクラスの実装ファイル
  */
+#include "cfd_transaction_internal.h"  // NOLINT
+
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -20,8 +22,6 @@
 #include "cfdcore/cfdcore_script.h"
 #include "cfdcore/cfdcore_transaction_common.h"
 #include "cfdcore/cfdcore_util.h"
-
-#include "cfd_transaction_internal.h"  // NOLINT
 
 namespace cfd {
 
@@ -511,37 +511,32 @@ std::vector<ByteData> TransactionContextUtil::GetVerifySignatureStack(
     has_pubkey = true;
     Pubkey pubkey(signature_stack.back());
     if (utxo.address_type == AddressType::kP2pkhAddress) {
-      locking_script =
-          ScriptUtil::CreateP2pkhLockingScript(pubkey);
+      locking_script = ScriptUtil::CreateP2pkhLockingScript(pubkey);
     } else {
-      locking_script =
-          ScriptUtil::CreateP2wpkhLockingScript(pubkey);
+      locking_script = ScriptUtil::CreateP2wpkhLockingScript(pubkey);
       if (utxo.address_type == AddressType::kP2shP2wpkhAddress) {
         if (locking_script.GetHex() != unlocking_script.GetHex()) {
           throw CfdException(
               CfdError::kCfdIllegalStateError,
               "p2sh-p2wpkh scriptsig unmatch.");
         }
-        locking_script =
-            ScriptUtil::CreateP2shLockingScript(locking_script);
+        locking_script = ScriptUtil::CreateP2shLockingScript(locking_script);
       }
     }
   } else {
     // check script format
     Script redeem_script(signature_stack.back());
     if (utxo.address_type == AddressType::kP2shAddress) {
-      locking_script =
-          ScriptUtil::CreateP2shLockingScript(redeem_script);
+      locking_script = ScriptUtil::CreateP2shLockingScript(redeem_script);
     } else {
-      locking_script =
-          ScriptUtil::CreateP2wshLockingScript(redeem_script);
+      locking_script = ScriptUtil::CreateP2wshLockingScript(redeem_script);
       if (utxo.address_type == AddressType::kP2shP2wshAddress) {
         if (locking_script.GetHex() != unlocking_script.GetHex()) {
           throw CfdException(
-              CfdError::kCfdIllegalStateError, "p2sh-p2wsh scriptsig unmatch.");
+              CfdError::kCfdIllegalStateError,
+              "p2sh-p2wsh scriptsig unmatch.");
         }
-        locking_script =
-            ScriptUtil::CreateP2shLockingScript(locking_script);
+        locking_script = ScriptUtil::CreateP2shLockingScript(locking_script);
       }
     }
   }

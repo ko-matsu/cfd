@@ -5,12 +5,13 @@
  * @brief \~english implementation of common classes related to transaction operation
  *   \~japanese Transaction操作共通の関連クラスの実装ファイル
  */
+#include "cfd/cfd_transaction_common.h"
+
 #include <algorithm>
 #include <string>
 #include <vector>
 
 #include "cfd/cfd_common.h"
-#include "cfd/cfd_transaction_common.h"
 #include "cfd/cfd_utxo.h"
 #include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_amount.h"

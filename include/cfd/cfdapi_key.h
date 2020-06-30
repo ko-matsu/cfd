@@ -12,6 +12,7 @@
 #include <string>
 
 #include "cfd/cfd_common.h"
+#include "cfdcore/cfdcore_key.h"
 
 namespace cfd {
 namespace api {
