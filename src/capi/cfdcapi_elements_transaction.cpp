@@ -6,6 +6,8 @@
  */
 #ifndef CFD_DISABLE_CAPI
 #ifndef CFD_DISABLE_ELEMENTS
+#include "cfdc/cfdcapi_elements_transaction.h"
+
 #include <exception>
 #include <map>
 #include <string>
@@ -19,7 +21,6 @@
 #include "cfd/cfdapi_elements_transaction.h"
 #include "cfd/cfdapi_key.h"
 #include "cfdc/cfdcapi_common.h"
-#include "cfdc/cfdcapi_elements_transaction.h"
 #include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_amount.h"
 #include "cfdcore/cfdcore_coin.h"
@@ -1359,8 +1360,8 @@ int CfdFinalizeBlindTx(
             ctxc.GetTxOutAddress(data.index, NetType::kLiquidV1, true);
         if (addr.GetAddress().empty()) {
           // set direct confidential key
-          ConfidentialKeyBlindParameter param = {data.index,
-                                                 data.confidential_key};
+          ConfidentialKeyBlindParameter param = {
+              data.index, data.confidential_key};
           direct_key_list.emplace_back(param);
         } else {
           confidential_key_list.emplace_back(addr, data.confidential_key);

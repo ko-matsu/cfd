@@ -5,16 +5,16 @@
  * @brief \~english implementation file for key management that uses cfd-api
  * \~japanese cfd-apiで利用する鍵関連の実装ファイル
  */
+#include "cfd/cfdapi_key.h"
+
 #include <string>
 
+#include "cfd/cfd_common.h"
 #include "cfd/cfdapi_address.h"
 #include "cfdcore/cfdcore_bytedata.h"
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_transaction_common.h"
-
-#include "cfd/cfd_common.h"
-#include "cfd/cfdapi_key.h"
 
 namespace cfd {
 namespace api {
@@ -24,13 +24,6 @@ using cfd::core::CfdError;
 using cfd::core::CfdException;
 using cfd::core::NetType;
 using cfd::core::Privkey;
-
-/// wif format error message.
-static constexpr const char* kWifError = "Error WIF to Private key.";
-/// wif format net types.
-static const NetType kWifNetTypes[] = {NetType::kMainnet, NetType::kTestnet};
-/// wif format net types num.
-static constexpr const uint8_t kNetTypesNum = 2;
 
 Privkey KeyApi::CreateKeyPair(
     bool is_compressed, Pubkey* pubkey, std::string* wif, NetType net_type) {
