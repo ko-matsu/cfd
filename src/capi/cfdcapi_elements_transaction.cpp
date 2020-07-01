@@ -2089,6 +2089,8 @@ CFDC_API int CfdVerifyConfidentialTxSign(
   } catch (const CfdException& except) {
     if (result != CfdErrorCode::kCfdSignVerificationError) {
       result = SetLastError(handle, except);
+    } else {
+      SetLastError(handle, except);  // collect error message
     }
   } catch (const std::exception& std_except) {
     SetLastFatalError(handle, std_except.what());
