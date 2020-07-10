@@ -219,6 +219,7 @@ Amount TransactionApi::EstimateFee(
   uint32_t witness_size = 0;
   uint32_t wit_size = 0;
   uint32_t nowit_size = 0;
+  uint32_t not_witness_count = 0;
   AddressApi address_api;
   for (const auto& utxo : utxos) {
     NetType net_type = NetType::kMainnet;
@@ -254,7 +255,14 @@ Amount TransactionApi::EstimateFee(
         addr_type, redeem_script, &wit_size, &nowit_size, scriptsig_template);
     size += nowit_size;
     witness_size += wit_size;
+    if (wit_size == 0) ++not_witness_count;
   }
+  if ((not_witness_count != 0) &&
+      (not_witness_count < static_cast<uint32_t>(utxos.size()))) {
+    // append witness size for p2pkh or p2sh
+    witness_size += not_witness_count;
+  }
+
   uint32_t utxo_vsize =
       AbstractTransaction::GetVsizeFromSize(size, witness_size);
 
