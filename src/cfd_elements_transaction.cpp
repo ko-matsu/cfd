@@ -215,6 +215,12 @@ bool ConfidentialTransactionContext::IsFindTxOut(
   }
 }
 
+const ConfidentialTxInReference ConfidentialTransactionContext::GetTxIn(
+    const OutPoint& outpoint) const {
+  uint32_t index = GetTxInIndex(outpoint);
+  return GetTxIn(index);
+}
+
 Address ConfidentialTransactionContext::GetTxOutAddress(
     uint32_t index, NetType net_type, bool ignore_error) const {
   if (vout_.size() <= index) {
@@ -252,9 +258,26 @@ uint32_t ConfidentialTransactionContext::AddTxOut(
 
 uint32_t ConfidentialTransactionContext::GetSizeIgnoreTxIn(
     bool is_blinded, uint32_t* witness_area_size,
-    uint32_t* no_witness_area_size, int exponent, int minimum_bits) const {
+    uint32_t* no_witness_area_size, int exponent, int minimum_bits,
+    uint32_t asset_count) const {
   uint32_t size = ConfidentialTransaction::kElementsTransactionMinimumSize;
   std::vector<ConfidentialTxOutReference> txouts = GetTxOutList();
+  uint32_t temp_asset_count = asset_count;
+
+  // search vin from issue/reissue
+  if (temp_asset_count == 0) {
+    for (const auto& txin : vin_) {
+      if (!txin.GetAssetEntropy().IsEmpty()) {
+        ++temp_asset_count;
+        if (!txin.GetBlindingNonce().IsEmpty()) {
+          // reissuance
+        } else {
+          ++temp_asset_count;  // issuance
+        }
+      }
+      ++temp_asset_count;
+    }
+  }
 
   uint32_t witness_size = 0;
   uint32_t no_witness_size = 0;
@@ -264,7 +287,7 @@ uint32_t ConfidentialTransactionContext::GetSizeIgnoreTxIn(
   for (const auto& txout : txouts) {
     txout.GetSerializeSize(
         is_blinded, &temp_witness_size, &temp_no_witness_size, exponent,
-        minimum_bits, &rangeproof_size_cache);
+        minimum_bits, &rangeproof_size_cache, temp_asset_count);
     witness_size += temp_witness_size;
     no_witness_size += temp_no_witness_size;
   }
@@ -280,11 +303,13 @@ uint32_t ConfidentialTransactionContext::GetSizeIgnoreTxIn(
 }
 
 uint32_t ConfidentialTransactionContext::GetVsizeIgnoreTxIn(
-    bool is_blinded, int exponent, int minimum_bits) const {
+    bool is_blinded, int exponent, int minimum_bits,
+    uint32_t asset_count) const {
   uint32_t witness_size = 0;
   uint32_t no_witness_size = 0;
   GetSizeIgnoreTxIn(
-      is_blinded, &witness_size, &no_witness_size, exponent, minimum_bits);
+      is_blinded, &witness_size, &no_witness_size, exponent, minimum_bits,
+      asset_count);
   return AbstractTransaction::GetVsizeFromSize(no_witness_size, witness_size);
 }
 

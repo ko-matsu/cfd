@@ -183,6 +183,12 @@ bool TransactionContext::IsFindTxOut(
   }
 }
 
+const TxInReference TransactionContext::GetTxIn(
+    const OutPoint& outpoint) const {
+  uint32_t index = GetTxInIndex(outpoint);
+  return GetTxIn(index);
+}
+
 Address TransactionContext::GetTxOutAddress(
     uint32_t index, NetType net_type) const {
   if (vout_.size() <= index) {
