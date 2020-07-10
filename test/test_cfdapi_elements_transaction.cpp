@@ -124,9 +124,12 @@ TEST(ElementsTransactionApi, EstimateFee_CheckRealValue)
   std::vector<cfd::UtxoData> utxos{utxo1, utxo2, utxo3};
   EXPECT_NO_THROW(txc.CollectInputUtxo(utxos));
 
-  ElementsUtxoAndOption eutxo1 = {utxo1, false, false, false, 0, Script()};
-  ElementsUtxoAndOption eutxo2 = {utxo2, false, false, false, 0, Script()};
-  ElementsUtxoAndOption eutxo3 = {utxo3, false, false, false, 0, Script()};
+  ElementsUtxoAndOption eutxo1;
+  ElementsUtxoAndOption eutxo2;
+  ElementsUtxoAndOption eutxo3;
+  eutxo1.utxo = utxo1;
+  eutxo2.utxo = utxo2;
+  eutxo3.utxo = utxo3;
   std::vector<cfd::api::ElementsUtxoAndOption> utxos_and_options{
       eutxo1, eutxo2, eutxo3
   };
