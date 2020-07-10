@@ -615,8 +615,8 @@ void ConfidentialTransactionContext::BlindTransactionWithDirectKey(
     std::string script = txout.GetLockingScript().GetHex();
     if (confidential_keys[index].IsValid()) {
       // do nothing
-    } else if (ct_map.count(script) != 0) {
-      confidential_keys[index] = ct_map.at(script);
+    } else if (ct_map.find(script) != std::end(ct_map)) {
+      confidential_keys[index] = ct_map.find(script)->second;
     } else {
       ByteData nonce = txout.GetNonce().GetData();
       if (Pubkey::IsValid(nonce)) {
@@ -674,7 +674,7 @@ void ConfidentialTransactionContext::CollectInputUtxo(
       uint32_t vout = txin_ref.GetVout();
 
       OutPoint outpoint(txid, vout);
-      if (utxo_map_.count(outpoint) == 0) {
+      if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
         for (const auto& utxo : utxos) {
           if ((utxo.vout == vout) && utxo.txid.Equals(txid)) {
             utxo_map_.emplace(outpoint, utxo);
@@ -701,11 +701,11 @@ void ConfidentialTransactionContext::BlindIssuance(
   std::map<OutPoint, BlindParameter> utxo_info_map;
   for (const auto& txin_ref : vin_) {
     OutPoint outpoint = txin_ref.GetOutPoint();
-    if (utxo_map_.count(outpoint) == 0) {
+    if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
       throw CfdException(
           CfdError::kCfdIllegalStateError, "Utxo is not found. blind fail.");
     }
-    UtxoData utxo = utxo_map_[outpoint];
+    UtxoData utxo = utxo_map_.find(outpoint)->second;
     BlindParameter param;
     param.asset = utxo.asset;
     param.abf = utxo.asset_blind_factor;
@@ -728,11 +728,11 @@ void ConfidentialTransactionContext::BlindIssuance(
 void ConfidentialTransactionContext::SignWithKey(
     const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
     SigHashType sighash_type, bool has_grind_r) {
-  if (utxo_map_.count(outpoint) == 0) {
+  if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
     throw CfdException(
         CfdError::kCfdIllegalStateError, "Utxo is not found. sign fail.");
   }
-  UtxoData utxo = utxo_map_[outpoint];
+  UtxoData utxo = utxo_map_.find(outpoint)->second;
 
   if (utxo.amount_blind_factor.IsEmpty() &&
       (!utxo.value_commitment.HasBlinding())) {
@@ -754,18 +754,18 @@ void ConfidentialTransactionContext::IgnoreVerify(const OutPoint& outpoint) {
 void ConfidentialTransactionContext::Verify() {
   for (const auto& vin : vin_) {
     OutPoint outpoint = vin.GetOutPoint();
-    if (verify_ignore_map_.count(outpoint) == 0) {
+    if (verify_ignore_map_.find(outpoint) == std::end(verify_ignore_map_)) {
       Verify(outpoint);
     }
   }
 }
 
 void ConfidentialTransactionContext::Verify(const OutPoint& outpoint) {
-  if (utxo_map_.count(outpoint) == 0) {
+  if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
     throw CfdException(
         CfdError::kCfdIllegalStateError, "Utxo is not found. verify fail.");
   }
-  const auto& utxo = utxo_map_[outpoint];
+  const auto& utxo = utxo_map_.find(outpoint)->second;
   const auto& txin = vin_[GetTxInIndex(outpoint)];
 
   TransactionContextUtil::Verify<ConfidentialTransactionContext>(

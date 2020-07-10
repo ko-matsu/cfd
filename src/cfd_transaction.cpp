@@ -8,6 +8,7 @@
 #include "cfd/cfd_transaction.h"
 
 #include <algorithm>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -252,7 +253,7 @@ void TransactionContext::CollectInputUtxo(const std::vector<UtxoData>& utxos) {
       uint32_t vout = txin_ref.GetVout();
 
       OutPoint outpoint(txid, vout);
-      if (utxo_map_.count(outpoint) == 0) {
+      if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
         for (const auto& utxo : utxos) {
           if ((utxo.vout == vout) && utxo.txid.Equals(txid)) {
             utxo_map_.emplace(outpoint, utxo);
@@ -268,12 +269,12 @@ Amount TransactionContext::GetFeeAmount() const {
   Amount input;
   for (const auto& txin_ref : vin_) {
     OutPoint outpoint(txin_ref.GetTxid(), txin_ref.GetVout());
-    if (utxo_map_.count(outpoint) == 0) {
+    if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
       throw CfdException(
           CfdError::kCfdIllegalStateError,
           "Utxo is not found. GetFeeAmount fail.");
     }
-    input += utxo_map_.at(outpoint).amount;
+    input += utxo_map_.find(outpoint)->second.amount;
   }
 
   Amount output;
@@ -290,11 +291,11 @@ Amount TransactionContext::GetFeeAmount() const {
 void TransactionContext::SignWithKey(
     const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
     SigHashType sighash_type, bool has_grind_r) {
-  if (utxo_map_.count(outpoint) == 0) {
+  if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
     throw CfdException(
         CfdError::kCfdIllegalStateError, "Utxo is not found. sign fail.");
   }
-  UtxoData utxo = utxo_map_[outpoint];
+  UtxoData utxo = utxo_map_.find(outpoint)->second;
 
   SignWithPrivkeySimple(
       outpoint, pubkey, privkey, sighash_type, utxo.amount, utxo.address_type,
@@ -309,18 +310,18 @@ void TransactionContext::IgnoreVerify(const OutPoint& outpoint) {
 void TransactionContext::Verify() {
   for (const auto& vin : vin_) {
     OutPoint outpoint = vin.GetOutPoint();
-    if (verify_ignore_map_.count(outpoint) == 0) {
+    if (verify_ignore_map_.find(outpoint) == std::end(verify_ignore_map_)) {
       Verify(outpoint);
     }
   }
 }
 
 void TransactionContext::Verify(const OutPoint& outpoint) {
-  if (utxo_map_.count(outpoint) == 0) {
+  if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
     throw CfdException(
         CfdError::kCfdIllegalStateError, "Utxo is not found. verify fail.");
   }
-  const auto& utxo = utxo_map_[outpoint];
+  const auto& utxo = utxo_map_.find(outpoint)->second;
   const auto& txin = vin_[GetTxInIndex(outpoint)];
 
   TransactionContextUtil::Verify<TransactionContext>(
