@@ -357,6 +357,7 @@ void TransactionContextUtil::Verify(
     }
 
     uint32_t success_count = 0;
+    std::string fail_indexes;
     SigHashType sighashtype;
     int prev_key_index = -1;
     for (size_t index = 0; index < sig_size; ++index) {
@@ -380,14 +381,18 @@ void TransactionContextUtil::Verify(
           break;
         }
       }
-      if (is_exist) ++success_count;
+      if (is_exist) {
+        ++success_count;
+      } else {
+        if (!fail_indexes.empty()) fail_indexes += ",";
+        fail_indexes += std::to_string(index);
+      }
     }
 
     if (success_count != sig_size) {
-      uint32_t fail_count = sig_size - success_count;
       throw CfdException(
           CfdError::kCfdIllegalStateError,
-          "Verify signature fail. fail count = " + std::to_string(fail_count));
+          "Verify signature fail. fail index = " + fail_indexes);
     }
   }
 }

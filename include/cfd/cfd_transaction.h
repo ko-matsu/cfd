@@ -36,6 +36,7 @@ using cfd::core::Script;
 using cfd::core::SigHashType;
 using cfd::core::Transaction;
 using cfd::core::Txid;
+using cfd::core::TxInReference;
 using cfd::core::WitnessVersion;
 
 /**
@@ -131,6 +132,16 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @retval false 未存在
    */
   bool IsFindTxOut(const Address& address, uint32_t* index = nullptr) const;
+  /**
+   * @brief Transaction's GetTxIn.
+   */
+  using Transaction::GetTxIn;
+  /**
+   * @brief Get txin by outpoint.
+   * @param[in] outpoint  target outpoint.
+   * @return TxInReference
+   */
+  const TxInReference GetTxIn(const OutPoint& outpoint) const;
   /**
    * @brief Get txout address by index.
    * @param[in] index     txout index.
