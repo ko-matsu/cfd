@@ -701,5 +701,5 @@ TEST(TransactionContext, VerifyP2shSegwit)
 
   // sign1 -> fail -> ignore
   OutPoint outpoint1(utxo2.txid, utxo2.vout);
-  EXPECT_NO_THROW(txc.Verify(outpoint1), CfdException);
+  EXPECT_NO_THROW(txc.Verify(outpoint1));
 }
