@@ -117,7 +117,7 @@ jobs:
       with:
         upload_url: ${{ steps.get_url.outputs.upload_url }}
         asset_path: ./cfd.zip
-        asset_name: cfdgo-${{ steps.get_version.outputs.VERSION }}-win-${{ matrix.bin }}-x86_64.zip
+        asset_name: cfd-${{ steps.get_version.outputs.VERSION }}-win-${{ matrix.bin }}-x86_64.zip
         asset_content_type: application/zip
 
   upload-object-ubuntu:
