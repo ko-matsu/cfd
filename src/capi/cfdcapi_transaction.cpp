@@ -1248,7 +1248,7 @@ int CfdVerifyTxSign(
     utxo.descriptor = "";
     utxo.txid = outpoint.GetTxid();
     utxo.vout = outpoint.GetVout();
-    utxo.address_type = AddressType::kP2shAddress;
+    utxo.address_type = addr_type;
     utxo.amount = amount;
     if (!IsEmptyString(address)) {
       std::string addr(address);
@@ -1270,7 +1270,6 @@ int CfdVerifyTxSign(
 #endif  // CFD_DISABLE_ELEMENTS
       }
       utxo.locking_script = utxo.address.GetLockingScript();
-      utxo.address_type = addr_type;
     } else if (!IsEmptyString(direct_locking_script)) {
       utxo.locking_script = Script(direct_locking_script);
     }
