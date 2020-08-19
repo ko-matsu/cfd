@@ -555,7 +555,7 @@ CFDC_API int CfdGetTxInByHandle(
  * @brief get transaction input witness stack.
  * @param[in] handle            cfd handle.
  * @param[in] tx_data_handle    transaction data handle.
- * @param[in] stack_type        witness stack type.
+ * @param[in] stack_type        witness stack type.(see: CfdTxWitnessStackType)
  * @param[in] txin_index        txin index.
  * @param[in] stack_index       witness stack index.
  * @param[out] stack_data       witness stack data.
@@ -564,8 +564,8 @@ CFDC_API int CfdGetTxInByHandle(
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetTxInWitnessByHandle(
-    void* handle, void* tx_data_handle, int32_t stack_type,
-    uint32_t txin_index, uint32_t stack_index, char** stack_data);
+    void* handle, void* tx_data_handle, int stack_type, uint32_t txin_index,
+    uint32_t stack_index, char** stack_data);
 
 /**
  * @brief get transaction output.
@@ -599,14 +599,14 @@ CFDC_API int CfdGetTxInCountByHandle(
  * @brief get transaction input witness stack count.
  * @param[in] handle            cfd handle.
  * @param[in] tx_data_handle    transaction data handle.
- * @param[in] stack_type        witness stack type.
+ * @param[in] stack_type        witness stack type.(see: CfdTxWitnessStackType)
  * @param[in] txin_index        txin index.
  * @param[out] count            witness stack count.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetTxInWitnessCountByHandle(
-    void* handle, void* tx_data_handle, int32_t stack_type,
-    uint32_t txin_index, uint32_t* count);
+    void* handle, void* tx_data_handle, int stack_type, uint32_t txin_index,
+    uint32_t* count);
 
 /**
  * @brief get transaction output count.
