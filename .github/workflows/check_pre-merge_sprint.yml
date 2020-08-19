@@ -40,7 +40,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: cmake_version
       run: cmake --version
     - name: cmake_generage-macos
@@ -76,7 +76,7 @@ jobs:
 #            cmake_cache: true
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: dump version
       run: |
         cmake --version
@@ -141,7 +141,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: install_doxygen
       run: sudo apt install doxygen graphviz
     - name: doxygen_check

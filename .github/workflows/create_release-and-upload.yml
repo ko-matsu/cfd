@@ -85,7 +85,6 @@ jobs:
         cmake -S . -B build
         cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off --build build
         cmake --build build --parallel 2 --config Release
-        cd ../..
       timeout-minutes: 20
     - name: cmake-install
       run: |
