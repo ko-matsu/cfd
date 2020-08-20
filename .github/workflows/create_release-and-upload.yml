@@ -48,12 +48,20 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        bin: [vs2019, vs2019-static]
+        bin: [vs2019, vs2019-static, gcc, gcc-static]
         include:
           - bin: vs2019
             shared: on
+            generator: Visual Studio 16 2019
           - bin: vs2019-static
             shared: off
+            generator: Visual Studio 16 2019
+          - bin: gcc
+            shared: on
+            generator: MSYS Makefiles
+          - bin: gcc-static
+            shared: off
+            generator: MSYS Makefiles
 
     steps:
     - name: checkout
@@ -82,7 +90,7 @@ jobs:
       run: mkdir dist
     - name: cmake-build
       run: |
-        cmake -S . -B build
+        cmake -S . -B build -G "${{ matrix.generator }}"
         cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off --build build
         cmake --build build --parallel 2 --config Release
       timeout-minutes: 20
