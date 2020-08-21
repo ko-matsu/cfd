@@ -515,7 +515,7 @@ CFDC_API int CfdSetBlindTxOption(
  * @param[in] vout                txin vout.
  * @param[in] asset_string        asset.(utxo value)
  * @param[in] asset_blind_factor  asset blind factor.(utxo value)
- * @param[in] value_blind_vactor  value blind factor.(utxo value)
+ * @param[in] value_blind_factor  value blind factor.(utxo value)
  * @param[in] value_satoshi       satoshi value.(utxo value)
  * @param[in] asset_key           asset blinding key(privkey).
  *                                (blind issuance only)
@@ -526,7 +526,7 @@ CFDC_API int CfdSetBlindTxOption(
 CFDC_API int CfdAddBlindTxInData(
     void* handle, void* blind_handle, const char* txid, uint32_t vout,
     const char* asset_string, const char* asset_blind_factor,
-    const char* value_blind_vactor, int64_t value_satoshi,
+    const char* value_blind_factor, int64_t value_satoshi,
     const char* asset_key, const char* token_key);
 
 /**
@@ -815,7 +815,7 @@ CFDC_API int CfdGetAssetCommitment(
  * @param[in] handle              cfd handle.
  * @param[in] value_satoshi       satoshi value.
  * @param[in] asset_commitment    asset commitment.
- * @param[in] value_blind_vactor  value blind factor.
+ * @param[in] value_blind_factor  value blind factor.
  * @param[out] value_commitment   value commitment
  *   If 'CfdFreeStringBuffer' is implemented,
  *   Call 'CfdFreeStringBuffer' after you are finished using it.
@@ -823,7 +823,7 @@ CFDC_API int CfdGetAssetCommitment(
  */
 CFDC_API int CfdGetValueCommitment(
     void* handle, int64_t value_satoshi, const char* asset_commitment,
-    const char* value_blind_vactor, char** value_commitment);
+    const char* value_blind_factor, char** value_commitment);
 
 /* 
 CFDC_API int CfdAddConfidentialTxPeginInput(

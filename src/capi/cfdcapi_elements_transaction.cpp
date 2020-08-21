@@ -1127,7 +1127,7 @@ int CfdInitializeBlindTx(void* handle, void** blind_handle) {
 int CfdAddBlindTxInData(
     void* handle, void* blind_handle, const char* txid, uint32_t vout,
     const char* asset_string, const char* asset_blind_factor,
-    const char* value_blind_vactor, int64_t value_satoshi,
+    const char* value_blind_factor, int64_t value_satoshi,
     const char* asset_key, const char* token_key) {
   try {
     cfd::Initialize();
@@ -1165,10 +1165,10 @@ int CfdAddBlindTxInData(
     } else {
       params.blind_param.abf = BlindFactor(asset_blind_factor);
     }
-    if (IsEmptyString(value_blind_vactor)) {
+    if (IsEmptyString(value_blind_factor)) {
       params.blind_param.vbf = BlindFactor(kEmpty32Bytes);
     } else {
-      params.blind_param.vbf = BlindFactor(value_blind_vactor);
+      params.blind_param.vbf = BlindFactor(value_blind_factor);
     }
 
     params.is_issuance = false;
@@ -2177,7 +2177,7 @@ int CfdGetAssetCommitment(
 
 int CfdGetValueCommitment(
     void* handle, int64_t value_satoshi, const char* asset_commitment,
-    const char* value_blind_vactor, char** value_commitment) {
+    const char* value_blind_factor, char** value_commitment) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -2193,7 +2193,7 @@ int CfdGetValueCommitment(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. asset commitment is null or empty.");
     }
-    if (IsEmptyString(value_blind_vactor)) {
+    if (IsEmptyString(value_blind_factor)) {
       warn(CFD_LOG_SOURCE, "value blind vactor is null or empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
@@ -2201,7 +2201,7 @@ int CfdGetValueCommitment(
     }
     Amount amount(value_satoshi);
     ConfidentialAssetId asset(asset_commitment);
-    BlindFactor vbf(value_blind_vactor);
+    BlindFactor vbf(value_blind_factor);
     ConfidentialValue commitment =
         ConfidentialValue::GetCommitment(amount, asset, vbf);
     *value_commitment = CreateString(commitment.GetHex());
