@@ -825,6 +825,24 @@ CFDC_API int CfdGetValueCommitment(
     void* handle, int64_t value_satoshi, const char* asset_commitment,
     const char* value_blind_factor, char** value_commitment);
 
+/**
+ * @brief add transaction output.
+ * @param[in] handle            cfd handle.
+ * @param[in] create_handle     create transaction handle.
+ * @param[in] value_satoshi     satoshi value. (Specify 0 if disabled)
+ * @param[in] address           destination address.(Specify null if disabled)
+ * @param[in] direct_locking_script  locking script for direct.
+ *                                  (Specify null if disabled.)
+ * @param[in] asset_string      value asset.(Specify null if disabled)
+ * @param[in] nonce             nonce.(Specify null if disabled)
+ * @return CfdErrorCode
+ * @see CfdInitializeTransaction
+ */
+CFDC_API int CfdAddConfidentialTxOutput(
+    void* handle, void* create_handle, int64_t value_satoshi,
+    const char* address, const char* direct_locking_script,
+    const char* asset_string, const char* nonce);
+
 /* 
 CFDC_API int CfdAddConfidentialTxPeginInput(
     void* handle, void* create_handle, const char* txid, uint32_t vout,
