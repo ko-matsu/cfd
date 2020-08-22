@@ -2467,6 +2467,68 @@ int CfdGetConfidentialTxOutByHandle(
   }
 }
 
+int CfdAddConfidentialTxOutput(
+    void* handle, void* create_handle, int64_t value_satoshi,
+    const char* address, const char* direct_locking_script,
+    const char* asset_string, const char* nonce) {
+  try {
+    cfd::Initialize();
+    CheckBuffer(create_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(create_handle);
+    bool is_bitcoin = false;
+    ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    } else if (is_bitcoin) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Invalid handle state. tx is bitcoin.");
+    }
+    Amount amount = Amount(value_satoshi);
+
+    ConfidentialTransactionContext* tx =
+        static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+    if (IsEmptyString(asset_string)) {
+      warn(CFD_LOG_SOURCE, "asset is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. asset is null or empty.");
+    }
+    ConfidentialAssetId asset = ConfidentialAssetId(asset_string);
+    ConfidentialNonce nonce_obj;
+    if (!IsEmptyString(nonce)) {
+      nonce_obj = ConfidentialNonce(std::string(nonce));
+    }
+
+    if (!IsEmptyString(address)) {
+      ElementsAddressFactory address_factory;
+      if (ElementsConfidentialAddress::IsConfidentialAddress(address)) {
+        ElementsConfidentialAddress confidential_addr(address);
+        tx->AddTxOut(confidential_addr, amount, asset, false);
+      } else {
+        Address addr = address_factory.GetAddress(address);
+        tx->AddTxOut(amount, asset, addr.GetLockingScript(), nonce_obj);
+      }
+    } else if (!IsEmptyString(direct_locking_script)) {
+      tx->AddTxOut(amount, asset, Script(direct_locking_script), nonce_obj);
+    } else {
+      tx->UpdateFeeAmount(amount, asset);
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
 };  // extern "C"
 
 #endif  // CFD_DISABLE_ELEMENTS
