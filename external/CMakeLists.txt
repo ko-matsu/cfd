@@ -3,7 +3,9 @@ project(external_download NONE)
 include(../cmake/EnableCcache.cmake)
 include(../cmake/ConvertSrclistFunction.cmake)
 
-find_package(cfdcore  QUIET CONFIG)
+find_package(univalue QUIET CONFIG)
+find_package(wally  QUIET CONFIG)
+find_package(cfdcore  CONFIG)
 
 # env check
 if($ENV{CFD_CMAKE_GIT_SSH})
