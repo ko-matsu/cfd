@@ -944,12 +944,13 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
       std::string asset = itr->first;
       Amount txin_amount = txin_amount_map[asset];
       Amount txout_amount = tx_amount_map[asset];
-      append_txout_amount_map[itr->first] =
-          itr->second + txin_amount - txout_amount;
 
       if (use_fee && (itr->first == fee_asset_str)) {
-        /* fee assetは別で計算するため、txout追加対象から除外 */
+        // fee assetは別で計算するため、txout追加対象から除外
         append_txout_amount_map.erase(itr->first);
+      } else {
+        append_txout_amount_map[itr->first] =
+            itr->second + txin_amount - txout_amount;
       }
       ++itr;
     }
