@@ -1286,7 +1286,7 @@ int CfdSetBlindTxOption(
         buffer->exponent = static_cast<int>(value);
         break;
       case CfdBlindOption::kCfdBlindOptionMinimumBits:
-        buffer->minimum_bits = static_cast<int>(value);
+        if (value >= 0) buffer->minimum_bits = static_cast<int>(value);
         break;
       default:
         warn(CFD_LOG_SOURCE, "illegal option key. [{}]", key);
