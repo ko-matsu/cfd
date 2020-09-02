@@ -536,8 +536,8 @@ Amount ElementsTransactionApi::EstimateFee(
     int minimum_bits) const {
   uint64_t fee_rate = static_cast<uint64_t>(floor(effective_fee_rate * 1000));
   return EstimateFee(
-      tx_hex, utxos, fee_asset, txout_fee, utxo_fee, is_blind, fee_rate, exponent,
-      minimum_bits);
+      tx_hex, utxos, fee_asset, txout_fee, utxo_fee, is_blind, fee_rate,
+      exponent, minimum_bits);
 }
 
 Amount ElementsTransactionApi::EstimateFee(
