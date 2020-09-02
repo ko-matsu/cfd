@@ -531,18 +531,18 @@ Privkey ElementsTransactionApi::GetIssuanceBlindingKey(
 
 Amount ElementsTransactionApi::EstimateFee(
     const std::string& tx_hex, const std::vector<ElementsUtxoAndOption>& utxos,
-    const ConfidentialAssetId& fee_asset, Amount* tx_fee, Amount* utxo_fee,
+    const ConfidentialAssetId& fee_asset, Amount* txout_fee, Amount* utxo_fee,
     bool is_blind, double effective_fee_rate, int exponent,
     int minimum_bits) const {
   uint64_t fee_rate = static_cast<uint64_t>(floor(effective_fee_rate * 1000));
   return EstimateFee(
-      tx_hex, utxos, fee_asset, tx_fee, utxo_fee, is_blind, fee_rate, exponent,
+      tx_hex, utxos, fee_asset, txout_fee, utxo_fee, is_blind, fee_rate, exponent,
       minimum_bits);
 }
 
 Amount ElementsTransactionApi::EstimateFee(
     const std::string& tx_hex, const std::vector<ElementsUtxoAndOption>& utxos,
-    const ConfidentialAssetId& fee_asset, Amount* tx_fee, Amount* utxo_fee,
+    const ConfidentialAssetId& fee_asset, Amount* txout_fee, Amount* utxo_fee,
     bool is_blind, uint64_t effective_fee_rate, int exponent,
     int minimum_bits) const {
   ConfidentialTransactionContext txc(tx_hex);
@@ -671,7 +671,7 @@ Amount ElementsTransactionApi::EstimateFee(
   Amount utxo_fee_amount = fee_calc.GetFee(utxo_vsize);
   Amount fee = tx_fee_amount + utxo_fee_amount;
 
-  if (tx_fee) *tx_fee = tx_fee_amount;
+  if (txout_fee) *txout_fee = tx_fee_amount;
   if (utxo_fee) *utxo_fee = utxo_fee_amount;
 
   info(
