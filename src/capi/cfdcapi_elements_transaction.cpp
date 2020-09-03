@@ -228,7 +228,7 @@ int CfdAddConfidentialTxOut(
           "Failed to parameter. asset is null or empty.");
     }
 
-    ConfidentialTransactionController ctxc(tx_hex_string);
+    ConfidentialTransactionContext ctxc(tx_hex_string);
 
     Amount amount;
     if (IsEmptyString(value_commitment)) {
@@ -252,14 +252,15 @@ int CfdAddConfidentialTxOut(
         ElementsConfidentialAddress confidential_addr(address);
         ctxc.AddTxOut(confidential_addr, amount, asset_obj, false);
       } else {
-        ctxc.AddTxOut(address_factory.GetAddress(address), amount, asset_obj);
+        Address addr = address_factory.GetAddress(address);
+        ctxc.AddTxOut(amount, asset_obj, addr.GetLockingScript(), nonce_obj);
       }
     } else if (!IsEmptyString(direct_locking_script)) {
       Script script(direct_locking_script);
-      ctxc.AddTxOut(script, amount, asset_obj, nonce_obj);
+      ctxc.AddTxOut(amount, asset_obj, script, nonce_obj);
     } else if (amount > 0) {
       // fee
-      ctxc.AddTxOutFee(amount, asset_obj);
+      ctxc.UpdateFeeAmount(amount, asset_obj);
     }
 
     *tx_string = CreateString(ctxc.GetHex());
