@@ -191,6 +191,7 @@ int CfdVerifyEcSignature(
   }
 }
 
+#if 0
 int CfdCalculateSchnorrSignature(
     void* handle, const char* oracle_privkey, const char* k_value,
     const char* message, char** signature) {
@@ -409,6 +410,7 @@ int CfdVerifySchnorrSignatureWithNonce(
     return CfdErrorCode::kCfdUnknownError;
   }
 }
+#endif
 
 int CfdEncodeSignatureByDer(
     void* handle, const char* signature, int sighash_type,
@@ -1117,6 +1119,7 @@ int CfdNegatePrivkey(void* handle, const char* privkey, char** output) {
   }
 }
 
+#if 0
 int CfdGetSchnorrPubkey(
     void* handle, const char* oracle_pubkey, const char* oracle_r_point,
     const char* message, char** output) {
@@ -1204,6 +1207,7 @@ int CfdGetSchnorrPublicNonce(void* handle, const char* privkey, char** nonce) {
     return CfdErrorCode::kCfdUnknownError;
   }
 }
+#endif
 
 int CfdCreateExtkeyFromSeed(
     void* handle, const char* seed_hex, int network_type, int key_type,

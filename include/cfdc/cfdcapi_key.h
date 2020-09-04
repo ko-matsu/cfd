@@ -58,6 +58,7 @@ CFDC_API int CfdVerifyEcSignature(
     void* handle, const char* sighash, const char* pubkey,
     const char* signature);
 
+#if 0
 /**
  * @brief calcurate schnorr signature.
  * @param[in] handle          cfd handle.
@@ -112,6 +113,7 @@ CFDC_API int CfdVerifySchnorrSignature(
 CFDC_API int CfdVerifySchnorrSignatureWithNonce(
     void* handle, const char* pubkey, const char* nonce, const char* signature,
     const char* message);
+#endif
 
 /**
  * @brief encode ec signature by der encoding.
@@ -370,6 +372,7 @@ CFDC_API int CfdPrivkeyTweakMul(
 CFDC_API int CfdNegatePrivkey(
     void* handle, const char* privkey, char** output);
 
+#if 0
 /**
  * @brief function for schnorr public key.
  * @param[in] handle          cfd handle.
@@ -396,6 +399,7 @@ CFDC_API int CfdGetSchnorrPubkey(
  */
 CFDC_API int CfdGetSchnorrPublicNonce(
     void* handle, const char* privkey, char** nonce);
+#endif
 
 /**
  * @brief create extkey from seed.
