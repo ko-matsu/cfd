@@ -719,6 +719,7 @@ TEST(cfdcapi_key, MnemonicTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+#if 0
 TEST(cfdcapi_key, CombineMultipleMessages) {
   void* handle = NULL;
   int ret = CfdCreateHandle(&handle);
@@ -898,3 +899,4 @@ TEST(cfdcapi_key, CombineMultipleMessages) {
   ret = CfdFreeHandle(handle);
   EXPECT_EQ(kCfdSuccess, ret);
 }
+#endif
