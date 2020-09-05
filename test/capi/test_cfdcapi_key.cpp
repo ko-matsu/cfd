@@ -14,6 +14,8 @@
 using cfd::core::HashUtil;
 using cfd::core::StringUtil;
 using cfd::core::Privkey;
+using cfd::core::CryptoUtil;
+using cfd::core::SigHashType;
 
 /**
  * @brief testing class.
@@ -719,184 +721,152 @@ TEST(cfdcapi_key, MnemonicTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
-#if 0
-TEST(cfdcapi_key, CombineMultipleMessages) {
+TEST(cfdcapi_key, EcdsaAdaptorTest) {
   void* handle = NULL;
   int ret = CfdCreateHandle(&handle);
   EXPECT_EQ(kCfdSuccess, ret);
   EXPECT_FALSE((NULL == handle));
 
-  constexpr uint32_t kOracleNum = 3;
-  // Arrange
-  Privkey oracle_privkey_obj(
-      "0000000000000000000000000000000000000000000000000000000000000001");
-  std::string oracle_privkey_str = oracle_privkey_obj.GetHex();
-  const char* oracle_privkey = oracle_privkey_str.c_str();
-  std::string oracle_pubkey_str = oracle_privkey_obj.GeneratePubkey().GetHex();
-  const char* oracle_pubkey = oracle_pubkey_str.c_str();
-  const char* oracle_k_values[] = {
-      "0000000000000000000000000000000000000000000000000000000000000002",
-      "0000000000000000000000000000000000000000000000000000000000000003",
-      "0000000000000000000000000000000000000000000000000000000000000004"};
-  char* oracle_r_points[kOracleNum];
-  std::vector<std::string> messages = {"W", "I", "N"};
-  Privkey local_fund_privkey_obj(
-      "0000000000000000000000000000000000000000000000000000000000000006");
-  std::string local_fund_privkey_str = local_fund_privkey_obj.GetHex();
-  const char* local_fund_privkey = local_fund_privkey_str.c_str();
-  std::string local_fund_pubkey_str = local_fund_privkey_obj.GeneratePubkey().GetHex();
-  const char* local_fund_pubkey = local_fund_pubkey_str.c_str();
+  const char* msg =
+      "024bdd11f2144e825db05759bdd9041367a420fad14b665fd08af5b42056e5e2";
+  const char* adaptor =
+      "038d48057fc4ce150482114d43201b333bf3706f3cd527e8767ceb4b443ab5d349";
+  const char* sk =
+      "90ac0d5dc0a1a9ab352afb02005a5cc6c4df0da61d8149d729ff50db9b5a5215";
+  const char* pubkey =
+      "03490cec9a53cd8f2f664aea61922f26ee920c42d2489778bb7c9d9ece44d149a7";
+  const char* adaptor_sig_str =
+      "00cbe0859638c3600ea1872ed7a55b8182a251969f59d7d2da6bd4afedf25f5021a49956"
+      "234cbbbbede8ca72e0113319c84921bf1224897a6abd89dc96b9c5b208";
+  const char* adaptor_proof_str =
+      "00b02472be1ba09f5675488e841a10878b38c798ca63eff3650c8e311e3e2ebe2e3b6fee"
+      "5654580a91cc5149a71bf25bcbeae63dea3ac5ad157a0ab7373c3011d0fc2592a07f719c"
+      "5fc1323f935569ecd010db62f045e965cc1d564eb42cce8d6d";
 
-  Privkey local_sweep_privkey_obj(
-      "0000000000000000000000000000000000000000000000000000000000000006");
-  // std::string local_sweep_privkey_str = local_sweep_privkey_obj.GetHex();
-  // const char* local_sweep_privkey = local_sweep_privkey_str.c_str();
-  std::string local_sweep_pubkey_str = local_sweep_privkey_obj.GeneratePubkey().GetHex();
-  // const char* local_sweep_pubkey = local_sweep_pubkey_str.c_str();
+  const char* adaptor_sig2 =
+      "01099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f47bb90"
+      "e2ad6630900b69f55674c8ad74a419e6ce113c10a21a79345a6e47bc74c1";
+  const ByteData sig_der(
+      "30440220099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f47"
+      "02204d13456e98d8989043fd4674302ce90c432e2f8bb0269f02c72aafec60b72de101");
+  const char* secret =
+      "475697a71a74ff3f2a8f150534e9b67d4b0b6561fab86fcaa51f8c9d6c9db8c6";
 
-  auto combine_func = [](void* handle, const char* src, const char* dst, char** output) -> int {
-    void* combine_handle = nullptr;
-    int ret = CfdInitializeCombinePubkey(handle, &combine_handle);
+  char* adaptor_signature = NULL;
+  char* adaptor_proof = NULL;
+  ret = CfdSignEcdsaAdaptor(handle, msg, sk, adaptor,
+      &adaptor_signature, &adaptor_proof);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(adaptor_sig_str, adaptor_signature);
+    EXPECT_STREQ(adaptor_proof_str, adaptor_proof);
+    CfdFreeStringBuffer(adaptor_signature);
+    CfdFreeStringBuffer(adaptor_proof);
+  }
+
+  ret = CfdVerifyEcdsaAdaptor(
+      handle, adaptor_sig_str, adaptor_proof_str, adaptor, msg, pubkey);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  SigHashType sig_hash;
+  auto raw_sig = CryptoUtil::ConvertSignatureFromDer(sig_der, &sig_hash);
+  char* signature = NULL;
+  ret = CfdAdaptEcdsaAdaptor(handle, adaptor_sig2, secret, &signature);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(raw_sig.GetHex().c_str(), signature);
+    CfdFreeStringBuffer(signature);
+  }
+
+  char* adaptor_secret = NULL;
+  ret = CfdExtractEcdsaAdaptorSecret(
+      handle, adaptor_sig2, raw_sig.GetHex().c_str(), adaptor, &adaptor_secret);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(secret, adaptor_secret);
+    CfdFreeStringBuffer(adaptor_secret);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
     EXPECT_EQ(kCfdSuccess, ret);
-    if (ret != kCfdSuccess) return ret;
-
-    ret = CfdAddCombinePubkey(handle, combine_handle, src);
-    EXPECT_EQ(kCfdSuccess, ret);
-    if (ret == kCfdSuccess) {
-      ret = CfdAddCombinePubkey(handle, combine_handle, dst);
-      EXPECT_EQ(kCfdSuccess, ret);
-    }
-    if (ret == kCfdSuccess) {
-      ret = CfdFinalizeCombinePubkey(handle, combine_handle, output);
-      EXPECT_EQ(kCfdSuccess, ret);
-    }
-    CfdFreeCombinePubkeyHandle(handle, combine_handle);
-    return ret;
-  };
-
-  memset(oracle_r_points, 0, sizeof(oracle_r_points));
-  for (uint32_t i = 0; i < kOracleNum; ++i) {
-    ret = CfdGetSchnorrPublicNonce(handle, oracle_k_values[i], &oracle_r_points[i]);
-    EXPECT_EQ(kCfdSuccess, ret);
-    if (ret != kCfdSuccess) break;
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
   }
-
-  // Act
-  char* signatures[kOracleNum];
-  memset(signatures, 0, sizeof(signatures));
-  if (ret == kCfdSuccess) {
-    for (uint32_t i = 0; i < kOracleNum; ++i) {
-      auto hash = HashUtil::Sha256(messages[i]).GetHex();
-      ret = CfdCalculateSchnorrSignatureWithNonce(
-          handle, oracle_privkey, oracle_k_values[i], hash.c_str(), &signatures[i]);
-      EXPECT_EQ(kCfdSuccess, ret);
-      if (ret != kCfdSuccess) break;
-    }
-  }
-
-  char* pubkeys[kOracleNum];
-  memset(pubkeys, 0, sizeof(pubkeys));
-  if (ret == kCfdSuccess) {
-    for (uint32_t i = 0; i < kOracleNum; ++i) {
-      auto hash = HashUtil::Sha256(messages[i]).GetHex();
-      ret = CfdGetSchnorrPubkey(handle, oracle_pubkey,
-          oracle_r_points[i], hash.c_str(), &pubkeys[i]);
-      EXPECT_EQ(kCfdSuccess, ret);
-      if (ret != kCfdSuccess) break;
-    }
-  }
-
-  char* committed_key = nullptr;
-  char* combine_pubkey = nullptr;
-  char* combined_pubkey = nullptr;
-  if (ret == kCfdSuccess) {
-    void* combine_handle = nullptr;
-    ret = CfdInitializeCombinePubkey(handle, &combine_handle);
-    EXPECT_EQ(kCfdSuccess, ret);
-    if (ret == kCfdSuccess) {
-      for (uint32_t i = 0; i < kOracleNum; ++i) {
-        ret = CfdAddCombinePubkey(handle, combine_handle, pubkeys[i]);
-        EXPECT_EQ(kCfdSuccess, ret);
-        if (ret != kCfdSuccess) break;
-      }
-      if (ret == kCfdSuccess) {
-        ret = CfdFinalizeCombinePubkey(handle, combine_handle, &committed_key);
-        EXPECT_EQ(kCfdSuccess, ret);
-      }
-      CfdFreeCombinePubkeyHandle(handle, combine_handle);
-    }
-  }
-  if (ret == kCfdSuccess) {
-    // auto committed_key = pubkey;
-    ret = combine_func(handle, local_fund_pubkey, committed_key, &combine_pubkey);
-    EXPECT_EQ(kCfdSuccess, ret);
-  }
-  char* hash_pubkey = nullptr;
-  if (ret == kCfdSuccess) {
-    //auto hashPub = Privkey(HashUtil::Sha256(local_sweep_pubkey.GetData()))
-    //  .GeneratePubkey();
-    std::string privkey_str = HashUtil::Sha256(StringUtil::StringToByte(local_sweep_pubkey_str)).GetHex();
-    ret = CfdGetPubkeyFromPrivkey(
-    handle, privkey_str.c_str(), nullptr, true, &hash_pubkey);
-  }
-  if (ret == kCfdSuccess) {
-    ret = combine_func(handle, combine_pubkey, hash_pubkey, &combined_pubkey);
-    EXPECT_EQ(kCfdSuccess, ret);
-  }
-  CfdFreeStringBuffer(hash_pubkey);
-  CfdFreeStringBuffer(committed_key);
-  CfdFreeStringBuffer(combine_pubkey);
-
-  // auto tweak_priv = DlcUtil::GetTweakedPrivkey(signatures, local_fund_privkey,
-  //                                              local_sweep_pubkey);
-  char* tweaked_key = nullptr;
-  if (ret == kCfdSuccess) {
-    const char* target_tweaked_key = local_fund_privkey;
-    char* temp_tweaked_key = nullptr;
-    for (uint32_t i = 0; i < kOracleNum; ++i) {
-      ret = CfdPrivkeyTweakAdd(
-          handle, target_tweaked_key, signatures[i], &temp_tweaked_key);
-      EXPECT_EQ(kCfdSuccess, ret);
-      if (ret != kCfdSuccess) break;
-      if (tweaked_key != nullptr) {
-        CfdFreeStringBuffer(tweaked_key);
-        tweaked_key = nullptr;
-      }
-      tweaked_key = temp_tweaked_key;
-      target_tweaked_key = temp_tweaked_key;
-    }
-  }
-
-  char* tweak_priv = nullptr;
-  if (ret == kCfdSuccess) {
-    auto hashstr = HashUtil::Sha256(StringUtil::StringToByte(local_sweep_pubkey_str)).GetHex();
-    ret = CfdPrivkeyTweakAdd(handle, tweaked_key, hashstr.c_str(), &tweak_priv);
-    EXPECT_EQ(kCfdSuccess, ret);
-  }
-
-  char* tweak_pub = nullptr;
-  if (ret == kCfdSuccess) {
-    ret = CfdGetPubkeyFromPrivkey(
-        handle, tweak_priv, nullptr, true, &tweak_pub);
-    EXPECT_EQ(kCfdSuccess, ret);
-    if (ret == kCfdSuccess) {
-      // Assert
-      EXPECT_STREQ(tweak_pub, combined_pubkey);
-    }
-  }
-
-  for (uint32_t i = 0; i < kOracleNum; ++i) {
-    CfdFreeStringBuffer(oracle_r_points[i]);
-    CfdFreeStringBuffer(signatures[i]);
-    CfdFreeStringBuffer(pubkeys[i]);
-  }
-
-  CfdFreeStringBuffer(combined_pubkey);
-  CfdFreeStringBuffer(tweaked_key);
-  CfdFreeStringBuffer(tweak_priv);
-  CfdFreeStringBuffer(tweak_pub);
 
   ret = CfdFreeHandle(handle);
   EXPECT_EQ(kCfdSuccess, ret);
 }
-#endif
+
+
+TEST(cfdcapi_key, SchnorrTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  static const char* msg =
+      "e48441762fb75010b2aa31a512b62b4148aa3fb08eb0765d76b252559064a614";
+  static const char* sk =
+      "688c77bc2d5aaff5491cf309d4753b732135470d05b7b2cd21add0744fe97bef";
+  static const char* pubkey =
+      "02b33cc9edc096d0a83416964bd3c6247b8fecd256e4efa7870d2c854bdeb33390";
+  static const char* aux_rand =
+      "02cce08e913f22a36c5648d6405a2c7c50106e7aa2f1649e381c7f09d16b80ab";
+  static const char* nonce =
+      "8c8ca771d3c25eb38de7401818eeda281ac5446f5c1396148f8d9d67592440fe";
+  static const char* schnorr_nonce =
+      "f14d7e54ff58c5d019ce9986be4a0e8b7d643bd08ef2cdf1099e1a457865b547";
+  static const char* signature =
+      "f14d7e54ff58c5d019ce9986be4a0e8b7d643bd08ef2cdf1099e1a457865b5477c988c51"
+      "634a8dc955950a58ff5dc8c506ddb796121e6675946312680c26cf33";
+
+  char* schnorr_signature;
+  ret = CfdSignSchnorr(handle, msg, sk, aux_rand, &schnorr_signature);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(signature, schnorr_signature);
+    CfdFreeStringBuffer(schnorr_signature);
+    schnorr_signature = NULL;
+  }
+
+  static const char* expected_sig =
+      "5da618c1936ec728e5ccff29207f1680dcf4146370bdcfab0039951b91e3637a50a2a86"
+      "0b130d009405511c3eafe943e157a0df2c2020e3e50df05adb175332f";
+  ret = CfdSignSchnorrWithNonce(handle, msg, sk, nonce, &schnorr_signature);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(expected_sig, schnorr_signature);
+    CfdFreeStringBuffer(schnorr_signature);
+    schnorr_signature = NULL;
+  }
+
+  static const char* expected_sig_point =
+      "020d17280b8d2c2bd3b597b4446419c151dc237353d0fb9ec03d4eb7e8de7ee0a8";
+  char* sigpoint = NULL;
+  ret = CfdComputeSchnorrSigPoint(handle, msg, schnorr_nonce, pubkey, &sigpoint);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(expected_sig_point, sigpoint);
+    CfdFreeStringBuffer(sigpoint);
+  }
+
+  ret = CfdVerifySchnorr(handle, signature, msg, pubkey);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}

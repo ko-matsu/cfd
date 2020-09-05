@@ -52,67 +52,129 @@ CFDC_API int CfdCalculateEcSignature(
  * @param[in] sighash         The signature hash.
  * @param[in] pubkey          The public key to verify the signature against.
  * @param[in] signature       The 64byte signature to verify.
- * @return true if the signature is valid, false if not.
+ * @return CfdErrorCode
  */
 CFDC_API int CfdVerifyEcSignature(
     void* handle, const char* sighash, const char* pubkey,
     const char* signature);
 
-#if 0
+#if 1
 /**
- * @brief calcurate schnorr signature.
- * @param[in] handle          cfd handle.
- * @param[in] oracle_privkey  oracle privkey hex.
- * @param[in] k_value         k-value(privkey).
- * @param[in] message         32byte message data.
- * @param[out] signature      signature.
- *   If 'CfdFreeStringBuffer' is implemented,
- *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @brief Create an adaptor signature over the given message using the given
+ * private key. Returns an AdaptorPair of the adaptor signature and its proof.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] msg the message to create the signature for.
+ * @param[in] sk the secret key to create the signature with.
+ * @param[in] adaptor the adaptor to adapt the signature with.
+ * @param[out] adaptor_signature the adaptor signature
+ * @param[out] adaptor_proof the adaptor proof
  * @return CfdErrorCode
  */
-CFDC_API int CfdCalculateSchnorrSignature(
-    void* handle, const char* oracle_privkey, const char* k_value,
-    const char* message, char** signature);
+CFDC_API int CfdSignEcdsaAdaptor(
+    void* handle, const char* msg, const char* sk, const char* adaptor,
+    char** adaptor_signature, char** adaptor_proof);
 
 /**
- * @brief calcurate schnorr signature with nonce.
- * @param[in] handle          cfd handle.
- * @param[in] oracle_privkey  oracle privkey hex.
- * @param[in] k_value         k-value(privkey).
- * @param[in] message         32byte message data.
- * @param[out] signature      signature.
- *   If 'CfdFreeStringBuffer' is implemented,
- *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @brief "Decrypt" an adaptor signature using the provided secret, returning
+ * an ecdsa signature in compact format.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] adaptor_signature the adaptor signature
+ * @param[in] adaptor_secret the secret
+ * @param[out] signature the ECDSA signature
  * @return CfdErrorCode
  */
-CFDC_API int CfdCalculateSchnorrSignatureWithNonce(
-    void* handle, const char* oracle_privkey, const char* k_value,
-    const char* message, char** signature);
+CFDC_API int CfdAdaptEcdsaAdaptor(
+    void* handle, const char* adaptor_signature, const char* adaptor_secret,
+    char** signature);
 
 /**
- * @brief Verify if a signature with respect to a public key and a message.
- * @param[in] handle          cfd handle.
- * @param[in] pubkey          The public key to verify the signature against.
- * @param[in] signature       The 64byte signature to verify.
- * @param[in] message         The 32byte message to sign.
- * @return true if the signature is valid, false if not.
+ * @brief Extract an adaptor secret from an ECDSA signature for a given
+ * adaptor signature.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] adaptor_signature the adaptor signature
+ * @param[in] signature the ECDSA signature
+ * @param[in] adaptor the adaptor for the signature
+ * @param[out] adaptor_secret the secret
+ * @return CfdErrorCode
  */
-CFDC_API int CfdVerifySchnorrSignature(
-    void* handle, const char* pubkey, const char* signature,
-    const char* message);
+CFDC_API int CfdExtractEcdsaAdaptorSecret(
+    void* handle, const char* adaptor_signature, const char* signature,
+    const char* adaptor, char** adaptor_secret);
 
 /**
- * @brief Verify if a signature with respect to a public key and a message.
- * @param[in] handle          cfd handle.
- * @param[in] pubkey          The public key to verify the signature against.
- * @param[in] nonce           The nonce.
- * @param[in] signature       The 32byte signature to verify.
- * @param[in] message         The 32byte message to sign.
- * @return true if the signature is valid, false if not.
+ * @brief Verify that an adaptor proof is valid with respect to a given
+ * adaptor signature, adaptor, message and public key.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] adaptor_signature the adaptor signature
+ * @param[in] proof the adaptor proof
+ * @param[in] adaptor the adaptor for the signature
+ * @param[in] msg the message to create the signature for.
+ * @param[in] pubkey the public key
+ * @return CfdErrorCode
  */
-CFDC_API int CfdVerifySchnorrSignatureWithNonce(
-    void* handle, const char* pubkey, const char* nonce, const char* signature,
-    const char* message);
+CFDC_API int CfdVerifyEcdsaAdaptor(
+    void* handle, const char* adaptor_signature, const char* proof,
+    const char* adaptor, const char* msg, const char* pubkey);
+
+/**
+ * @brief Create a schnorr signature over the given message using the given
+ * private key and auxiliary random data.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] msg the message to create the signature for.
+ * @param[in] sk the secret key to create the signature with.
+ * @param[in] aux_rand the auxiliary random data used to create the nonce.
+ * @param[out] signature the signature.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSignSchnorr(
+    void* handle, const char* msg, const char* sk, const char* aux_rand,
+    char** signature);
+
+/**
+ * @brief Create a schnorr signature over the given message using the given
+ * private key.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] msg the message to create the signature for.
+ * @param[in] sk the secret key to create the signature with.
+ * @param[in] nonce the nonce to use to create the signature.
+ * @param[out] signature the signature.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSignSchnorrWithNonce(
+    void* handle, const char* msg, const char* sk, const char* nonce,
+    char** signature);
+
+/**
+ * @brief Compute a signature point for a Schnorr signature.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] msg the message that will be signed.
+ * @param[in] nonce the public component of the nonce that will be used.
+ * @param[in] pubkey the public key for which the signature will be valid.
+ * @param[out] sigpoint the signature point.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdComputeSchnorrSigPoint(
+    void* handle, const char* msg, const char* nonce, const char* pubkey,
+    char** sigpoint);
+
+/**
+ * @brief Verify a Schnorr signature.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] signature the signature to verify.
+ * @param[in] msg the message to verify the signature against.
+ * @param[in] pubkey the public key to verify the signature against.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdVerifySchnorr(
+    void* handle, const char* signature, const char* msg, const char* pubkey);
 #endif
 
 /**
@@ -371,35 +433,6 @@ CFDC_API int CfdPrivkeyTweakMul(
  */
 CFDC_API int CfdNegatePrivkey(
     void* handle, const char* privkey, char** output);
-
-#if 0
-/**
- * @brief function for schnorr public key.
- * @param[in] handle          cfd handle.
- * @param[in] oracle_pubkey   the public key of the oracle.
- * @param[in] oracle_r_point  the R point for the event.
- * @param[in] message         the message for the outcome.
- * @param[out] output         schnorr public key hex.
- *   If 'CfdFreeStringBuffer' is implemented,
- *   Call 'CfdFreeStringBuffer' after you are finished using it.
- * @return CfdErrorCode
- */
-CFDC_API int CfdGetSchnorrPubkey(
-    void* handle, const char* oracle_pubkey, const char* oracle_r_point,
-    const char* message, char** output);
-
-/**
- * @brief get schnorr public nonce.
- * @param[in] handle          cfd handle.
- * @param[in] privkey         privkey hex.
- * @param[out] nonce          public nonce hex.
- *   If 'CfdFreeStringBuffer' is implemented,
- *   Call 'CfdFreeStringBuffer' after you are finished using it.
- * @return CfdErrorCode
- */
-CFDC_API int CfdGetSchnorrPublicNonce(
-    void* handle, const char* privkey, char** nonce);
-#endif
 
 /**
  * @brief create extkey from seed.
