@@ -58,7 +58,6 @@ CFDC_API int CfdVerifyEcSignature(
     void* handle, const char* sighash, const char* pubkey,
     const char* signature);
 
-#if 1
 /**
  * @brief Create an adaptor signature over the given message using the given
  * private key. Returns an AdaptorPair of the adaptor signature and its proof.
@@ -175,7 +174,6 @@ CFDC_API int CfdComputeSchnorrSigPoint(
  */
 CFDC_API int CfdVerifySchnorr(
     void* handle, const char* signature, const char* msg, const char* pubkey);
-#endif
 
 /**
  * @brief encode ec signature by der encoding.
