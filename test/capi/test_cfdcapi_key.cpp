@@ -857,6 +857,21 @@ TEST(cfdcapi_key, SchnorrTest) {
   ret = CfdVerifySchnorr(handle, signature, msg, pubkey);
   EXPECT_EQ(kCfdSuccess, ret);
 
+  const char* expected_nonce =
+      "f14d7e54ff58c5d019ce9986be4a0e8b7d643bd08ef2cdf1099e1a457865b547";
+  const char* expected_privkey =
+      "7c988c51634a8dc955950a58ff5dc8c506ddb796121e6675946312680c26cf33";
+  char* sigs_nonce = NULL;
+  char* sigs_key = NULL;
+  ret = CfdSplitSchnorrSignature(handle, signature, &sigs_nonce, &sigs_key);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(expected_nonce, sigs_nonce);
+    EXPECT_STREQ(expected_privkey, sigs_key);
+    CfdFreeStringBuffer(sigs_nonce);
+    CfdFreeStringBuffer(sigs_key);
+  }
+
   ret = CfdGetLastErrorCode(handle);
   if (ret != kCfdSuccess) {
     char* str_buffer = NULL;

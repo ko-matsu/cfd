@@ -578,6 +578,50 @@ int CfdVerifySchnorr(
   return result;
 }
 
+int CfdSplitSchnorrSignature(
+    void* handle, const char* signature, char** nonce, char** key) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_nonce = nullptr;
+  char* work_key = nullptr;
+  try {
+    cfd::Initialize();
+    if (IsEmptyString(signature)) {
+      warn(CFD_LOG_SOURCE, "signature is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. signature is null or empty.");
+    }
+    if (nonce == nullptr) {
+      warn(CFD_LOG_SOURCE, "nonce is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. nonce is null.");
+    }
+    if (key == nullptr) {
+      warn(CFD_LOG_SOURCE, "key is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. key is null.");
+    }
+
+    SchnorrSignature sig = SchnorrSignature(std::string(signature));
+    work_nonce = CreateString(sig.GetNonce().GetData().GetHex());
+    work_key = CreateString(sig.GetPrivkey().GetHex());
+
+    *nonce = work_nonce;
+    *key = work_key;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_nonce, &work_key);
+  return result;
+}
+
 int CfdEncodeSignatureByDer(
     void* handle, const char* signature, int sighash_type,
     bool sighash_anyone_can_pay, char** der_signature) {

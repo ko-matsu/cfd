@@ -176,6 +176,18 @@ CFDC_API int CfdVerifySchnorr(
     void* handle, const char* signature, const char* msg, const char* pubkey);
 
 /**
+ * @brief Split a Schnorr signature.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] signature the signature.
+ * @param[out] nonce the nonce part of the signature.
+ * @param[out] key the second part of the signature as a Privkey instance.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSplitSchnorrSignature(
+    void* handle, const char* signature, char** nonce, char** key);
+
+/**
  * @brief encode ec signature by der encoding.
  * @param[in] handle                  cfd handle.
  * @param[in] signature               compact signature string.
