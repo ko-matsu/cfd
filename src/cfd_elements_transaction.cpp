@@ -1269,6 +1269,22 @@ uint32_t ConfidentialTransactionController::GetSizeIgnoreTxIn(
     uint32_t* no_witness_area_size, int exponent, int minimum_bits) const {
   uint32_t size = ConfidentialTransaction::kElementsTransactionMinimumSize;
   std::vector<ConfidentialTxOutReference> txouts = transaction_.GetTxOutList();
+  std::vector<ConfidentialTxInReference> txins = transaction_.GetTxInList();
+
+  uint32_t temp_asset_count = 0;
+
+  // search vin from issue/reissue
+  for (const auto& txin : txins) {
+    if (!txin.GetAssetEntropy().IsEmpty()) {
+      ++temp_asset_count;
+      if (!txin.GetBlindingNonce().IsEmpty()) {
+        // reissuance
+      } else {
+        ++temp_asset_count;  // issuance
+      }
+    }
+    ++temp_asset_count;
+  }
 
   uint32_t witness_size = 0;
   uint32_t no_witness_size = 0;
@@ -1277,7 +1293,7 @@ uint32_t ConfidentialTransactionController::GetSizeIgnoreTxIn(
   for (const auto& txout : txouts) {
     txout.GetSerializeSize(
         is_blinded, &temp_witness_size, &temp_no_witness_size, exponent,
-        minimum_bits, nullptr);
+        minimum_bits, nullptr, temp_asset_count);
     witness_size += temp_witness_size;
     no_witness_size += temp_no_witness_size;
   }
