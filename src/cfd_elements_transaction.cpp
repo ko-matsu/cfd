@@ -283,11 +283,10 @@ uint32_t ConfidentialTransactionContext::GetSizeIgnoreTxIn(
   uint32_t no_witness_size = 0;
   uint32_t temp_witness_size = 0;
   uint32_t temp_no_witness_size = 0;
-  uint32_t rangeproof_size_cache = 0;
   for (const auto& txout : txouts) {
     txout.GetSerializeSize(
         is_blinded, &temp_witness_size, &temp_no_witness_size, exponent,
-        minimum_bits, &rangeproof_size_cache, temp_asset_count);
+        minimum_bits, nullptr, temp_asset_count);
     witness_size += temp_witness_size;
     no_witness_size += temp_no_witness_size;
   }
@@ -1275,11 +1274,10 @@ uint32_t ConfidentialTransactionController::GetSizeIgnoreTxIn(
   uint32_t no_witness_size = 0;
   uint32_t temp_witness_size = 0;
   uint32_t temp_no_witness_size = 0;
-  uint32_t rangeproof_size_cache = 0;
   for (const auto& txout : txouts) {
     txout.GetSerializeSize(
         is_blinded, &temp_witness_size, &temp_no_witness_size, exponent,
-        minimum_bits, &rangeproof_size_cache);
+        minimum_bits, nullptr);
     witness_size += temp_witness_size;
     no_witness_size += temp_no_witness_size;
   }
