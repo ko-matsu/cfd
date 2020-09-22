@@ -615,6 +615,7 @@ TEST(ElementsTransactionApi, FundRawTransaction_Reissueasset) {
     option.SetEffectiveFeeBaserate(fee_rate);
     option.SetLongTermFeeBaserate(fee_rate);
     option.SetFeeAsset(fee_asset);
+    // option.SetBlindInfo(0, 36);
 
     ElementsTransactionApi api;
     ConfidentialTransactionController ctx = api.FundRawTransaction(
@@ -624,6 +625,7 @@ TEST(ElementsTransactionApi, FundRawTransaction_Reissueasset) {
 
     EXPECT_STREQ(kExpTxData, ctx.GetHex().c_str());
     EXPECT_EQ(883, estimate_fee.GetSatoshiValue());
+    // EXPECT_EQ(657, estimate_fee.GetSatoshiValue());
     EXPECT_EQ(size_t{2}, append_txout_addresses.size());
     if (append_txout_addresses.size() == size_t{2})
     {

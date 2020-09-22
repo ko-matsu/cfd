@@ -579,6 +579,8 @@ Amount ElementsTransactionApi::EstimateFee(
   ElementsAddressApi address_api;
   for (const auto& utxo : utxos) {
     uint32_t pegin_btc_tx_size = 0;
+    txin_size = 0;
+    wit_size = 0;
     Script fedpeg_script;
     if (utxo.is_pegin) {
       pegin_btc_tx_size = utxo.pegin_btc_tx_size;
@@ -636,6 +638,15 @@ Amount ElementsTransactionApi::EstimateFee(
             static_cast<uint32_t>(pegin_stack[4].GetSerializeSize());
         fedpeg_script = Script(pegin_stack[3]);
       }
+
+      if (utxo.is_issuance && ref.GetAssetEntropy().IsEmpty()) {
+        // unmatch pattern. (using utxo data)
+      } else {
+        ref.EstimateTxInSize(
+            addr_type, redeem_script, is_blind_issuance, exponent,
+            minimum_bits, fedpeg_script, scriptsig_template, &wit_size,
+            &txin_size);
+      }
     } catch (const CfdException& except) {
       info(CFD_LOG_SOURCE, "Error:{}", std::string(except.what()));
     }
@@ -646,10 +657,12 @@ Amount ElementsTransactionApi::EstimateFee(
       asset_count += 2;
 
     ++asset_count;
-    ConfidentialTxIn::EstimateTxInSize(
-        addr_type, redeem_script, pegin_btc_tx_size, fedpeg_script,
-        is_issuance, is_blind_issuance, &wit_size, &txin_size, is_reissuance,
-        scriptsig_template, exponent, minimum_bits, &rangeproof_size_cache);
+    if (txin_size == 0) {
+      ConfidentialTxIn::EstimateTxInSize(
+          addr_type, redeem_script, pegin_btc_tx_size, fedpeg_script,
+          is_issuance, is_blind_issuance, &wit_size, &txin_size, is_reissuance,
+          scriptsig_template, exponent, minimum_bits, &rangeproof_size_cache);
+    }
     size += txin_size;
     witness_size += wit_size;
     if (wit_size == 0) ++not_witness_count;
