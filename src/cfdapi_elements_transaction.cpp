@@ -1108,12 +1108,12 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     }
 
     Amount min_fee;
+    ConfidentialTransactionContext txc_dummy(ctxc.GetHex());
+    uint32_t dummy_txout_index = 0;
+    std::vector<ElementsUtxoAndOption> new_selected_utxos;
     {
-      // dummyのtx作成
-      ConfidentialTransactionContext txc_dummy(ctxc.GetHex());
       // fee再計算用に選択済みUTXO情報をElements用Utxoに再設定
-      std::vector<ElementsUtxoAndOption> new_selected_utxos =
-          selected_txin_utxos;
+      new_selected_utxos = selected_txin_utxos;
       Txid txid;
       for (const auto& coin : selected_coins) {
         memcpy(txid_bytes.data(), coin.txid, txid_bytes.size());
@@ -1145,6 +1145,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
       warn(
           CFD_LOG_SOURCE, "Set dummy_amount={}",
           dummy_amount.GetSatoshiValue());
+      dummy_txout_index = txc_dummy.GetTxOutCount();
       txc_dummy.AddTxOut(
           address, dummy_amount, ConfidentialAssetId(fee_asset_str));
       fee = ElementsTransactionApi::EstimateFee(
@@ -1194,7 +1195,6 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
       fee_selected_coins = coin_select.SelectCoins(
           new_target_values, utxo_list, utxo_filter, option, fee,
           &new_amount_map, &utxo_fee, nullptr);
-      fee += utxo_fee;
       // append txout for fee asset
       for (auto itr = new_amount_map.begin(); itr != new_amount_map.end();
            ++itr) {
@@ -1203,6 +1203,15 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           break;
         }
       }
+      // estimate fee after coinselection (new fee < old fee)
+      Amount dummy_amount = fee_selected_value + txin_amount - tx_amount - fee;
+      txc_dummy.SetTxOutValue(dummy_txout_index, dummy_amount);
+      Amount new_fee = ElementsTransactionApi::EstimateFee(
+          txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
+          is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
+          minimum_bits);
+      if (new_fee < fee) fee = new_fee;
+      fee += utxo_fee;
     }
     if ((fee_selected_value + txin_amount) < (tx_amount + fee)) {
       warn(CFD_LOG_SOURCE, "Failed to FundRawTransaction. low fee asset.");
