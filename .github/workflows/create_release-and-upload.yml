@@ -298,7 +298,7 @@ jobs:
         cd build
         sudo make install DESTDIR=../dist
         cd ..
-      timeout-minutes: 30
+      timeout-minutes: 40
     - name: create archive file
       run: |
         cd dist
