@@ -1084,11 +1084,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           "Input address and network is unmatch.");
     }
 
-    Amount txin_amount;
-    Amount tx_amount;
-    Amount target_value;
-    Amount utxo_value;
-    Amount max_utxo_value;
+    Amount txin_amount, tx_amount, target_value, utxo_value, max_utxo_value;
     {
       if (txin_amount_map.find(fee_asset_str) != txin_amount_map.end()) {
         txin_amount = txin_amount_map[fee_asset_str];
@@ -1156,31 +1152,28 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
 
     Amount dust_amount = option.GetConfidentialDustFeeAmount(address);
 
-    Amount fee_asset_target_value;
-    {
-      fee_asset_target_value = target_value + fee;
-      Amount diff_amount;
-      if (txin_amount > tx_amount) {
-        Amount check_min_fee = dust_amount + min_fee;
-        diff_amount = txin_amount - tx_amount;
-        if ((target_value == 0) && (diff_amount > min_fee) &&
-            (diff_amount < check_min_fee)) {
-          // 既存UTXOで満たされる場合、coinselection不要かつTxOut追加も不要
-          fee_asset_target_value = Amount();
-          fee = min_fee;
-          info(CFD_LOG_SOURCE, "use minimum fee[{}]", fee.GetSatoshiValue());
-        } else if (diff_amount >= fee_asset_target_value) {
-          fee_asset_target_value = Amount();
-        } else {
-          // txinの余剰分でtarget分が満たされない場合、不足分をコインセレクト
-          fee_asset_target_value -= diff_amount;
-        }
-      } else if (txin_amount < tx_amount) {
-        // txoutの不足分を計算
-        diff_amount = tx_amount - txin_amount;
-        // txoutの不足分を合わせてコインセレクト
-        fee_asset_target_value += diff_amount;
+    Amount fee_asset_target_value = target_value + fee;
+    Amount diff_amount;
+    if (txin_amount > tx_amount) {
+      Amount check_min_fee = dust_amount + min_fee;
+      diff_amount = txin_amount - tx_amount;
+      if ((target_value == 0) && (diff_amount > min_fee) &&
+          (diff_amount < check_min_fee)) {
+        // 既存UTXOで満たされる場合、coinselection不要かつTxOut追加も不要
+        fee_asset_target_value = Amount();
+        fee = min_fee;
+        info(CFD_LOG_SOURCE, "use minimum fee[{}]", fee.GetSatoshiValue());
+      } else if (diff_amount >= fee_asset_target_value) {
+        fee_asset_target_value = Amount();
+      } else {
+        // txinの余剰分でtarget分が満たされない場合、不足分をコインセレクト
+        fee_asset_target_value -= diff_amount;
       }
+    } else if (txin_amount < tx_amount) {
+      // txoutの不足分を計算
+      diff_amount = tx_amount - txin_amount;
+      // txoutの不足分を合わせてコインセレクト
+      fee_asset_target_value += diff_amount;
     }
 
     std::vector<Utxo> fee_selected_coins;
