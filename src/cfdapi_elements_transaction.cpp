@@ -832,6 +832,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
       asset_list.push_back(asset);
     }
   }
+  std::map<std::string, Amount> input_amount_map;
+  std::map<std::string, Amount> input_max_map;
   std::vector<UtxoData> utxodata_list;
   utxodata_list.reserve(utxos.size());
   for (const auto& utxo : utxos) {
@@ -845,6 +847,16 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     }
     if (!isFind) {
       utxodata_list.push_back(utxo);
+    }
+    std::string asset = utxo.asset.GetHex();
+    if (input_amount_map.find(asset) == input_amount_map.end()) {
+      Amount amount;
+      input_amount_map.emplace(asset, amount);
+      input_max_map.emplace(asset, amount);
+    }
+    input_amount_map[asset] += utxo.amount;
+    if (input_max_map[asset] < utxo.amount) {
+      input_max_map[asset] = utxo.amount;
     }
   }
 
@@ -1072,6 +1084,29 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           "Input address and network is unmatch.");
     }
 
+    Amount txin_amount;
+    Amount tx_amount;
+    Amount target_value;
+    Amount utxo_value;
+    Amount max_utxo_value;
+    {
+      if (txin_amount_map.find(fee_asset_str) != txin_amount_map.end()) {
+        txin_amount = txin_amount_map[fee_asset_str];
+      }
+      if (tx_amount_map.find(fee_asset_str) != tx_amount_map.end()) {
+        tx_amount = tx_amount_map[fee_asset_str];
+      }
+      if (target_values.find(fee_asset_str) != target_values.end()) {
+        target_value = target_values[fee_asset_str];
+      }
+      if (input_amount_map.find(fee_asset_str) != input_amount_map.end()) {
+        utxo_value = input_amount_map[fee_asset_str];
+      }
+      if (input_max_map.find(fee_asset_str) != input_max_map.end()) {
+        max_utxo_value = input_max_map[fee_asset_str];
+      }
+    }
+
     Amount min_fee;
     {
       // dummyのtx作成
@@ -1097,8 +1132,21 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
           minimum_bits);
       // add dummy txout（余剰額のTxOut追加考慮）
+      Amount dummy_amount;
+      if (txin_amount < tx_amount) {
+        dummy_amount = tx_amount - txin_amount;
+      }
+      dummy_amount += target_value + min_fee * 2;
+      if (max_utxo_value > dummy_amount) {
+        dummy_amount = max_utxo_value * 2;
+      } else {
+        dummy_amount *= 2;
+      }
+      warn(
+          CFD_LOG_SOURCE, "Set dummy_amount={}",
+          dummy_amount.GetSatoshiValue());
       txc_dummy.AddTxOut(
-          address, Amount(1), ConfidentialAssetId(fee_asset_str));
+          address, dummy_amount, ConfidentialAssetId(fee_asset_str));
       fee = ElementsTransactionApi::EstimateFee(
           txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
           is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
@@ -1108,19 +1156,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     Amount dust_amount = option.GetConfidentialDustFeeAmount(address);
 
     Amount fee_asset_target_value;
-    Amount txin_amount;
-    Amount tx_amount;
-    Amount target_value;
     {
-      if (txin_amount_map.find(fee_asset_str) != txin_amount_map.end()) {
-        txin_amount = txin_amount_map[fee_asset_str];
-      }
-      if (tx_amount_map.find(fee_asset_str) != tx_amount_map.end()) {
-        tx_amount = tx_amount_map[fee_asset_str];
-      }
-      if (target_values.find(fee_asset_str) != target_values.end()) {
-        target_value = target_values[fee_asset_str];
-      }
       fee_asset_target_value = target_value + fee;
       Amount diff_amount;
       if (txin_amount > tx_amount) {
