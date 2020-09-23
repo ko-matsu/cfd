@@ -44,7 +44,7 @@ using cfd::core::HDWallet;
 using cfd::core::NetType;
 using cfd::core::Privkey;
 using cfd::core::Pubkey;
-using cfd::core::SchnorrNonce;
+using cfd::core::SchnorrPubkey;
 using cfd::core::SchnorrSignature;
 using cfd::core::SchnorrUtil;
 using cfd::core::Script;
@@ -524,7 +524,7 @@ int CfdComputeSchnorrSigPoint(
     }
 
     Pubkey sig_point = SchnorrUtil::ComputeSigPoint(
-        ByteData256(msg), SchnorrNonce(nonce), Pubkey(pubkey));
+        ByteData256(msg), SchnorrPubkey(nonce), SchnorrPubkey(pubkey));
 
     *sigpoint = CreateString(sig_point.GetHex());
     return CfdErrorCode::kCfdSuccess;
@@ -563,7 +563,7 @@ int CfdVerifySchnorr(
     }
 
     bool is_verify = SchnorrUtil::Verify(
-        SchnorrSignature(signature), ByteData256(msg), Pubkey(pubkey));
+        SchnorrSignature(signature), ByteData256(msg), SchnorrPubkey(pubkey));
     if (!is_verify) {
       return CfdErrorCode::kCfdSignVerificationError;
     }
