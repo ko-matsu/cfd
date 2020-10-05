@@ -418,7 +418,8 @@ TEST(ElementsTransactionApi, EstimateFee_LargeAmount_MinBits36)
 
   EXPECT_NO_THROW(tx = txc.Finalize());
 
-  if ((tx.GetDataSize() != 8534) && (tx.GetDataSize() != 8535) && (tx.GetDataSize() != 8536)) {
+  if ((tx.GetDataSize() != 8533) && (tx.GetDataSize() != 8534) &&
+      (tx.GetDataSize() != 8535) && (tx.GetDataSize() != 8536)) {
     EXPECT_EQ(tx.GetDataSize(), 0);
   }
 
