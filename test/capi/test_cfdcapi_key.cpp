@@ -824,6 +824,15 @@ TEST(cfdcapi_key, SchnorrTest) {
       "6470fd1303dda4fda717b9837153c24a6eab377183fc438f939e0ed2b620e9ee"
       "5077c4a8b8dca28963d772a94f5f0ddf598e1c47c137f91933274c7c3edadce8";
 
+  char* temp_schnorr_pubkey = NULL;
+  ret = CfdGetSchnorrPubkeyFromPrivkey(handle, sk, &temp_schnorr_pubkey);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(pubkey, temp_schnorr_pubkey);
+    CfdFreeStringBuffer(temp_schnorr_pubkey);
+    temp_schnorr_pubkey = NULL;
+  }
+
   char* schnorr_signature;
   ret = CfdSignSchnorr(handle, msg, sk, aux_rand, &schnorr_signature);
   EXPECT_EQ(kCfdSuccess, ret);

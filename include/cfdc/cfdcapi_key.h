@@ -120,6 +120,17 @@ CFDC_API int CfdVerifyEcdsaAdaptor(
     const char* adaptor, const char* msg, const char* pubkey);
 
 /**
+ * @brief Get a schnorr public key from a private key/
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] privkey the private.
+ * @param[out] pubkey the public key.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetSchnorrPubkeyFromPrivkey(
+    void* handle, const char* privkey, char** pubkey);
+
+/**
  * @brief Create a schnorr signature over the given message using the given
  * private key and auxiliary random data.
  *

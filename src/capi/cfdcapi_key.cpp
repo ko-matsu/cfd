@@ -400,6 +400,39 @@ int CfdVerifyEcdsaAdaptor(
   return result;
 }
 
+int CfdGetSchnorrPubkeyFromPrivkey(
+    void* handle, const char* privkey, char** pubkey) {
+  try {
+    cfd::Initialize();
+    if (pubkey == nullptr) {
+      warn(CFD_LOG_SOURCE, "pubkey is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null.");
+    }
+    if (IsEmptyString(privkey)) {
+      warn(CFD_LOG_SOURCE, "privkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. privkey is null or empty.");
+    }
+
+    Privkey privkey_obj = Privkey(std::string(privkey));
+    SchnorrPubkey schnorr_pubkey = SchnorrPubkey::FromPrivkey(privkey_obj);
+    *pubkey = CreateString(schnorr_pubkey.GetData().GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
 int CfdSignSchnorr(
     void* handle, const char* msg, const char* sk, const char* aux_rand,
     char** signature) {
