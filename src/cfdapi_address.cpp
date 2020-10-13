@@ -257,7 +257,7 @@ DescriptorScriptData AddressApi::ParseOutputDescriptor(
   };
 
   DescriptorScriptData result;
-  result.key_type = DescriptorKeyType::kDescriptorTypeNull;  // dummy init
+  result.key_type = DescriptorKeyType::kDescriptorKeyNull;  // dummy init
   result.address_type = AddressType::kP2shAddress;  // dummy init
   Descriptor desc = Descriptor::Parse(descriptor, &addr_prefixes);
   std::vector<std::string> args;
@@ -300,7 +300,7 @@ DescriptorScriptData AddressApi::ParseOutputDescriptor(
           }
           if (ref.HasRedeemScript()) {
             ref_data.redeem_script = ref.GetRedeemScript();
-            ref_data.key_type = DescriptorKeyType::kDescriptorTypeNull;
+            ref_data.key_type = DescriptorKeyType::kDescriptorKeyNull;
           } else {
             key_ref = ref.GetKeyList()[0];
             ref_data.key_type = key_ref.GetKeyType();
