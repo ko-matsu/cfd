@@ -824,15 +824,6 @@ TEST(cfdcapi_key, SchnorrTest) {
       "6470fd1303dda4fda717b9837153c24a6eab377183fc438f939e0ed2b620e9ee"
       "5077c4a8b8dca28963d772a94f5f0ddf598e1c47c137f91933274c7c3edadce8";
 
-  char* temp_schnorr_pubkey = NULL;
-  ret = CfdGetSchnorrPubkeyFromPrivkey(handle, sk, &temp_schnorr_pubkey);
-  EXPECT_EQ(kCfdSuccess, ret);
-  if (ret == kCfdSuccess) {
-    EXPECT_STREQ(pubkey, temp_schnorr_pubkey);
-    CfdFreeStringBuffer(temp_schnorr_pubkey);
-    temp_schnorr_pubkey = NULL;
-  }
-
   char* schnorr_signature;
   ret = CfdSignSchnorr(handle, msg, sk, aux_rand, &schnorr_signature);
   EXPECT_EQ(kCfdSuccess, ret);
@@ -880,6 +871,95 @@ TEST(cfdcapi_key, SchnorrTest) {
     CfdFreeStringBuffer(sigs_nonce);
     CfdFreeStringBuffer(sigs_key);
   }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_key, SchnorrKeyTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  static const char* tweak =
+      "e48441762fb75010b2aa31a512b62b4148aa3fb08eb0765d76b252559064a614";
+  static const char* sk =
+      "688c77bc2d5aaff5491cf309d4753b732135470d05b7b2cd21add0744fe97bef";
+  static const char* pk =
+      "03b33cc9edc096d0a83416964bd3c6247b8fecd256e4efa7870d2c854bdeb33390";
+  static const char* exp_pubkey =
+      "b33cc9edc096d0a83416964bd3c6247b8fecd256e4efa7870d2c854bdeb33390";
+  // static const bool exp_parity = true;
+  static const char* exp_tweaked_pk =
+      "1fc8e882e34cc7942a15f39ffaebcbdf58a19239bcb17b7f5aa88e0eb808f906";
+  static const bool exp_tweaked_parity = true;
+  static const char* exp_tweaked_sk =
+      "7bf7c9ba025ca01b698d3e9b3e40efce2774f8a388f8c390550481e1407b2a25";
+
+  char* temp_schnorr_pubkey = nullptr;
+  bool parity = false;
+  ret = CfdGetSchnorrPubkeyFromPrivkey(handle, sk, &temp_schnorr_pubkey, &parity);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_TRUE(parity);
+    EXPECT_STREQ(exp_pubkey, temp_schnorr_pubkey);
+    CfdFreeStringBuffer(temp_schnorr_pubkey);
+    temp_schnorr_pubkey = nullptr;
+  }
+
+  ret = CfdGetSchnorrPubkeyFromPubkey(handle, pk, &temp_schnorr_pubkey, &parity);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_TRUE(parity);
+    EXPECT_STREQ(exp_pubkey, temp_schnorr_pubkey);
+    CfdFreeStringBuffer(temp_schnorr_pubkey);
+    temp_schnorr_pubkey = nullptr;
+  }
+
+  // check tweak
+
+  char* tweaked_pk = nullptr;
+  ret = CfdSchnorrPubkeyTweakAdd(handle, exp_pubkey, tweak, &tweaked_pk, &parity);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_TRUE(parity);
+    EXPECT_STREQ(exp_tweaked_pk, tweaked_pk);
+    CfdFreeStringBuffer(tweaked_pk);
+    tweaked_pk = NULL;
+  }
+
+  char* tweaked_sk = nullptr;
+  ret = CfdSchnorrKeyPairTweakAdd(handle, sk, tweak,
+      &tweaked_pk, &parity, &tweaked_sk);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_TRUE(parity);
+    EXPECT_STREQ(exp_tweaked_pk, tweaked_pk);
+    EXPECT_STREQ(exp_tweaked_sk, tweaked_sk);
+    CfdFreeStringBuffer(tweaked_pk);
+    CfdFreeStringBuffer(tweaked_sk);
+    tweaked_pk = NULL;
+    tweaked_sk = NULL;
+  }
+
+  ret = CfdCheckTweakAddFromSchnorrPubkey(handle, exp_tweaked_pk,
+      exp_tweaked_parity, exp_pubkey, tweak);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  ret = CfdCheckTweakAddFromSchnorrPubkey(handle, exp_tweaked_pk,
+      !exp_tweaked_parity, exp_pubkey, tweak);
+  EXPECT_EQ(kCfdSignVerificationError, ret);
 
   ret = CfdGetLastErrorCode(handle);
   if (ret != kCfdSuccess) {

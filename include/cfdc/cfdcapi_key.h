@@ -120,15 +120,76 @@ CFDC_API int CfdVerifyEcdsaAdaptor(
     const char* adaptor, const char* msg, const char* pubkey);
 
 /**
- * @brief Get a schnorr public key from a private key/
+ * @brief Get a schnorr public key from a private key.
  *
  * @param[in] handle cfd handle.
- * @param[in] privkey the private.
- * @param[out] pubkey the public key.
+ * @param[in] privkey the private key.
+ * @param[out] schnorr_pubkey the schnorr public key.
+ * @param[out] parity the y-parity flag.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetSchnorrPubkeyFromPrivkey(
-    void* handle, const char* privkey, char** pubkey);
+    void* handle, const char* privkey, char** schnorr_pubkey, bool* parity);
+
+/**
+ * @brief Get a schnorr public key from a public key.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] pubkey the public key.
+ * @param[out] schnorr_pubkey the schnorr public key.
+ * @param[out] parity the y-parity flag.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetSchnorrPubkeyFromPubkey(
+    void* handle, const char* pubkey, char** schnorr_pubkey, bool* parity);
+
+/**
+ * @brief Add tweak to pubkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          pubkey hex.
+ * @param[in] tweak           tweak data hex. (32-byte (64-charactors))
+ * @param[out] output         pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] parity the y-parity flag.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSchnorrPubkeyTweakAdd(
+    void* handle, const char* pubkey, const char* tweak, char** output,
+    bool* parity);
+
+/**
+ * @brief Add tweak to key pair.
+ * @param[in] handle          cfd handle.
+ * @param[in] privkey         privkey hex.
+ * @param[in] tweak           tweak data hex. (32-byte (64-charactors))
+ * @param[out] tweaked_pubkey   tweaked schnorr pubkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] tweaked_parity the y-parity flag.
+ * @param[out] tweaked_privkey  tweaked privkey output hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSchnorrKeyPairTweakAdd(
+    void* handle, const char* privkey, const char* tweak,
+    char** tweaked_pubkey, bool* tweaked_parity, char** tweaked_privkey);
+
+/**
+ * @brief Check tweak-add from base pubkey.
+ * @param[in] handle          cfd handle.
+ * @param[in] tweaked_pubkey  tweaked pubkey hex.
+ * @param[in] tweaked_parity  tweaked y-parity flag.
+ * @param[in] base_pubkey     base pubkey hex.
+ * @param[in] tweak           tweak data hex. (32-byte (64-charactors))
+ * @retval kCfdSuccess                check success.
+ * @retval kCfdSignVerificationError  check fail.
+ * @retval kCfdIllegalArgumentError   illegal argument.
+ */
+CFDC_API int CfdCheckTweakAddFromSchnorrPubkey(
+    void* handle, const char* tweaked_pubkey, bool tweaked_parity,
+    const char* base_pubkey, const char* tweak);
 
 /**
  * @brief Create a schnorr signature over the given message using the given

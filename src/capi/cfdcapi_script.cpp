@@ -325,7 +325,7 @@ int CfdAddMultisigScriptSigDataToDer(
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
-    if (IsEmptyString()) {
+    if (IsEmptyString(signature)) {
       warn(CFD_LOG_SOURCE, "signature is null or empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
