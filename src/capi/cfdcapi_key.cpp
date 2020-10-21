@@ -401,7 +401,7 @@ int CfdVerifyEcdsaAdaptor(
 }
 
 int CfdGetSchnorrPubkeyFromPrivkey(
-    void* handle, const char* privkey, char** pubkey) {
+    void* handle, const char* privkey, char** pubkey, bool* parity) {
   try {
     cfd::Initialize();
     if (pubkey == nullptr) {
@@ -418,8 +418,9 @@ int CfdGetSchnorrPubkeyFromPrivkey(
     }
 
     Privkey privkey_obj = Privkey(std::string(privkey));
-    SchnorrPubkey schnorr_pubkey = SchnorrPubkey::FromPrivkey(privkey_obj);
-    *pubkey = CreateString(schnorr_pubkey.GetData().GetHex());
+    SchnorrPubkey schnorr_pubkey =
+        SchnorrPubkey::FromPrivkey(privkey_obj, parity);
+    *pubkey = CreateString(schnorr_pubkey.GetHex());
 
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -431,6 +432,174 @@ int CfdGetSchnorrPubkeyFromPrivkey(
     SetLastFatalError(handle, "unknown error.");
     return CfdErrorCode::kCfdUnknownError;
   }
+}
+
+int CfdGetSchnorrPubkeyFromPubkey(
+    void* handle, const char* pubkey, char** schnorr_pubkey, bool* parity) {
+  try {
+    cfd::Initialize();
+    if (schnorr_pubkey == nullptr) {
+      warn(CFD_LOG_SOURCE, "schnorr pubkey is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. schnorr pubkey is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+
+    Pubkey pubkey_obj = Pubkey(std::string(pubkey));
+    SchnorrPubkey schnorr_pubkey_obj =
+        SchnorrPubkey::FromPubkey(pubkey_obj, parity);
+    *schnorr_pubkey = CreateString(schnorr_pubkey_obj.GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdSchnorrPubkeyTweakAdd(
+    void* handle, const char* pubkey, const char* tweak, char** output,
+    bool* parity) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "tweak pubkey is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak pubkey is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+    if (IsEmptyString(tweak)) {
+      warn(CFD_LOG_SOURCE, "tweak is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak is null or empty.");
+    }
+
+    ByteData256 tweak_obj = ByteData256(std::string(tweak));
+    SchnorrPubkey pubkey_obj = SchnorrPubkey(std::string(pubkey));
+    SchnorrPubkey schnorr_pubkey =
+        pubkey_obj.CreateTweakAdd(tweak_obj, parity);
+    *output = CreateString(schnorr_pubkey.GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdSchnorrKeyPairTweakAdd(
+    void* handle, const char* privkey, const char* tweak,
+    char** tweaked_pubkey, bool* tweaked_parity, char** tweaked_privkey) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_pubkey = nullptr;
+  char* work_privkey = nullptr;
+  try {
+    cfd::Initialize();
+    if (IsEmptyString(privkey)) {
+      warn(CFD_LOG_SOURCE, "privkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. privkey is null or empty.");
+    }
+    if (IsEmptyString(tweak)) {
+      warn(CFD_LOG_SOURCE, "tweak is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak is null or empty.");
+    }
+
+    ByteData256 tweak_obj = ByteData256(std::string(tweak));
+    Privkey privkey_obj = Privkey(std::string(privkey));
+    Privkey tweaked_privkey_obj;
+    SchnorrPubkey schnorr_pubkey = SchnorrPubkey::CreateTweakAddFromPrivkey(
+        privkey_obj, tweak_obj, &tweaked_privkey_obj, tweaked_parity);
+    if (tweaked_pubkey != nullptr) {
+      work_pubkey = CreateString(schnorr_pubkey.GetHex());
+    }
+    if (tweaked_privkey != nullptr) {
+      work_privkey = CreateString(tweaked_privkey_obj.GetHex());
+    }
+
+    if (tweaked_pubkey != nullptr) *tweaked_pubkey = work_pubkey;
+    if (tweaked_privkey != nullptr) *tweaked_privkey = work_privkey;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_pubkey, &work_privkey);
+  return result;
+}
+
+int CfdCheckTweakAddFromSchnorrPubkey(
+    void* handle, const char* tweaked_pubkey, bool tweaked_parity,
+    const char* base_pubkey, const char* tweak) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    if (IsEmptyString(tweaked_pubkey)) {
+      warn(CFD_LOG_SOURCE, "tweak pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak pubkey is null or empty.");
+    }
+    if (IsEmptyString(base_pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+    if (IsEmptyString(tweak)) {
+      warn(CFD_LOG_SOURCE, "tweak is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweak is null or empty.");
+    }
+
+    ByteData256 tweak_obj = ByteData256(std::string(tweak));
+    SchnorrPubkey pubkey_obj = SchnorrPubkey(std::string(tweaked_pubkey));
+    SchnorrPubkey base_pubkey_obj = SchnorrPubkey(std::string(base_pubkey));
+    bool is_tweaked =
+        pubkey_obj.IsTweaked(base_pubkey_obj, tweak_obj, tweaked_parity);
+    if (!is_tweaked) {
+      return CfdErrorCode::kCfdSignVerificationError;
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
 }
 
 int CfdSignSchnorr(
@@ -467,7 +636,7 @@ int CfdSignSchnorr(
     SchnorrSignature schnorr_sig = SchnorrUtil::Sign(
         ByteData256(msg), Privkey(sk), ByteData256(aux_rand));
 
-    *signature = CreateString(schnorr_sig.GetData().GetHex());
+    *signature = CreateString(schnorr_sig.GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -513,7 +682,7 @@ int CfdSignSchnorrWithNonce(
     SchnorrSignature schnorr_sig = SchnorrUtil::SignWithNonce(
         ByteData256(msg), Privkey(sk), Privkey(nonce));
 
-    *signature = CreateString(schnorr_sig.GetData().GetHex());
+    *signature = CreateString(schnorr_sig.GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -638,7 +807,7 @@ int CfdSplitSchnorrSignature(
     }
 
     SchnorrSignature sig = SchnorrSignature(std::string(signature));
-    work_nonce = CreateString(sig.GetNonce().GetData().GetHex());
+    work_nonce = CreateString(sig.GetNonce().GetHex());
     work_key = CreateString(sig.GetPrivkey().GetHex());
 
     *nonce = work_nonce;

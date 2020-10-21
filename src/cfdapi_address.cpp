@@ -258,7 +258,7 @@ DescriptorScriptData AddressApi::ParseOutputDescriptor(
 
   DescriptorScriptData result;
   result.key_type = DescriptorKeyType::kDescriptorKeyNull;  // dummy init
-  result.address_type = AddressType::kP2shAddress;  // dummy init
+  result.address_type = AddressType::kP2shAddress;          // dummy init
   Descriptor desc = Descriptor::Parse(descriptor, &addr_prefixes);
   std::vector<std::string> args;
   for (uint32_t index = 0; index < desc.GetNeedArgumentNum(); ++index) {
