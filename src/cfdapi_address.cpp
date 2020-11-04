@@ -339,33 +339,34 @@ DescriptorScriptData AddressApi::ParseOutputDescriptor(
     DescriptorScriptReference script_ref = script_refs[0];
     bool is_loop = script_ref.HasChild();
     uint32_t depth = 0;
-    result.redeem_script = Script();
+    result.redeem_script = (is_loop) ? Script() : script_ref.GetRedeemScript();
     while (is_loop) {
       DescriptorScriptReference child;
-      if (script_ref.HasChild()) {
-        child = script_ref.GetChild();
-      }
       DescriptorScriptData data;
       switch (script_ref.GetScriptType()) {
         case DescriptorScriptType::kDescriptorScriptSh:
         case DescriptorScriptType::kDescriptorScriptWsh:
-          child = script_ref.GetChild();
-          if ((child.GetScriptType() ==
-               DescriptorScriptType::kDescriptorScriptMulti) ||
-              (child.GetScriptType() ==
-               DescriptorScriptType::kDescriptorScriptSortedMulti)) {
-            multisig_keys = child.GetKeyList();
-            multisig_req_num = child.GetReqNum();
-            result.multisig_req_sig_num = multisig_req_num;
-            is_loop = false;
-          } else if (
-              child.GetScriptType() ==
-              DescriptorScriptType::kDescriptorScriptMiniscript) {
-            is_loop = false;
-          }
-          if (child.GetScriptType() !=
-              DescriptorScriptType::kDescriptorScriptWpkh) {
+          if (!script_ref.HasChild()) {
             result.redeem_script = script_ref.GetRedeemScript();
+          } else {
+            child = script_ref.GetChild();
+            if ((child.GetScriptType() ==
+                 DescriptorScriptType::kDescriptorScriptMulti) ||
+                (child.GetScriptType() ==
+                 DescriptorScriptType::kDescriptorScriptSortedMulti)) {
+              multisig_keys = child.GetKeyList();
+              multisig_req_num = child.GetReqNum();
+              result.multisig_req_sig_num = multisig_req_num;
+              is_loop = false;
+            } else if (
+                child.GetScriptType() ==
+                DescriptorScriptType::kDescriptorScriptMiniscript) {
+              is_loop = false;
+            }
+            if (child.GetScriptType() !=
+                DescriptorScriptType::kDescriptorScriptWpkh) {
+              result.redeem_script = script_ref.GetRedeemScript();
+            }
           }
           break;
         // case DescriptorScriptType::kDescriptorScriptPk:
