@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <exception>
 #include <vector>
 
 #include "cfd/cfd_transaction.h"
@@ -183,23 +184,54 @@ TEST(AddressApi, ParseOutputDescriptor) {
       DescriptorKeyType::kDescriptorKeyNull,
       "",
       0
+    },
+    {
+      "sh(c:or_i(andor(c:pk_h(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/44),pk_h(xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/44),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e)))",
+      NetType::kMainnet,
+      DescriptorScriptType::kDescriptorScriptSh,
+      "a9148019628fc9b183af5d52ed7dc5c6d56fe6a6325f87",
+      0,
+      "3DNLpswxUiEVyRnAA6mZSvAt7iG6bCu33f",
+      AddressType::kP2shAddress,
+      "6376a914520e6e72bcd5b616bc744092139bd759c31d6bbe88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9145ab62f0be26fe9d6205a155403f33e2ad2d31efe8868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac",
+      DescriptorKeyType::kDescriptorKeyNull,
+      "",
+      0
+    },
+    {
+      "sh(wsh(c:or_i(andor(c:pk_h(xpub661MyMwAqRbcFW31YEwpkMuc5THy2PSt5bDMsktWQcFF8syAmRUapSCGu8ED9W6oDMSgv6Zz8idoc4a6mr8BDzTJY47LJhkJ8UB7WEGuduB/1/0/44),pk_h(xpub69H7F5d8KSRgmmdJg2KhpAK8SR3DjMwAdkxj3ZuxV27CprR9LgpeyGmXUbC6wb7ERfvrnKZjXoUmmDznezpbZb7ap6r1D3tgFxHmwMkQTPH/0/0/44),pk_h(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)),pk_k(02d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e))))",
+      NetType::kMainnet,
+      DescriptorScriptType::kDescriptorScriptSh,
+      "a914a7a9f411001e3e3db96d7f02fc9ab1d0dc6aa69187",
+      0,
+      "3GyYN9WnJBoMn8M5tuqVcFJq1BvbAcdPAt",
+      AddressType::kP2shP2wshAddress,
+      "6376a914520e6e72bcd5b616bc744092139bd759c31d6bbe88ac6476a91406afd46bcdfd22ef94ac122aa11f241244a37ecc886776a9145ab62f0be26fe9d6205a155403f33e2ad2d31efe8868672102d7924d4f7d43ea965a465ae3095ff41131e5946f3c85f79e44adbcf8e27e080e68ac",
+      DescriptorKeyType::kDescriptorKeyNull,
+      "",
+      0
     }
   };
 
   DescriptorScriptData data;
   AddressApi factory;
   for (auto test_data : g_test_cfd_descriptor_data) {
-    EXPECT_NO_THROW(data = factory.ParseOutputDescriptor(
-        test_data.descriptor, test_data.net_type));
+    try {
+      data = factory.ParseOutputDescriptor(
+          test_data.descriptor, test_data.net_type);
 
-    EXPECT_EQ(test_data.type, data.type);
-    EXPECT_EQ(test_data.locking_script, data.locking_script.GetHex());
-    EXPECT_EQ(test_data.depth, data.depth);
-    EXPECT_EQ(test_data.address, data.address.GetAddress());
-    EXPECT_EQ(test_data.address_type, data.address_type);
-    EXPECT_EQ(test_data.redeem_script, data.redeem_script.GetHex());
-    EXPECT_EQ(test_data.key_type, data.key_type);
-    EXPECT_EQ(test_data.key, data.key);
-    EXPECT_EQ(test_data.multisig_req_sig_num, data.multisig_req_sig_num);
+      EXPECT_EQ(test_data.type, data.type);
+      EXPECT_EQ(test_data.locking_script, data.locking_script.GetHex());
+      EXPECT_EQ(test_data.depth, data.depth);
+      EXPECT_EQ(test_data.address, data.address.GetAddress());
+      EXPECT_EQ(test_data.address_type, data.address_type);
+      EXPECT_EQ(test_data.redeem_script, data.redeem_script.GetHex());
+      EXPECT_EQ(test_data.key_type, data.key_type);
+      EXPECT_EQ(test_data.key, data.key);
+      EXPECT_EQ(test_data.multisig_req_sig_num, data.multisig_req_sig_num);
+    } catch (const std::exception& e) {
+      EXPECT_STREQ("", e.what());
+      EXPECT_STREQ("", test_data.descriptor.c_str());
+    }
   }
 }
