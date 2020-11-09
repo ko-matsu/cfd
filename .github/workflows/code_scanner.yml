@@ -7,6 +7,13 @@ on:
     - develop
     - features/sprint*
     - feature/code_scanning
+    paths:
+    - '**.js'
+    - '**.ts'
+    - '**.cpp'
+    - '**.h'
+    - '**/code_scanner.yml'
+    - '**/external_project_local_setting.config'
   pull_request:
     branches:
     - master
