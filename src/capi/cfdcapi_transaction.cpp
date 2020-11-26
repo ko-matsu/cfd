@@ -2143,8 +2143,7 @@ int CfdFinalizeFundRawTx(
       AmountMap map_target_value;
       std::map<std::string, std::string> reserve_txout_address;
       for (const auto& target : *(buffer->targets)) {
-        map_target_value.emplace(
-            target.asset, Amount::CreateBySatoshiAmount(target.amount));
+        map_target_value.emplace(target.asset, target.amount);
         reserve_txout_address.emplace(target.asset, target.reserved_address);
       }
 

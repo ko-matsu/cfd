@@ -575,7 +575,7 @@ class CFD_EXPORT ElementsTransactionApi {
    */
   ConfidentialTransactionController FundRawTransaction(
       const std::string& tx_hex, const std::vector<UtxoData>& utxos,
-      const std::map<std::string, Amount>& map_target_value,
+      const std::map<std::string, int64_t>& map_target_value,
       const std::vector<ElementsUtxoAndOption>& selected_txin_utxos,
       const std::map<std::string, std::string>& reserve_txout_address,
       const ConfidentialAssetId& fee_asset, bool is_blind_estimate_fee = true,
