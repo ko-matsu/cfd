@@ -598,9 +598,9 @@ TEST(ElementsTransactionApi, FundRawTransaction_Reissueasset) {
     tx.AddTxOut(set_addr2, Amount(int64_t{500000}), exp_dummy_asset_b);
 
     ConfidentialAssetId fee_asset = exp_dummy_asset_a;
-    std::map<std::string, int64_t> map_target_value;
-    map_target_value.emplace(exp_dummy_asset_a.GetHex(), 0);
-    map_target_value.emplace(exp_dummy_asset_b.GetHex(), 0);
+    std::map<std::string, Amount> map_target_value;
+    map_target_value.emplace(exp_dummy_asset_a.GetHex(), Amount(int64_t{0}));
+    map_target_value.emplace(exp_dummy_asset_b.GetHex(), Amount(int64_t{0}));
     Address addr1 = factory.CreateP2wpkhAddress(key.DerivePubkey(1).GetPubkey());
     Address addr2 = factory.CreateP2wpkhAddress(key.DerivePubkey(2).GetPubkey());
     std::map<std::string, std::string> reserve_txout_address;
@@ -771,9 +771,9 @@ TEST(ElementsTransactionApi, FundRawTransaction_MinBits36) {
     tx.AddTxOut(ct_addr4, Amount(int64_t{50000000000}), exp_dummy_asset_a);
 
     ConfidentialAssetId fee_asset = exp_dummy_asset_a;
-    std::map<std::string, int64_t> map_target_value;
-    map_target_value.emplace(exp_dummy_asset_a.GetHex(), 0);
-    map_target_value.emplace(exp_dummy_asset_b.GetHex(), 0);
+    std::map<std::string, Amount> map_target_value;
+    map_target_value.emplace(exp_dummy_asset_a.GetHex(), Amount(int64_t{0}));
+    map_target_value.emplace(exp_dummy_asset_b.GetHex(), Amount(int64_t{0}));
     Address addr1 = factory.CreateP2wpkhAddress(key.DerivePubkey(1).GetPubkey());
     Address addr2 = factory.CreateP2wpkhAddress(key.DerivePubkey(2).GetPubkey());
     std::map<std::string, std::string> reserve_txout_address;
@@ -902,8 +902,8 @@ TEST(ElementsTransactionApi, FundRawTransaction_MillionAmountValue) {
 
   double fee_rate = 0.11;
   ConfidentialAssetId fee_asset = exp_dummy_asset_a;
-  std::map<std::string, int64_t> map_target_value;
-  map_target_value.emplace(exp_dummy_asset_a.GetHex(), 0);
+  std::map<std::string, Amount> map_target_value;
+  map_target_value.emplace(exp_dummy_asset_a.GetHex(), Amount(int64_t{0}));
   std::map<std::string, std::string> reserve_txout_address;
   reserve_txout_address.emplace(exp_dummy_asset_a.GetHex(), reserve_ct_addr3.GetAddress());
   std::vector<ElementsUtxoAndOption> selected_txin_utxos;
@@ -1032,8 +1032,8 @@ TEST(ElementsTransactionApi, FundRawTransaction_LimitAmountValue) {
 
   double fee_rate = 0.11;
   ConfidentialAssetId fee_asset = exp_dummy_asset_a;
-  std::map<std::string, int64_t> map_target_value;
-  map_target_value.emplace(exp_dummy_asset_a.GetHex(), 0);
+  std::map<std::string, Amount> map_target_value;
+  map_target_value.emplace(exp_dummy_asset_a.GetHex(), Amount(int64_t{0}));
   std::map<std::string, std::string> reserve_txout_address;
   reserve_txout_address.emplace(exp_dummy_asset_a.GetHex(), reserve_ct_addr3.GetAddress());
   std::vector<ElementsUtxoAndOption> selected_txin_utxos;
@@ -1170,9 +1170,9 @@ TEST(ElementsTransactionApi, FundRawTransaction_AssetLimitAmountValue) {
 
   double fee_rate = 0.11;
   ConfidentialAssetId fee_asset = exp_dummy_asset_a;
-  std::map<std::string, int64_t> map_target_value;
-  map_target_value.emplace(exp_dummy_asset_a.GetHex(), 0);
-  map_target_value.emplace(exp_dummy_asset_b.GetHex(), 0);
+  std::map<std::string, Amount> map_target_value;
+  map_target_value.emplace(exp_dummy_asset_a.GetHex(), Amount());
+  map_target_value.emplace(exp_dummy_asset_b.GetHex(), Amount());
   std::map<std::string, std::string> reserve_txout_address;
   reserve_txout_address.emplace(exp_dummy_asset_a.GetHex(), reserve_ct_addr3.GetAddress());
   reserve_txout_address.emplace(exp_dummy_asset_b.GetHex(), reserve_ct_addr4.GetAddress());
