@@ -829,7 +829,6 @@ void CollectUtxoDataByFundRawTransaction(
  * @param[in] txin_amount_map           txin amount map
  * @param[in] tx_amount_map             tx amount map
  * @param[in] target_values             target amounts
- * @param[in] input_amount_map          input amount map
  * @param[in] input_max_map             input max amount map
  * @param[in] selected_coins            select utxo list
  * @param[in] utxodata_list             utxo list
@@ -851,7 +850,6 @@ void CalculateFeeAndFundTransaction(
     const std::map<std::string, int64_t>& txin_amount_map,
     const std::map<std::string, int64_t>& tx_amount_map,
     const std::map<std::string, int64_t>& target_values,
-    const std::map<std::string, int64_t>& input_amount_map,
     const std::map<std::string, int64_t>& input_max_map,
     const std::vector<Utxo>& selected_coins,
     const std::vector<UtxoData>& utxodata_list,
@@ -907,7 +905,7 @@ void CalculateFeeAndFundTransaction(
   int64_t txin_amount = 0;
   int64_t tx_amount = 0;
   int64_t target_value = 0;
-  int64_t utxo_value = 0;
+  // int64_t utxo_value = 0;
   int64_t max_utxo_value = 0;
   if (txin_amount_map.find(fee_asset_str) != txin_amount_map.end())
     txin_amount = txin_amount_map.at(fee_asset_str);
@@ -915,8 +913,6 @@ void CalculateFeeAndFundTransaction(
     tx_amount = tx_amount_map.at(fee_asset_str);
   if (target_values.find(fee_asset_str) != target_values.end())
     target_value = target_values.at(fee_asset_str);
-  if (input_amount_map.find(fee_asset_str) != input_amount_map.end())
-    utxo_value = input_amount_map.at(fee_asset_str);
   if (input_max_map.find(fee_asset_str) != input_max_map.end())
     max_utxo_value = input_max_map.at(fee_asset_str);
 
@@ -1315,7 +1311,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   if (use_fee) {
     CalculateFeeAndFundTransaction(
         *this, addr_factory, txin_amount_map, tx_amount_map, target_values,
-        input_amount_map, input_max_map, selected_coins, utxodata_list,
+        input_max_map, selected_coins, utxodata_list,
         fee_asset, selected_txin_utxos, reserve_txout_address, net_type,
         is_blind_estimate_fee, utxo_filter, option, utxo_list, &ctxc,
         append_txout_addresses, estimate_fee);
