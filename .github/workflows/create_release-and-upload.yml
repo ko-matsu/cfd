@@ -269,7 +269,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xcode: [10.3, 11.6]
+        xcode: [10.3, 11.7, 12.2]
         shared: [on, off]
         include:
           - shared: on
@@ -279,7 +279,7 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v1
+      uses: actions/checkout@v2
     - name: Get the version
       id: get_version
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
