@@ -26,11 +26,18 @@ namespace json {
 class CFD_EXPORT JsonMappingApi {
  public:
   /**
-   * @brief DecodeRawTransactionのJSON API関数(request, response).
-   * @param[in] request_message     リクエストされたjson文字列
-   * @return 戻り値(JSON文字列)
+   * @brief DecodeRawTransaction.
+   * @param[in] request_message     json message
+   * @return json message
    */
   static std::string DecodeRawTransaction(const std::string &request_message);
+
+  /**
+   * @brief DecodePsbt.
+   * @param[in] request_message     json message
+   * @return json message
+   */
+  static std::string DecodePsbt(const std::string &request_message);
 
 #ifndef CFD_DISABLE_ELEMENTS
 

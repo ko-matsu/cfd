@@ -9,6 +9,11 @@
 #ifndef CFD_SRC_JSONAPI_CFD_JSON_TRANSACTION_H_
 #define CFD_SRC_JSONAPI_CFD_JSON_TRANSACTION_H_
 
+#include <string>
+#include <vector>
+
+#include "cfd/cfd_address.h"
+#include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_bytedata.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_script.h"
@@ -19,6 +24,8 @@ namespace cfd {
 namespace api {
 namespace json {
 
+using cfd::AddressFactory;
+using cfd::core::Address;
 using cfd::core::ByteData;
 using cfd::core::Script;
 using cfd::core::SigHashType;
@@ -110,6 +117,18 @@ class TransactionJsonApi {
    * @throw CfdException 指定文字列以外が渡された場合
    */
   static NetType ConvertNetType(const std::string& network_type);
+
+  /**
+   * @brief Convert from locking script.
+   * @param[in] factory     address factory
+   * @param[in] script      locking script
+   * @param[out] script_type    script type
+   * @param[out] require_num    multisig require num
+   * @return address list
+   */
+  static std::vector<Address> ConvertFromLockingScript(
+      const AddressFactory& factory, const Script& script,
+      std::string* script_type, int64_t* require_num);
 
  private:
   TransactionJsonApi();

@@ -1,0 +1,201 @@
+{
+  "namespace": ["cfd","api","json"],
+  "request": {
+    ":class": "DecodePsbtRequest",
+    "psbt": "",
+    "network": "mainnet"
+  },
+  "response": {
+    ":class": "DecodePsbtResponse",
+    "tx": {
+      ":class": "DecodeRawTransactionResponse",
+      "txid": "",
+      "hash": "",
+      "version": 0,
+      "version:type": "uint32_t",
+      "size": 0,
+      "vsize": 0,
+      "weight": 0,
+      "locktime": 0,
+      "locktime:type": "uint32_t",
+      "vin": [
+        {
+          ":class": "DecodeRawTransactionTxIn",
+          "coinbase": "",
+          "coinbase:hint": "coinbase is only ", 
+          "txid": "",
+          "vout": 0,
+          "scriptSig": {
+            ":class": "DecodeUnlockingScript",
+            "asm": "",
+            "hex": ""
+          },
+          "txinwitness": [
+            ""
+          ],
+          "sequence": 0
+        }
+      ],
+      "vout": [
+        {
+          ":class": "DecodeRawTransactionTxOut",
+          "value": 0,
+          "value:type": "double",
+          "n": 0,
+          "scriptPubKey": {
+            ":class": "DecodeLockingScript",
+            "asm": "",
+            "hex": "",
+            "reqSigs": 0,
+            "type": "",
+            "addresses": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    "unknown": [{
+      ":class": "PsbtMapData",
+      "key": "",
+      "value": ""
+    }],
+    "inputs": [
+      {
+        ":class": "DecodePsbtInput",
+        "non_witness_utxo:require": "optional",
+        "non_witness_utxo": {
+          ":class": "DecodeRawTransactionResponse",
+          "txid": "",
+          "hash": "",
+          "version": 0,
+          "version:type": "uint32_t",
+          "size": 0,
+          "vsize": 0,
+          "weight": 0,
+          "locktime": 0,
+          "locktime:type": "uint32_t",
+          "vin": [
+            {
+              ":class": "DecodeRawTransactionTxIn",
+              "coinbase": "",
+              "coinbase:hint": "coinbase is only ", 
+              "txid": "",
+              "vout": 0,
+              "scriptSig": {
+                ":class": "DecodeUnlockingScript",
+                "asm": "",
+                "hex": ""
+              },
+              "txinwitness": [
+                ""
+              ],
+              "sequence": 0
+            }
+          ],
+          "vout": [
+            {
+              ":class": "DecodeRawTransactionTxOut",
+              "value": 0,
+              "value:type": "double",
+              "n": 0,
+              "scriptPubKey": {
+                ":class": "DecodeLockingScript",
+                "asm": "",
+                "hex": "",
+                "reqSigs": 0,
+                "type": "",
+                "addresses": [
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        "witness_utxo": {
+          ":class": "DecodePsbtUtxo",
+          "amount": 0,
+          "scriptPubKey": {
+            ":class": "DecodePsbtLockingScript",
+            "asm": "",
+            "hex": "",
+            "type": "",
+            "address": ""
+          }
+        },
+        "partial_signatures": [{
+          ":class": "PsbtSignatureData",
+          "pubkey": "",
+          "signature": ""
+        }],
+        "sighash": "",
+        "redeem_script": {
+          ":class": "PsbtScriptData",
+          "asm": "",
+          "hex": "",
+          "type": ""
+        },
+        "witness_script": {
+          ":class": "PsbtScriptData",
+          "asm": "",
+          "hex": "",
+          "type": ""
+        },
+        "bip32_derivs": [
+          {
+            ":class": "PsbtBip32Data",
+            "pubkey": "",
+            "master_fingerprint": "",
+            "path": ""
+          }
+        ],
+        "final_scriptsig": {
+          ":class": "DecodeUnlockingScript",
+          "asm": "",
+          "hex": ""
+        },
+        "final_scriptwitness": [""],
+        "unknown": [
+          {
+            ":class": "PsbtMapData",
+            "key": "",
+            "value": ""
+          }
+        ]
+      }
+    ],
+    "outputs": [
+      {
+        ":class": "DecodePsbtOutput",
+        "redeem_script": {
+          ":class": "PsbtScriptData",
+          "asm": "",
+          "hex": "",
+          "type": ""
+        },
+        "witness_script": {
+          ":class": "PsbtScriptData",
+          "asm": "",
+          "hex": "",
+          "type": ""
+        },
+        "bip32_derivs": [
+          {
+            ":class": "PsbtBip32Data",
+            "pubkey": "",
+            "master_fingerprint": "",
+            "path": ""
+          }
+        ],
+        "unknown": [
+          {
+            ":class": "PsbtMapData",
+            "key": "",
+            "value": ""
+          }
+        ]
+      }
+    ],
+    "fee": 0
+  }
+}

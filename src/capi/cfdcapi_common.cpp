@@ -608,6 +608,8 @@ extern "C" int CfdRequestExecuteJson(
 #endif  // CFD_DISABLE_ELEMENTS
     } else if (command == "DecodeRawTransaction") {
       result = JsonMappingApi::DecodeRawTransaction(std::string(json_string));
+    } else if (command == "DecodePsbt") {
+      result = JsonMappingApi::DecodePsbt(std::string(json_string));
     } else {
       throw CfdException(
           CfdError::kCfdIllegalArgumentError, "unknown request name.");
