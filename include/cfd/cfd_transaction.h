@@ -68,7 +68,7 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @brief constructor
    * @param[in] context   Transaction Context
    */
-  explicit TransactionContext(const TransactionContext& context);
+  TransactionContext(const TransactionContext& context);
   /**
    * @brief constructor
    * @param[in] transaction   Transaction
@@ -208,6 +208,12 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   void CollectInputUtxo(const std::vector<UtxoData>& utxos);
   /**
+   * @brief Get UTXO by outpoint
+   * @param[in] outpoint  TxIn txid and vout
+   * @return UTXO
+   */
+  UtxoData GetTxInUtxoData(const OutPoint& outpoint) const;
+  /**
    * @brief TxOutのFee額を取得する.
    * @return Fee額
    */
@@ -346,7 +352,6 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @param[in] sign_params     sign data list
    * @param[in] insert_witness  use witness
    * @param[in] clear_stack     clear stack data before add.
-   * @return SignDataが付与されたTransactionController
    */
   void AddSign(
       const OutPoint& outpoint, const std::vector<SignParameter>& sign_params,
@@ -422,11 +427,30 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   virtual void CallbackStateChange(uint32_t type);
 
+  /**
+   * @brief find target outpoint utxo list.
+   * @param[in] outpoint    outpoint
+   * @param[out] utxo       utxo
+   * @retval true   exist
+   * @retval false  not exist
+   */
+  bool IsFindUtxoMap(const OutPoint& outpoint, UtxoData* utxo = nullptr) const;
+
+  /**
+   * @brief find target outpoint from list.
+   * @param[in] list        outpoint list
+   * @param[in] outpoint    outpoint
+   * @retval true   exist
+   * @retval false  not exist
+   */
+  bool IsFindOutPoint(
+      const std::vector<OutPoint>& list, const OutPoint& outpoint) const;
+
  private:
   /**
    * @brief utxo map.
    */
-  std::map<OutPoint, UtxoData> utxo_map_;
+  std::vector<UtxoData> utxo_map_;
   /**
    * @brief utxo signed map. (outpoint, SigHashType)
    */
@@ -434,11 +458,11 @@ class CFD_EXPORT TransactionContext : public Transaction {
   /**
    * @brief utxo verify map. (outpoint)
    */
-  std::set<OutPoint> verify_map_;
+  std::vector<OutPoint> verify_map_;
   /**
    * @brief utxo verify ignore map. (outpoint)
    */
-  std::set<OutPoint> verify_ignore_map_;
+  std::vector<OutPoint> verify_ignore_map_;
 };
 
 // ----------------------------------------------------------------------------

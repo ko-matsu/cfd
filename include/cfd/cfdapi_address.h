@@ -25,6 +25,7 @@ using cfd::core::AddressFormatData;
 using cfd::core::AddressType;
 using cfd::core::DescriptorKeyType;
 using cfd::core::DescriptorScriptType;
+using cfd::core::KeyData;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
 using cfd::core::Script;
@@ -119,6 +120,7 @@ class CFD_EXPORT AddressApi {
    * @param[out] script_list            descriptor script list
    * @param[out] multisig_key_list      descriptor multisig key list
    * @param[in] prefix_list             address prefix list
+   * @param[out] key_list               key data list
    * @return descriptor script data (top level or high security)
    */
   DescriptorScriptData ParseOutputDescriptor(
@@ -126,7 +128,8 @@ class CFD_EXPORT AddressApi {
       const std::string& bip32_derivation_path = "",
       std::vector<DescriptorScriptData>* script_list = nullptr,
       std::vector<DescriptorKeyData>* multisig_key_list = nullptr,
-      const std::vector<AddressFormatData>* prefix_list = nullptr) const;
+      const std::vector<AddressFormatData>* prefix_list = nullptr,
+      std::vector<KeyData>* key_list = nullptr) const;
 };
 
 }  // namespace api
