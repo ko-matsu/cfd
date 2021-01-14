@@ -276,6 +276,39 @@ CFDC_API int CfdEncodeBase58(
 CFDC_API int CfdDecodeBase58(
     void* handle, const char* base58, bool use_checksum, char** output);
 
+/**
+ * @brief Hash with sha256.
+ * @param[in] handle          handle pointer.
+ * @param[in] message_hex     message hex string.
+ * @param[out] output         output byte array hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSha256(void* handle, const char* message_hex, char** output);
+
+/**
+ * @brief Hash with hash160.
+ * @param[in] handle          handle pointer.
+ * @param[in] message_hex     message hex string.
+ * @param[out] output         output byte array hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdHash160(void* handle, const char* message_hex, char** output);
+
+/**
+ * @brief Hash with hash256.
+ * @param[in] handle          handle pointer.
+ * @param[in] message_hex     message hex string.
+ * @param[out] output         output byte array hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdHash256(void* handle, const char* message_hex, char** output);
+
 #ifdef __cplusplus
 #if 0
 {
