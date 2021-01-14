@@ -34,6 +34,7 @@ using cfd::core::DescriptorKeyType;
 using cfd::core::DescriptorNode;
 using cfd::core::DescriptorScriptReference;
 using cfd::core::DescriptorScriptType;
+using cfd::core::KeyData;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
 using cfd::core::Script;
@@ -235,7 +236,8 @@ DescriptorScriptData AddressApi::ParseOutputDescriptor(
     const std::string& bip32_derivation_path,
     std::vector<DescriptorScriptData>* script_list,
     std::vector<DescriptorKeyData>* multisig_key_list,
-    const std::vector<AddressFormatData>* prefix_list) const {
+    const std::vector<AddressFormatData>* prefix_list,
+    std::vector<KeyData>* key_list) const {
   std::vector<AddressFormatData> addr_prefixes;
   if (prefix_list == nullptr) {
     addr_prefixes = cfd::core::GetBitcoinAddressFormatList();
@@ -264,6 +266,12 @@ DescriptorScriptData AddressApi::ParseOutputDescriptor(
   std::vector<std::string> args;
   for (uint32_t index = 0; index < desc.GetNeedArgumentNum(); ++index) {
     args.push_back(bip32_derivation_path);
+  }
+  if (key_list != nullptr) {
+    auto temp_list = desc.GetKeyDataAll(&args);
+    for (const auto& key : temp_list) {
+      key_list->push_back(key);
+    }
   }
   std::vector<DescriptorScriptReference> script_refs =
       desc.GetReferenceAll(&args);
