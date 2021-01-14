@@ -1125,6 +1125,7 @@ int CfdVerifyTxSign(
     ConvertNetType(net_type, &is_bitcoin);
 
     UtxoData utxo;
+    utxo.address_type = AddressType::kP2shAddress;
     utxo.block_height = 0;
     utxo.binary_data = nullptr;
     utxo.descriptor = "";
@@ -1883,6 +1884,9 @@ int CfdAddTxInTemplateForFundRawTx(
         static_cast<CfdCapiFundRawTxData*>(fund_handle);
 
     UtxoData utxo;
+    utxo.address_type = AddressType::kP2shAddress;
+    utxo.block_height = 0;
+    utxo.binary_data = nullptr;
     utxo.txid = Txid(txid);
     utxo.vout = vout;
     utxo.amount = Amount(amount);
@@ -1963,6 +1967,9 @@ int CfdAddUtxoTemplateForFundRawTx(
         static_cast<CfdCapiFundRawTxData*>(fund_handle);
 
     UtxoData utxo;
+    utxo.address_type = AddressType::kP2shAddress;
+    utxo.block_height = 0;
+    utxo.binary_data = nullptr;
     utxo.txid = Txid(txid);
     utxo.vout = vout;
     utxo.amount = Amount(amount);
