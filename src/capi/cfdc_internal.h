@@ -249,6 +249,7 @@ class CfdCapiManager {
   /**
    * @brief ハンドルを作成する。
    * @param[in] is_outside  create outside handle
+   * @return handle
    */
   void* CreateHandle(bool is_outside = false);
   /**

@@ -275,3 +275,7 @@ set CFD_CMAKE_GIT_SKIP_UPDATE=1
 ```
 export CFD_CMAKE_GIT_SKIP_UPDATE=1
 ```
+
+### Visula C++ & Debug build:
+
+When debugging build with Visual C++, std::map related may not work properly.

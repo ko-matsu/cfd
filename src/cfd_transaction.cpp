@@ -91,16 +91,36 @@ static ByteData256 CreateTxSighash(
 // -----------------------------------------------------------------------------
 // TransactionController
 // -----------------------------------------------------------------------------
-TransactionContext::TransactionContext() {}
+TransactionContext::TransactionContext() {
+  utxo_map_.clear();
+  signed_map_.clear();
+  verify_map_.clear();
+  verify_ignore_map_.clear();
+}
 
 TransactionContext::TransactionContext(uint32_t version, uint32_t locktime)
-    : Transaction(version, locktime) {}
+    : Transaction(version, locktime) {
+  utxo_map_.clear();
+  signed_map_.clear();
+  verify_map_.clear();
+  verify_ignore_map_.clear();
+}
 
 TransactionContext::TransactionContext(const std::string& tx_hex)
-    : Transaction(tx_hex) {}
+    : Transaction(tx_hex) {
+  utxo_map_.clear();
+  signed_map_.clear();
+  verify_map_.clear();
+  verify_ignore_map_.clear();
+}
 
 TransactionContext::TransactionContext(const ByteData& byte_data)
-    : Transaction(byte_data.GetHex()) {}
+    : Transaction(byte_data.GetHex()) {
+  utxo_map_.clear();
+  signed_map_.clear();
+  verify_map_.clear();
+  verify_ignore_map_.clear();
+}
 
 TransactionContext::TransactionContext(const TransactionContext& context)
     : Transaction(context.GetHex()) {
@@ -237,7 +257,7 @@ void TransactionContext::AddInput(const UtxoData& utxo, uint32_t sequence) {
   UtxoUtil::ConvertToUtxo(utxo, &temp, &dest);
 
   AddTxIn(utxo.txid, utxo.vout, sequence);
-  utxo_map_.emplace(OutPoint(utxo.txid, utxo.vout), dest);
+  utxo_map_.emplace_back(dest);
 }
 
 void TransactionContext::AddInputs(const std::vector<UtxoData>& utxos) {
@@ -253,10 +273,10 @@ void TransactionContext::CollectInputUtxo(const std::vector<UtxoData>& utxos) {
       uint32_t vout = txin_ref.GetVout();
 
       OutPoint outpoint(txid, vout);
-      if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
+      if (!IsFindUtxoMap(outpoint)) {
         for (const auto& utxo : utxos) {
           if ((utxo.vout == vout) && utxo.txid.Equals(txid)) {
-            utxo_map_.emplace(outpoint, utxo);
+            utxo_map_.emplace_back(utxo);
             break;
           }
         }
@@ -265,16 +285,27 @@ void TransactionContext::CollectInputUtxo(const std::vector<UtxoData>& utxos) {
   }
 }
 
+UtxoData TransactionContext::GetTxInUtxoData(const OutPoint& outpoint) const {
+  UtxoData utxo;
+  utxo.address_type = AddressType::kP2shAddress;
+  utxo.vout = 0;
+  utxo.block_height = 0;
+  utxo.binary_data = nullptr;
+  IsFindUtxoMap(outpoint, &utxo);
+  return utxo;
+}
+
 Amount TransactionContext::GetFeeAmount() const {
   Amount input;
+  UtxoData utxo;
   for (const auto& txin_ref : vin_) {
     OutPoint outpoint(txin_ref.GetTxid(), txin_ref.GetVout());
-    if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
+    if (!IsFindUtxoMap(outpoint, &utxo)) {
       throw CfdException(
           CfdError::kCfdIllegalStateError,
           "Utxo is not found. GetFeeAmount fail.");
     }
-    input += utxo_map_.find(outpoint)->second.amount;
+    input += utxo.amount;
   }
 
   Amount output;
@@ -291,11 +322,11 @@ Amount TransactionContext::GetFeeAmount() const {
 void TransactionContext::SignWithKey(
     const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
     SigHashType sighash_type, bool has_grind_r) {
-  if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
+  UtxoData utxo;
+  if (!IsFindUtxoMap(outpoint, &utxo)) {
     throw CfdException(
         CfdError::kCfdIllegalStateError, "Utxo is not found. sign fail.");
   }
-  UtxoData utxo = utxo_map_.find(outpoint)->second;
 
   SignWithPrivkeySimple(
       outpoint, pubkey, privkey, sighash_type, utxo.amount, utxo.address_type,
@@ -304,29 +335,33 @@ void TransactionContext::SignWithKey(
 
 void TransactionContext::IgnoreVerify(const OutPoint& outpoint) {
   GetTxInIndex(outpoint.GetTxid(), outpoint.GetVout());
-  verify_ignore_map_.emplace(outpoint);
+  if (!IsFindOutPoint(verify_ignore_map_, outpoint)) {
+    verify_ignore_map_.emplace_back(outpoint);
+  }
 }
 
 void TransactionContext::Verify() {
   for (const auto& vin : vin_) {
     OutPoint outpoint = vin.GetOutPoint();
-    if (verify_ignore_map_.find(outpoint) == std::end(verify_ignore_map_)) {
+    if (!IsFindOutPoint(verify_ignore_map_, outpoint)) {
       Verify(outpoint);
     }
   }
 }
 
 void TransactionContext::Verify(const OutPoint& outpoint) {
-  if (utxo_map_.find(outpoint) == std::end(utxo_map_)) {
+  UtxoData utxo;
+  if (!IsFindUtxoMap(outpoint, &utxo)) {
     throw CfdException(
         CfdError::kCfdIllegalStateError, "Utxo is not found. verify fail.");
   }
-  const auto& utxo = utxo_map_.find(outpoint)->second;
   const auto& txin = vin_[GetTxInIndex(outpoint)];
 
   TransactionContextUtil::Verify<TransactionContext>(
       this, outpoint, utxo, &txin, CreateTxSighash);
-  verify_map_.emplace(outpoint);
+  if (!IsFindOutPoint(verify_map_, outpoint)) {
+    verify_map_.emplace_back(outpoint);
+  }
 }
 
 ByteData TransactionContext::Finalize() {
@@ -355,8 +390,7 @@ ByteData TransactionContext::CreateSignatureHash(
     const OutPoint& outpoint, const Script& redeem_script,
     SigHashType sighash_type, const Amount& value,
     WitnessVersion version) const {
-  // TODO(soejima): OP_CODESEPARATOR存在時、Scriptの分割が必要。
-  // TODO(k-matsuzawa): 現状は利用側で分割し、適用する箇所だけ指定してもらう。
+  // TODO(k-matsuzawa): For now, when using OP_CODESEPARATOR, divide it on the user side and ask them to specify only the applicable part.  // NOLINT
   ByteData256 sighash = GetSignatureHash(
       GetTxInIndex(outpoint), redeem_script.GetData(), sighash_type, value,
       version);
@@ -504,6 +538,26 @@ std::vector<SignParameter> TransactionContext::CheckMultisig(
   }
 
   return signature_list;
+}
+
+bool TransactionContext::IsFindUtxoMap(
+    const OutPoint& outpoint, UtxoData* utxo) const {
+  for (const auto& utxo_data : utxo_map_) {
+    if ((outpoint.GetVout() == utxo_data.vout) &&
+        utxo_data.txid.Equals(outpoint.GetTxid())) {
+      if (utxo != nullptr) *utxo = utxo_data;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool TransactionContext::IsFindOutPoint(
+    const std::vector<OutPoint>& list, const OutPoint& outpoint) const {
+  for (const auto& target : list) {
+    if (outpoint == target) return true;
+  }
+  return false;
 }
 
 // -----------------------------------------------------------------------------

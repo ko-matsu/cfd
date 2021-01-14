@@ -1311,8 +1311,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   if (use_fee) {
     CalculateFeeAndFundTransaction(
         *this, addr_factory, txin_amount_map, tx_amount_map, target_values,
-        input_max_map, selected_coins, utxodata_list,
-        fee_asset, selected_txin_utxos, reserve_txout_address, net_type,
+        input_max_map, selected_coins, utxodata_list, fee_asset,
+        selected_txin_utxos, reserve_txout_address, net_type,
         is_blind_estimate_fee, utxo_filter, option, utxo_list, &ctxc,
         append_txout_addresses, estimate_fee);
   }

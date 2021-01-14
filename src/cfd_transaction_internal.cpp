@@ -599,6 +599,14 @@ template void TransactionContextUtil::Verify<TransactionContext>(
         const SigHashType&, const Pubkey&, const Script&, WitnessVersion)>
         create_sighash_func);
 
+template void TransactionContextUtil::Verify<Transaction>(
+    const Transaction* transaction, const OutPoint& outpoint,
+    const UtxoData& utxo, const AbstractTxIn* txin,
+    std::function<ByteData256(
+        const Transaction*, const OutPoint&, const UtxoData&,
+        const SigHashType&, const Pubkey&, const Script&, WitnessVersion)>
+        create_sighash_func);
+
 // -----------------------------------------------------------------------------
 // TransactionContextUtil implements ConfidentialTransactionContext
 // -----------------------------------------------------------------------------

@@ -109,7 +109,7 @@ class TransactionContextUtil {
 
   /**
    * @brief verify tx sign (signature) on outpoint.
-   * @param[in,out] transaction       Transaction
+   * @param[in] transaction           Transaction
    * @param[in] outpoint              utxo target txin & vout.
    * @param[in] utxo                  utxo.
    * @param[in] txin                  tx input.

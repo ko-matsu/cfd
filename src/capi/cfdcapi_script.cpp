@@ -50,7 +50,7 @@ namespace capi {
 //! prefix: ScriptItem
 constexpr const char* const kPrefixScriptItem = "ScriptItem";
 //! prefix: MultisigScriptSig
-constexpr const char* const kPrefiMultisigScriptSig = "MultiScriptSig";
+constexpr const char* const kPrefixMultisigScriptSig = "MultiScriptSig";
 //! delimiter of script asm
 constexpr const char kScriptAsmDelimiter = ' ';
 //! MultisigScriptSig struct
@@ -82,7 +82,7 @@ using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
 using cfd::capi::IsEmptyString;
 using cfd::capi::kMultisigMaxKeyNum;
-using cfd::capi::kPrefiMultisigScriptSig;
+using cfd::capi::kPrefixMultisigScriptSig;
 using cfd::capi::kPrefixScriptItem;
 using cfd::capi::kPubkeyHexSize;
 using cfd::capi::kScriptAsmDelimiter;
@@ -257,7 +257,7 @@ int CfdInitializeMultisigScriptSig(void* handle, void** multisig_handle) {
     }
 
     *multisig_handle = AllocBuffer(
-        kPrefiMultisigScriptSig, sizeof(CfdCapiMultisigScriptSigData));
+        kPrefixMultisigScriptSig, sizeof(CfdCapiMultisigScriptSigData));
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -275,7 +275,7 @@ int CfdAddMultisigScriptSigData(
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
-    CheckBuffer(multisig_handle, kPrefiMultisigScriptSig);
+    CheckBuffer(multisig_handle, kPrefixMultisigScriptSig);
     if (signature == nullptr) {
       warn(CFD_LOG_SOURCE, "signature is null.");
       throw CfdException(
@@ -358,7 +358,7 @@ int CfdFinalizeMultisigScriptSig(
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
-    CheckBuffer(multisig_handle, kPrefiMultisigScriptSig);
+    CheckBuffer(multisig_handle, kPrefixMultisigScriptSig);
     if (IsEmptyString(redeem_script)) {
       warn(CFD_LOG_SOURCE, "redeemScript is null or empty.");
       throw CfdException(
@@ -421,7 +421,7 @@ int CfdFreeMultisigScriptSigHandle(void* handle, void* multisig_handle) {
   try {
     cfd::Initialize();
     FreeBuffer(
-        multisig_handle, kPrefiMultisigScriptSig,
+        multisig_handle, kPrefixMultisigScriptSig,
         sizeof(CfdCapiMultisigScriptSigData));
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {

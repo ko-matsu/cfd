@@ -124,6 +124,7 @@ target_compile_options(${PROJECT_NAME}
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE
     CFD_BUILD=1
+    ${ELEMENTS_COMP_OPT}
     ${CFD_ELEMENTS_USE}
     ${CFD_CAPI_USE}
     ${CFD_JSONAPI_USE}
