@@ -347,7 +347,7 @@ void CfdCapiManager::CopyHandle(
           dest_data->error_message, source_data->error_message,
           sizeof(dest_data->error_message));
     } else {
-      // TODO(k-matsuzawa): 現在はコピーする情報が無い
+      // TODO(k-matsuzawa): Currently there is no information to copy
       // bool is_outside = dest_data->is_outside;
       // memcpy(dest_data, source_data, sizeof(CfdCapiHandleData));
       // dest_data->is_outside = is_outside;
@@ -357,7 +357,6 @@ void CfdCapiManager::CopyHandle(
 
 void CfdCapiManager::SetLastError(
     void* handle, int error_code, const char* message) {
-  // TODO(k-matsuzawa): handle存在チェックすべきかどうか
   if (handle != nullptr) {
     CfdCapiHandleData* data = static_cast<CfdCapiHandleData*>(handle);
     memset(data->error_message, 0, sizeof(data->error_message));
@@ -376,7 +375,6 @@ void CfdCapiManager::SetLastFatalError(void* handle, const char* message) {
 }
 
 CfdException CfdCapiManager::GetLastError(void* handle) {
-  // TODO(k-matsuzawa): handle存在チェックすべきかどうか
   if (handle != nullptr) {
     CfdCapiHandleData* data = static_cast<CfdCapiHandleData*>(handle);
     char str_buffer[256];
@@ -633,7 +631,8 @@ extern "C" int CfdRequestExecuteJson(
 #endif  // CFD_DISABLE_JSONAPI
 }
 
-int CfdSerializeByteData(void* handle, const char* buffer, char** output) {
+extern "C" int CfdSerializeByteData(
+    void* handle, const char* buffer, char** output) {
   try {
     cfd::Initialize();
     if (buffer == nullptr) {
@@ -652,6 +651,227 @@ int CfdSerializeByteData(void* handle, const char* buffer, char** output) {
     ByteData data(buffer);
     *output = cfd::capi::CreateString(data.Serialize().GetHex());
 
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+extern "C" int CfdEncryptAES(
+    void* handle, const char* key, const char* cbc_iv, const char* buffer,
+    char** output) {
+  try {
+    cfd::Initialize();
+    if (key == nullptr) {
+      warn(CFD_LOG_SOURCE, "key is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. key is null.");
+    }
+    if (buffer == nullptr) {
+      warn(CFD_LOG_SOURCE, "buffer is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. buffer is null.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    ByteData key_data(key);
+    ByteData data(buffer);
+
+    if (cfd::capi::IsEmptyString(cbc_iv)) {
+      auto aes_data = cfd::core::CryptoUtil::EncryptAes256(key_data, data);
+      *output = cfd::capi::CreateString(aes_data.GetHex());
+    } else {
+      ByteData iv(cbc_iv);
+      auto aes_data =
+          cfd::core::CryptoUtil::EncryptAes256Cbc(key_data, iv, data);
+      *output = cfd::capi::CreateString(aes_data.GetHex());
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+extern "C" int CfdDecryptAES(
+    void* handle, const char* key, const char* cbc_iv, const char* buffer,
+    char** output) {
+  try {
+    cfd::Initialize();
+    if (key == nullptr) {
+      warn(CFD_LOG_SOURCE, "key is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. key is null.");
+    }
+    if (buffer == nullptr) {
+      warn(CFD_LOG_SOURCE, "buffer is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. buffer is null.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    ByteData key_data(key);
+    ByteData data(buffer);
+
+    if (cfd::capi::IsEmptyString(cbc_iv)) {
+      auto aes_data = cfd::core::CryptoUtil::DecryptAes256(key_data, data);
+      *output = cfd::capi::CreateString(aes_data.GetHex());
+    } else {
+      ByteData iv(cbc_iv);
+      auto aes_data =
+          cfd::core::CryptoUtil::DecryptAes256Cbc(key_data, iv, data);
+      *output = cfd::capi::CreateString(aes_data.GetHex());
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+extern "C" int CfdEncodeBase64(
+    void* handle, const char* buffer, char** output) {
+  try {
+    cfd::Initialize();
+    if (buffer == nullptr) {
+      warn(CFD_LOG_SOURCE, "buffer is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. buffer is null.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    ByteData data(buffer);
+    auto base64 = cfd::core::CryptoUtil::EncodeBase64(data);
+    *output = cfd::capi::CreateString(base64);
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+extern "C" int CfdDecodeBase64(
+    void* handle, const char* base64, char** output) {
+  try {
+    cfd::Initialize();
+    if (cfd::capi::IsEmptyString(base64)) {
+      warn(CFD_LOG_SOURCE, "base64 is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. base64 is null or empty.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    auto data = cfd::core::CryptoUtil::DecodeBase64(std::string(base64));
+    *output = cfd::capi::CreateString(data.GetHex());
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+extern "C" int CfdEncodeBase58(
+    void* handle, const char* buffer, bool use_checksum, char** output) {
+  try {
+    cfd::Initialize();
+    if (buffer == nullptr) {
+      warn(CFD_LOG_SOURCE, "buffer is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. buffer is null.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    ByteData data(buffer);
+    if (use_checksum) {
+      auto base58 = cfd::core::CryptoUtil::EncodeBase58Check(data);
+      *output = cfd::capi::CreateString(base58);
+    } else {
+      auto base58 = cfd::core::CryptoUtil::EncodeBase58(data);
+      *output = cfd::capi::CreateString(base58);
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+extern "C" int CfdDecodeBase58(
+    void* handle, const char* base58, bool use_checksum, char** output) {
+  try {
+    cfd::Initialize();
+    if (cfd::capi::IsEmptyString(base58)) {
+      warn(CFD_LOG_SOURCE, "base58 is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. base58 is null or empty.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+    if (use_checksum) {
+      auto data =
+          cfd::core::CryptoUtil::DecodeBase58Check(std::string(base58));
+      *output = cfd::capi::CreateString(data.GetHex());
+    } else {
+      auto data = cfd::core::CryptoUtil::DecodeBase58(std::string(base58));
+      *output = cfd::capi::CreateString(data.GetHex());
+    }
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     return cfd::capi::SetLastError(handle, except);

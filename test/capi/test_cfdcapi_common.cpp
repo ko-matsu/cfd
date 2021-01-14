@@ -462,6 +462,169 @@ TEST(cfdcapi_common, CfdSerializeByteData) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+
+TEST(cfdcapi_common, CfdEncryptDecryptAES) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  const char* target_data = "74657374207465737420746573742074657374";
+  const char* exp_aes = "752fe203af4a4d427997e5d2c8b246530e0546b66d2982a49e333e77295dccea";
+  ret = CfdEncryptAES(handle,
+      "616975656F616975656F616975656F616975656F616975656F616975656F6169",
+      "",
+      target_data,
+      &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp_aes, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdDecryptAES(handle,
+      "616975656F616975656F616975656F616975656F616975656F616975656F6169",
+      "",
+      exp_aes,
+      &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("7465737420746573742074657374207465737400000000000000000000000000", output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_common, CfdEncryptDecryptAES_CBC) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  const char* target_data = "74657374207465737420746573742074657374";
+  const char* exp_aes = "2ef199bb7d160f94fc17fa5f01b220c630d6b19a5973f4b313868c921fc10d22";
+  ret = CfdEncryptAES(handle,
+      "616975656F616975656F616975656F616975656F616975656F616975656F6169",
+      "33343536373839303132333435363738",
+      target_data,
+      &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp_aes, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdDecryptAES(handle,
+      "616975656F616975656F616975656F616975656F616975656F616975656F6169",
+      "33343536373839303132333435363738",
+      exp_aes,
+      &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(target_data, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_common, CfdEncodeDecodeBase64) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  const char* target_data = "54686520717569636b2062726f776e20666f78206a756d7073206f766572203133206c617a7920646f67732e";
+  const char* exp = "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIDEzIGxhenkgZG9ncy4=";
+  ret = CfdEncodeBase64(handle, target_data, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdDecodeBase64(handle, exp, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(target_data, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_common, CfdEncodeDecodeBase58) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  const char* target_data = "0488b21e051431616f00000000e6ba4088246b104837c62bd01fd8ba1cf2931ad1a5376c2360a1f112f2cfc63c02acf89ab4e3daa79bceef2ebecee2af92712e6bf5e4b0d10c74bbecc27ac13da8";
+  const char* exp = "9XpNiCWvYUYz78YLbbNYoBMUef5GNJooCQ9i2nf9AH95Njpp4AbuEcmL5iVAwxa6LdR6FyRPeGFEmkFDr3KPGww6peFFtqtabW75Ush4TR";
+  ret = CfdEncodeBase58(handle, target_data, false, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdDecodeBase58(handle, exp, false, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(target_data, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_common, CfdEncodeDecodeBase58Check) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  const char* target_data = "0488b21e051431616f00000000e6ba4088246b104837c62bd01fd8ba1cf2931ad1a5376c2360a1f112f2cfc63c02acf89ab4e3daa79bceef2ebecee2af92712e6bf5e4b0d10c74bbecc27ac13da8";
+  const char* exp = "xpub6FZeZ5vwcYiT6r7ZYKJhyUqBxMBvzSmb6SpPQCsSenGPrVjKk5SGW4JJpc7cKERN8w9KnJZcMgJA4B2cHnpGq5TahYrDvZSBY2EMLKPRMTT";
+  ret = CfdEncodeBase58(handle, target_data, true, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdDecodeBase58(handle, exp, true, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(target_data, output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+
 // last test.
 /* comment out.
 TEST(cfdcapi_common, CfdFinalize) {
