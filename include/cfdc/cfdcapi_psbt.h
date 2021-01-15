@@ -35,6 +35,8 @@ enum CfdPsbtRecordKind {
   kCfdPsbtRecordInputBip32 = 2,
   /** record: output bip32 */
   kCfdPsbtRecordOutputBip32 = 3,
+  /** record: global xpub bip32 */
+  kCfdPsbtRecordGloalXpub = 4,
 };
 
 /** fund psbt option */
@@ -310,9 +312,17 @@ CFDC_API int CfdGetPsbtSighashType(
  * @param[in] vout              vout.
  * @param[out] amount           amount.
  * @param[out] locking_script   locking script.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] redeem_script    redeem script.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] descriptor       descriptor.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] full_tx_hex      full transaction hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtUtxoData(
@@ -326,12 +336,22 @@ CFDC_API int CfdGetPsbtUtxoData(
  * @param[in] psbt_handle       psbt handle.
  * @param[in] index             input index.
  * @param[out] txid             txid.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] vout             vout.
  * @param[out] amount           amount.
  * @param[out] locking_script   locking script.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] redeem_script    redeem script.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] descriptor       descriptor.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] full_tx_hex      full transaction hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtUtxoDataByIndex(
@@ -402,7 +422,7 @@ CFDC_API int CfdGetPsbtTxInIndex(
  * @param[in] psbt_handle       psbt handle.
  * @param[in] kind              PSBT kind.
  * @param[in] index             input or output index.
- * @param[in] pubkey            pubkey.
+ * @param[in] pubkey            pubkey or xpubkey.
  * @param[out] value            record value.
  * @return CfdErrorCode
  */
@@ -416,7 +436,7 @@ CFDC_API int CfdGetPsbtPubkeyRecord(
  * @param[in] psbt_handle       psbt handle.
  * @param[in] kind              PSBT kind.
  * @param[in] index             input or output index.
- * @param[in] pubkey            pubkey.
+ * @param[in] pubkey            pubkey or xpubkey.
  * @return CfdErrorCode
  */
 CFDC_API int CfdIsFindPsbtPubkeyRecord(
@@ -429,9 +449,13 @@ CFDC_API int CfdIsFindPsbtPubkeyRecord(
  * @param[in] psbt_handle       psbt handle.
  * @param[in] kind              PSBT kind.
  * @param[in] index             input or output index.
- * @param[in] pubkey            pubkey.
+ * @param[in] pubkey            pubkey or xpubkey.
  * @param[out] fingerprint      fingerprint.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] bip32_path       bip32 path.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtBip32Data(
@@ -458,20 +482,32 @@ CFDC_API int CfdGetPsbtPubkeyList(
  * @param[in,out] handle            cfd handle.
  * @param[in] pubkey_list_handle    pubkey list handle.
  * @param[in] index                 list index.
- * @param[out] pubkey               pubkey.
+ * @param[out] pubkey               pubkey or xpubkey. (require)
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] pubkey_hex           pubkey or xpubkey by hex string.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtPubkeyListData(
-    void* handle, void* pubkey_list_handle, uint32_t index, char** pubkey);
+    void* handle, void* pubkey_list_handle, uint32_t index, char** pubkey,
+    char** pubkey_hex);
 
 /**
  * @brief Get PSBT pubkey list data.
  * @param[in,out] handle            cfd handle.
  * @param[in] pubkey_list_handle    pubkey list handle.
  * @param[in] index                 list index.
- * @param[out] pubkey               pubkey.
+ * @param[out] pubkey               pubkey or xpubkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] fingerprint          fingerprint.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] bip32_path           bip32 path.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtPubkeyListBip32Data(
@@ -485,6 +521,19 @@ CFDC_API int CfdGetPsbtPubkeyListBip32Data(
  * @return CfdErrorCode
  */
 CFDC_API int CfdFreePsbtPubkeyList(void* handle, void* pubkey_list_handle);
+
+/**
+ * @brief Add PSBT global bip32 xpubkey.
+ * @param[in,out] handle        cfd handle.
+ * @param[in] psbt_handle       psbt handle.
+ * @param[in] xpubkey           xpubkey. (direct or path data)
+ * @param[in] fingerprint       fingerprint.
+ * @param[in] bip32_path        bip32_path.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddPsbtGlobalXpubkey(
+    void* handle, void* psbt_handle, const char* xpubkey,
+    const char* fingerprint, const char* bip32_path);
 
 /**
  * @brief Add PSBT record.
@@ -508,6 +557,8 @@ CFDC_API int CfdAddPsbtRecord(
  * @param[in] index         index. (if type is global, this field is not use.)
  * @param[in] key           key hex.
  * @param[out] value        value hex.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtRecord(
@@ -601,11 +652,19 @@ CFDC_API int CfdFinalizeFundPsbt(
  * @param[in] index                 used utxo index.
  * @param[out] utxo_index           set utxo list index.
  * @param[out] txid                 utxo txid.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] vout                 utxo vout.
  * @param[out] amount               utxo amount.
  * @param[out] asset                utxo asset.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] descriptor           utxo descriptor.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @param[out] scriptsig_template   utxo scriptsig template.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetFundPsbtUsedUtxo(

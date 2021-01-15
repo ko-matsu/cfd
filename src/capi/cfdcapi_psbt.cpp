@@ -69,6 +69,12 @@ using cfd::core::logger::warn;
 using cfd::Psbt;
 
 // =============================================================================
+// internal file
+// =============================================================================
+//! ExtPubkey hex size.
+static constexpr size_t kCfdExtPubkeyHexSize = ExtPrivkey::kSerializeSize * 2;
+
+// =============================================================================
 // internal c-api
 // =============================================================================
 namespace cfd {
@@ -97,6 +103,7 @@ struct CfdCapiPsbtHandle {
 struct CfdCapiPsbtPubkeyListHandle {
   char prefix[kPrefixLength];      //!< buffer prefix
   bool has_bip32_list;             //!< bip32 list
+  bool has_xpub_list;              //!< xpubkey list
   std::vector<KeyData>* key_list;  //!< key list
 };
 
@@ -116,6 +123,63 @@ struct CfdCapiPsbtFundHandle {
   /// knapsack min change (int64)
   int64_t knapsack_min_change;
 };
+
+/**
+ * @brief parse pubkey.
+ * @param[in] kind      psbt record kind.
+ * @param[in] pubkey    pubkey or xpubkey.
+ * @param[in] net_type  network type.
+ * @return key data.
+ */
+static KeyData ParsePubkey(
+    CfdPsbtRecordKind kind, const char* pubkey, NetType net_type) {
+  constexpr size_t kCompressPubkeyHexSize = Pubkey::kCompressedPubkeySize * 2;
+  std::string pubkey_str(pubkey);
+
+  bool has_extpubkey = false;
+  switch (kind) {
+    case kCfdPsbtRecordGloalXpub:
+      has_extpubkey = true;
+      break;
+    case kCfdPsbtRecordInputBip32:
+    case kCfdPsbtRecordInputSignature:
+    case kCfdPsbtRecordOutputBip32:
+    default:
+      break;
+  }
+
+  bool is_pubkey = false;
+  if (pubkey_str.length() == kCompressPubkeyHexSize) {
+    is_pubkey = true;
+  }
+  if (is_pubkey == has_extpubkey) {
+    warn(CFD_LOG_SOURCE, "unmatch pubkey type.");
+    throw CfdException(
+        CfdError::kCfdIllegalArgumentError,
+        "Failed to parameter. unmatch pubkey type.");
+  }
+
+  if (is_pubkey) {
+    return KeyData(pubkey_str);
+  }
+  KeyData data;
+  if (pubkey_str.length() == kCfdExtPubkeyHexSize) {
+    data = KeyData(ExtPubkey(ByteData(pubkey_str)), "", ByteData());
+  } else {
+    data = KeyData(ExtPubkey(pubkey_str), "", ByteData());
+  }
+  bool has_mainnet =
+      (data.GetExtPubkey().GetNetworkType() == NetType::kMainnet);
+
+  if (((net_type == NetType::kMainnet) && (!has_mainnet)) ||
+      ((net_type != NetType::kMainnet) && (has_mainnet))) {
+    warn(CFD_LOG_SOURCE, "unmatch xpubkey network type.");
+    throw CfdException(
+        CfdError::kCfdIllegalArgumentError,
+        "Failed to parameter. unmatch xpubkey network type.");
+  }
+  return data;
+}
 
 }  // namespace capi
 }  // namespace cfd
@@ -137,6 +201,7 @@ using cfd::capi::IsEmptyString;
 using cfd::capi::kPrefixPsbtFundHandle;
 using cfd::capi::kPrefixPsbtHandle;
 using cfd::capi::kPrefixPsbtPubkeyList;
+using cfd::capi::ParsePubkey;
 using cfd::capi::SetLastError;
 using cfd::capi::SetLastFatalError;
 
@@ -700,18 +765,6 @@ int CfdSetPsbtTxInBip32Pubkey(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. pubkey is null or empty.");
     }
-    if (IsEmptyString(fingerprint)) {
-      warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. fingerprint is null or empty.");
-    }
-    if (IsEmptyString(bip32_path)) {
-      warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. bip32_path is null or empty.");
-    }
     if (psbt_obj->psbt == nullptr) {
       warn(CFD_LOG_SOURCE, "psbt is null.");
       throw CfdException(
@@ -721,8 +774,26 @@ int CfdSetPsbtTxInBip32Pubkey(
     OutPoint outpoint(Txid(txid), vout);
 
     std::vector<KeyData> key_list;
-    key_list.emplace_back(
-        Pubkey(pubkey), std::string(bip32_path), ByteData(fingerprint));
+    KeyData key_data(pubkey);
+    if (key_data.GetBip32Path().empty() ||
+        (key_data.GetFingerprint().GetDataSize() != 4)) {
+      if (IsEmptyString(fingerprint)) {
+        warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. fingerprint is null or empty.");
+      }
+      if (IsEmptyString(bip32_path)) {
+        warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. bip32_path is null or empty.");
+      }
+      key_list.emplace_back(
+          Pubkey(pubkey), std::string(bip32_path), ByteData(fingerprint));
+    } else {
+      key_list.emplace_back(key_data.ToString());
+    }
     auto script = psbt_obj->psbt->GetTxInRedeemScript(outpoint, true);
     auto tx = psbt_obj->psbt->GetTxInUtxoFull(outpoint, true);
     if (tx.GetTxOutCount() > vout) {
@@ -1306,18 +1377,6 @@ int CfdSetPsbtTxOutBip32Pubkey(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. pubkey is null or empty.");
     }
-    if (IsEmptyString(fingerprint)) {
-      warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. fingerprint is null or empty.");
-    }
-    if (IsEmptyString(bip32_path)) {
-      warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. bip32_path is null or empty.");
-    }
     if (psbt_obj->psbt == nullptr) {
       warn(CFD_LOG_SOURCE, "psbt is null.");
       throw CfdException(
@@ -1326,8 +1385,26 @@ int CfdSetPsbtTxOutBip32Pubkey(
     }
 
     std::vector<KeyData> key_list;
-    key_list.emplace_back(
-        Pubkey(pubkey), std::string(bip32_path), ByteData(fingerprint));
+    KeyData key_data(pubkey);
+    if (key_data.GetBip32Path().empty() ||
+        (key_data.GetFingerprint().GetDataSize() != 4)) {
+      if (IsEmptyString(fingerprint)) {
+        warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. fingerprint is null or empty.");
+      }
+      if (IsEmptyString(bip32_path)) {
+        warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. bip32_path is null or empty.");
+      }
+      key_list.emplace_back(
+          Pubkey(pubkey), std::string(bip32_path), ByteData(fingerprint));
+    } else {
+      key_list.emplace_back(key_data.ToString());
+    }
     auto script = psbt_obj->psbt->GetTxOutScript(index, true);
     psbt_obj->psbt->SetTxOutData(index, script, key_list);
     return CfdErrorCode::kCfdSuccess;
@@ -1408,22 +1485,29 @@ int CfdGetPsbtPubkeyRecord(
           "Failed to handle statement. psbt is null.");
     }
 
-    Pubkey pk(pubkey);
+    KeyData pk_obj = ParsePubkey(kind, pubkey, psbt_obj->net_type);
     ByteData key;
     ByteData data;
     switch (kind) {
       case kCfdPsbtRecordInputSignature:
-        key = Psbt::CreatePubkeyRecordKey(Psbt::kPsbtInputPartialSig, pk);
+        key = Psbt::CreatePubkeyRecordKey(
+            Psbt::kPsbtInputPartialSig, pk_obj.GetPubkey());
         data = psbt_obj->psbt->GetTxInRecord(index, key);
         break;
       case kCfdPsbtRecordInputBip32:
-        key = Psbt::CreatePubkeyRecordKey(Psbt::kPsbtInputBip32Derivation, pk);
+        key = Psbt::CreatePubkeyRecordKey(
+            Psbt::kPsbtInputBip32Derivation, pk_obj.GetPubkey());
         data = psbt_obj->psbt->GetTxInRecord(index, key);
         break;
       case kCfdPsbtRecordOutputBip32:
-        key =
-            Psbt::CreatePubkeyRecordKey(Psbt::kPsbtOutputBip32Derivation, pk);
+        key = Psbt::CreatePubkeyRecordKey(
+            Psbt::kPsbtOutputBip32Derivation, pk_obj.GetPubkey());
         data = psbt_obj->psbt->GetTxOutRecord(index, key);
+        break;
+      case kCfdPsbtRecordGloalXpub:
+        key = Psbt::CreateFixRecordKey(
+            Psbt::kPsbtGlobalXpub, pk_obj.GetExtPubkey().GetData());
+        data = psbt_obj->psbt->GetGlobalRecord(key);
         break;
       default:
         warn(CFD_LOG_SOURCE, "kind is invalid: {}", kind);
@@ -1465,22 +1549,29 @@ int CfdIsFindPsbtPubkeyRecord(
           "Failed to handle statement. psbt is null.");
     }
 
-    Pubkey pk(pubkey);
+    KeyData pk_obj = ParsePubkey(kind, pubkey, psbt_obj->net_type);
     ByteData key;
     bool is_find = true;
     switch (kind) {
       case kCfdPsbtRecordInputSignature:
-        key = Psbt::CreatePubkeyRecordKey(Psbt::kPsbtInputPartialSig, pk);
+        key = Psbt::CreatePubkeyRecordKey(
+            Psbt::kPsbtInputPartialSig, pk_obj.GetPubkey());
         is_find = psbt_obj->psbt->IsFindTxInRecord(index, key);
         break;
       case kCfdPsbtRecordInputBip32:
-        key = Psbt::CreatePubkeyRecordKey(Psbt::kPsbtInputBip32Derivation, pk);
+        key = Psbt::CreatePubkeyRecordKey(
+            Psbt::kPsbtInputBip32Derivation, pk_obj.GetPubkey());
         is_find = psbt_obj->psbt->IsFindTxInRecord(index, key);
         break;
       case kCfdPsbtRecordOutputBip32:
-        key =
-            Psbt::CreatePubkeyRecordKey(Psbt::kPsbtOutputBip32Derivation, pk);
+        key = Psbt::CreatePubkeyRecordKey(
+            Psbt::kPsbtOutputBip32Derivation, pk_obj.GetPubkey());
         is_find = psbt_obj->psbt->IsFindTxOutRecord(index, key);
+        break;
+      case kCfdPsbtRecordGloalXpub:
+        key = Psbt::CreateFixRecordKey(
+            Psbt::kPsbtGlobalXpub, pk_obj.GetExtPubkey().GetData());
+        is_find = psbt_obj->psbt->IsFindGlobalRecord(key);
         break;
       default:
         warn(CFD_LOG_SOURCE, "kind is invalid: {}", kind);
@@ -1523,13 +1614,15 @@ int CfdGetPsbtBip32Data(
           CfdError::kCfdIllegalStateError,
           "Failed to handle statement. psbt is null.");
     }
-    Pubkey pk_obj(pubkey);
+    KeyData pk_obj = ParsePubkey(kind, pubkey, psbt_obj->net_type);
 
     std::vector<KeyData> key_list;
     if (kind == kCfdPsbtRecordInputBip32) {
       key_list = psbt_obj->psbt->GetTxInKeyDataList(index);
     } else if (kind == kCfdPsbtRecordOutputBip32) {
       key_list = psbt_obj->psbt->GetTxOutKeyDataList(index);
+    } else if (kind == kCfdPsbtRecordGloalXpub) {
+      key_list = psbt_obj->psbt->GetGlobalXpubkeyDataList();
     } else {
       warn(CFD_LOG_SOURCE, "kind is invalid: {}", kind);
       throw CfdException(
@@ -1538,14 +1631,24 @@ int CfdGetPsbtBip32Data(
     }
 
     KeyData key;
+    bool has_extpubkey = pk_obj.HasExtPubkey();
+    Pubkey target_pubkey = pk_obj.GetPubkey();
     for (const auto temp_key : key_list) {
-      if (temp_key.GetPubkey().Equals(pk_obj)) {
-        key = temp_key;
-        break;
+      if (temp_key.GetPubkey().Equals(target_pubkey)) {
+        if (has_extpubkey) {
+          if (temp_key.GetExtPubkey().GetData().Equals(
+                  pk_obj.GetExtPubkey().GetData())) {
+            key = temp_key;
+            break;
+          }
+        } else {
+          key = temp_key;
+          break;
+        }
       }
     }
     if (!key.IsValid()) {
-      warn(CFD_LOG_SOURCE, "pubkey not found: {}", pk_obj.GetHex());
+      warn(CFD_LOG_SOURCE, "pubkey not found: {}", pk_obj.ToString());
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. pubkey not found");
@@ -1601,6 +1704,7 @@ int CfdGetPsbtPubkeyList(
     std::vector<Pubkey> pk_list;
     std::vector<KeyData> key_list;
     bool has_bip32_list = true;
+    bool has_xpub_list = false;
     switch (kind) {
       case kCfdPsbtRecordInputSignature:
         pk_list = psbt_obj->psbt->GetTxInSignaturePubkeyList(index);
@@ -1610,6 +1714,10 @@ int CfdGetPsbtPubkeyList(
         break;
       case kCfdPsbtRecordOutputBip32:
         key_list = psbt_obj->psbt->GetTxOutKeyDataList(index);
+        break;
+      case kCfdPsbtRecordGloalXpub:
+        key_list = psbt_obj->psbt->GetGlobalXpubkeyDataList();
+        has_xpub_list = true;
         break;
       default:
         warn(CFD_LOG_SOURCE, "kind is invalid: {}", kind);
@@ -1631,8 +1739,9 @@ int CfdGetPsbtPubkeyList(
         kPrefixPsbtPubkeyList, sizeof(CfdCapiPsbtPubkeyListHandle)));
     buffer->key_list = new std::vector<KeyData>();
     buffer->has_bip32_list = has_bip32_list;
+    buffer->has_xpub_list = has_xpub_list;
     *(buffer->key_list) = key_list;
-    *list_num = static_cast<uint32_t>(pk_list.size());
+    *list_num = static_cast<uint32_t>(key_list.size());
     *pubkey_list_handle = buffer;
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -1647,8 +1756,11 @@ int CfdGetPsbtPubkeyList(
 }
 
 int CfdGetPsbtPubkeyListData(
-    void* handle, void* pubkey_list_handle, uint32_t index, char** pubkey) {
+    void* handle, void* pubkey_list_handle, uint32_t index, char** pubkey,
+    char** pubkey_hex) {
   int result = CfdErrorCode::kCfdUnknownError;
+  char* work_pubkey = nullptr;
+  char* work_pubkey_hex = nullptr;
   try {
     cfd::Initialize();
     CheckBuffer(pubkey_list_handle, kPrefixPsbtPubkeyList);
@@ -1673,7 +1785,22 @@ int CfdGetPsbtPubkeyListData(
     }
 
     auto key = list_handle->key_list->at(index);
-    *pubkey = CreateString(key.GetPubkey().GetHex());
+    if (list_handle->has_xpub_list) {
+      auto extkey = key.GetExtPubkey();
+      work_pubkey = CreateString(extkey.ToString());
+      if (pubkey_hex != nullptr) {
+        work_pubkey_hex = CreateString(extkey.GetData().GetHex());
+      }
+    } else {
+      auto pubkey_obj = key.GetPubkey();
+      work_pubkey = CreateString(pubkey_obj.GetHex());
+      if (pubkey_hex != nullptr) {
+        work_pubkey_hex = CreateString(pubkey_obj.GetHex());
+      }
+    }
+
+    *pubkey = work_pubkey;
+    if (pubkey_hex != nullptr) *pubkey_hex = work_pubkey_hex;
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -1682,6 +1809,7 @@ int CfdGetPsbtPubkeyListData(
   } catch (...) {
     SetLastFatalError(handle, "unknown error.");
   }
+  FreeBufferOnError(&work_pubkey, &work_pubkey_hex);
   return result;
 }
 
@@ -1721,7 +1849,11 @@ int CfdGetPsbtPubkeyListBip32Data(
     }
 
     auto key = list_handle->key_list->at(index);
-    work_pubkey = CreateString(key.GetPubkey().GetHex());
+    if (list_handle->has_xpub_list) {
+      work_pubkey = CreateString(key.GetExtPubkey().ToString());
+    } else {
+      work_pubkey = CreateString(key.GetPubkey().GetHex());
+    }
     if (fingerprint != nullptr) {
       work_fingerprint = CreateString(key.GetFingerprint().GetHex());
     }
@@ -1758,6 +1890,81 @@ int CfdFreePsbtPubkeyList(void* handle, void* pubkey_list_handle) {
           pubkey_list_handle, kPrefixPsbtPubkeyList,
           sizeof(CfdCapiPsbtPubkeyListHandle));
     }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdAddPsbtGlobalXpubkey(
+    void* handle, void* psbt_handle, const char* xpubkey,
+    const char* fingerprint, const char* bip32_path) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(psbt_handle, kPrefixPsbtHandle);
+    CfdCapiPsbtHandle* psbt_obj = static_cast<CfdCapiPsbtHandle*>(psbt_handle);
+    if (IsEmptyString(xpubkey)) {
+      warn(CFD_LOG_SOURCE, "xpubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. xpubkey is null or empty.");
+    }
+    if (psbt_obj->psbt == nullptr) {
+      warn(CFD_LOG_SOURCE, "psbt is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to handle statement. psbt is null.");
+    }
+
+    std::string xpub_str(xpubkey);
+    KeyData key_data;
+    if (xpub_str.length() == kCfdExtPubkeyHexSize) {
+      key_data = KeyData(ExtPubkey(ByteData(xpub_str)), "", ByteData());
+    } else {
+      key_data = KeyData(xpub_str);
+      if ((!key_data.HasExtPubkey()) || key_data.HasExtPrivkey()) {
+        warn(CFD_LOG_SOURCE, "psbt invalid xpubkey format.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. psbt invalid xpubkey format.");
+      }
+    }
+
+    bool has_mainnet =
+        (key_data.GetExtPubkey().GetNetworkType() == NetType::kMainnet);
+    if (((psbt_obj->net_type == NetType::kMainnet) && (!has_mainnet)) ||
+        ((psbt_obj->net_type != NetType::kMainnet) && (has_mainnet))) {
+      warn(CFD_LOG_SOURCE, "unmatch xpubkey network type.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. unmatch xpubkey network type.");
+    }
+
+    if (key_data.GetBip32Path().empty() ||
+        (key_data.GetFingerprint().GetDataSize() != 4)) {
+      if (IsEmptyString(fingerprint)) {
+        warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. fingerprint is null or empty.");
+      }
+      if (IsEmptyString(bip32_path)) {
+        warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. bip32_path is null or empty.");
+      }
+      key_data = KeyData(
+          key_data.GetExtPubkey(), std::string(bip32_path),
+          ByteData(fingerprint));
+    }
+    psbt_obj->psbt->SetGlobalXpubkey(key_data);
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);

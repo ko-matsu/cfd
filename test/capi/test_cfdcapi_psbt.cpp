@@ -1065,7 +1065,7 @@ TEST(cfdcapi_psbt, GetPsbtInput) {
       fingerprint = nullptr;
       path = nullptr;
       for (uint32_t index=0; index<list_num; ++index) {
-        ret = CfdGetPsbtPubkeyListData(handle, pubkey_list_handle, index, &pk);
+        ret = CfdGetPsbtPubkeyListData(handle, pubkey_list_handle, index, &pk, nullptr);
         EXPECT_EQ(kCfdSuccess, ret);
         if (ret == kCfdSuccess) {
           if (index == 0) {
@@ -1105,7 +1105,7 @@ TEST(cfdcapi_psbt, GetPsbtInput) {
       fingerprint = nullptr;
       path = nullptr;
       for (uint32_t index=0; index<list_num; ++index) {
-        ret = CfdGetPsbtPubkeyListData(handle, pubkey_list_handle, index, &pk);
+        ret = CfdGetPsbtPubkeyListData(handle, pubkey_list_handle, index, &pk, nullptr);
         EXPECT_EQ(kCfdSuccess, ret);
         if (ret == kCfdSuccess) {
           if (index == 0) {
@@ -1234,18 +1234,19 @@ TEST(cfdcapi_psbt, GetPsbtOutput) {
     ret = CfdGetPsbtPubkeyList(handle, psbt_handle, kCfdPsbtRecordOutputBip32,
         0, &list_num, &pubkey_list_handle);
     EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(2, list_num);
     if (ret == kCfdSuccess) {
       char* pk = nullptr;
       fingerprint = nullptr;
       path = nullptr;
       for (uint32_t index=0; index<list_num; ++index) {
-        ret = CfdGetPsbtPubkeyListData(handle, pubkey_list_handle, index, &pk);
+        ret = CfdGetPsbtPubkeyListData(handle, pubkey_list_handle, index, &pk, nullptr);
         EXPECT_EQ(kCfdSuccess, ret);
         if (ret == kCfdSuccess) {
           if (index == 0) {
-            EXPECT_STREQ("03a512f5f59c0e7901fc478ed6353eef76f44f9cb2c185bfbcf7f0b9bb76716bf3", pk);
+            EXPECT_STREQ("02622c7974ec32de75afa3733b09a6c33d0dea514b29faaccfb0991774f4622242", pk);
           } else if (index == 1) {
-            EXPECT_STREQ("03f4d473614e954ac4f5518e6f7cb3307b4f84743e137ed4eecb5f4fb643c23b47", pk);
+            EXPECT_STREQ("02906d399f6dbbecc898d4b8de3f497474c86a41f2cf36d71f95e5ca06b074867b", pk);
           }
           ret = CfdFreeStringBuffer(pk);
           EXPECT_EQ(kCfdSuccess, ret);
@@ -1256,13 +1257,13 @@ TEST(cfdcapi_psbt, GetPsbtOutput) {
         CfdcapiPsbtDumpLog(ret, handle);
         if (ret == kCfdSuccess) {
           if (index == 0) {
-            EXPECT_STREQ("03a512f5f59c0e7901fc478ed6353eef76f44f9cb2c185bfbcf7f0b9bb76716bf3", pk);
-            EXPECT_STREQ("2a704760", fingerprint);
-            EXPECT_STREQ("44'/0'/0'/0/11", path);
-          } else if (index == 1) {
-            EXPECT_STREQ("03f4d473614e954ac4f5518e6f7cb3307b4f84743e137ed4eecb5f4fb643c23b47", pk);
+            EXPECT_STREQ("02622c7974ec32de75afa3733b09a6c33d0dea514b29faaccfb0991774f4622242", pk);
             EXPECT_STREQ("9d6b6d86", fingerprint);
-            EXPECT_STREQ("44'/0'/0'/0/11", path);
+            EXPECT_STREQ("44'/0'/0'/0/12", path);
+          } else if (index == 1) {
+            EXPECT_STREQ("02906d399f6dbbecc898d4b8de3f497474c86a41f2cf36d71f95e5ca06b074867b", pk);
+            EXPECT_STREQ("2a704760", fingerprint);
+            EXPECT_STREQ("44'/0'/0'/0/12", path);
           }
           ret = CfdFreeStringBuffer(pk);
           EXPECT_EQ(kCfdSuccess, ret);
@@ -1326,7 +1327,7 @@ TEST(cfdcapi_psbt, GetPsbtGlobal) {
   EXPECT_EQ(kCfdSuccess, ret);
   EXPECT_FALSE((NULL == handle));
 
-  int net_type = kCfdNetworkTestnet;
+  int net_type = kCfdNetworkMainnet;
   void* psbt_handle = nullptr;
   const char* psbt_base64 = "cHNidP8BAF4CAAAAAWkv08JB0xYYGWvDa23k9riJEU5CDpvd+cu+Ux5aVE1UAAAAAAD/////ARBLzR0AAAAAIgAgPK0GGd5n5iR6dqECgTY1wFNFfGuk/eSsH/2BSNcOS8wAAAAAAAEBIAhYzR0AAAAAF6kUlF+1A5GnBjfB/8Wrf7ZTCMLyMXWHIgIDpRL19ZwOeQH8R47WNT7vdvRPnLLBhb+89/C5u3Zxa/NHMEQCICBjWTfgUXDYPcMhOts6bq5mcTAI5KvDi0kSxWgN7E8MAiAzwIpxowdXsIRj1TDsBY7XQBlo+zC+9j1FSXIaDkhbhAEiAgP01HNhTpVKxPVRjm98szB7T4R0PhN+1O7LX0+2Q8I7R0cwRAIgXSdKeIfePvrehKSjScTDb1ibVWI7ECe32m2sicF4VjQCIGoDr+u7tgifHjf6yPmZpAFRYciSAUT9UxEtoFgEzUPMAQEDBAEAAAABBCIAIJxNrLJeu4rai7sa3bhp3qTYFwzJUfHZaUshVOFYMnbJAQVHUiEDpRL19ZwOeQH8R47WNT7vdvRPnLLBhb+89/C5u3Zxa/MhA/TUc2FOlUrE9VGOb3yzMHtPhHQ+E37U7stfT7ZDwjtHUq4iBgOlEvX1nA55AfxHjtY1Pu929E+cssGFv7z38Lm7dnFr8xgqcEdgLAAAgAAAAIAAAACAAAAAAAsAAAAiBgP01HNhTpVKxPVRjm98szB7T4R0PhN+1O7LX0+2Q8I7Rxida22GLAAAgAAAAIAAAACAAAAAAAsAAAAAAQAiACA8rQYZ3mfmJHp2oQKBNjXAU0V8a6T95Kwf/YFI1w5LzAEBR1IhApBtOZ9tu+zImNS43j9JdHTIakHyzzbXH5XlygawdIZ7IQJiLHl07DLeda+jczsJpsM9DepRSyn6rM+wmRd09GIiQlKuIgICYix5dOwy3nWvo3M7CabDPQ3qUUsp+qzPsJkXdPRiIkIYnWtthiwAAIAAAACAAAAAgAAAAAAMAAAAIgICkG05n2277MiY1LjeP0l0dMhqQfLPNtcfleXKBrB0hnsYKnBHYCwAAIAAAACAAAAAgAAAAAAMAAAAAA==";
   char* output = nullptr;
@@ -1334,6 +1335,97 @@ TEST(cfdcapi_psbt, GetPsbtGlobal) {
     handle, net_type, psbt_base64, "", 0, 0, &psbt_handle);
   EXPECT_EQ(kCfdSuccess, ret);
   if (ret == kCfdSuccess) {
+    const char* pubkey = "xpub6EkLrUTiaMiLbMAkbLN2BdH4hWkCQT7fLQf3Q6Ymx3gAqbuFeSKHfTMVDtjcsuRtEFqJbAsjYFZMrqeDLgRSsn4yuQygK44HWPrnA7gZC2C";
+    ret = CfdAddPsbtGlobalXpubkey(handle, psbt_handle,
+        pubkey, "b7665978", "0/44");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddPsbtGlobalXpubkey(handle, psbt_handle,
+        "[ae05dbb7/0/44']xpub6JNQxQDHv2vcUQiXjggbaGYZg3nmxX6ojMcJPSs4KfLSLnMBCg8VbJUh5n4to2SwLWXdSXnHBkUQx1fVnJ9oKYjPPYAQehjWRpx6ErQyykX", nullptr, nullptr);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdIsFindPsbtPubkeyRecord(handle, psbt_handle, kCfdPsbtRecordGloalXpub, 0, pubkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    char* signature = nullptr;
+    ret = CfdGetPsbtPubkeyRecord(handle, psbt_handle,
+        kCfdPsbtRecordGloalXpub, 0, pubkey, &signature);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("b7665978000000002c000000", signature);
+      ret = CfdFreeStringBuffer(signature);
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+
+    char* fingerprint = nullptr;
+    char* path = nullptr;
+    ret = CfdGetPsbtBip32Data(handle, psbt_handle, kCfdPsbtRecordGloalXpub, 0, pubkey, &fingerprint, &path);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("b7665978", fingerprint);
+      EXPECT_STREQ("0/44", path);
+      ret = CfdFreeStringBuffer(fingerprint);
+      EXPECT_EQ(kCfdSuccess, ret);
+      ret = CfdFreeStringBuffer(path);
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+    void* pubkey_list_handle = nullptr;
+    uint32_t list_num = 0;
+    ret = CfdGetPsbtPubkeyList(handle, psbt_handle, kCfdPsbtRecordGloalXpub,
+        0, &list_num, &pubkey_list_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(2, list_num);
+    if (ret == kCfdSuccess) {
+      char* pk = nullptr;
+      char* pk_hex = nullptr;
+      fingerprint = nullptr;
+      path = nullptr;
+      for (uint32_t index=0; index<list_num; ++index) {
+        ret = CfdGetPsbtPubkeyListData(handle, pubkey_list_handle, index, &pk, &pk_hex);
+        EXPECT_EQ(kCfdSuccess, ret);
+        if (ret == kCfdSuccess) {
+          if (index == 0) {
+            EXPECT_STREQ("xpub6EkLrUTiaMiLbMAkbLN2BdH4hWkCQT7fLQf3Q6Ymx3gAqbuFeSKHfTMVDtjcsuRtEFqJbAsjYFZMrqeDLgRSsn4yuQygK44HWPrnA7gZC2C", pk);
+            EXPECT_STREQ("0488b21e04a53a8ff30000002c839fb0d66f1887db167cdc530ab98e871d8b017ebcb198568874b6c98516364e03f1e767c0555ce0105b2a76d0f8b19b6d33a147f82f75a05c4c09580c39694fd3", pk_hex);
+          } else if (index == 1) {
+            EXPECT_STREQ("xpub6JNQxQDHv2vcUQiXjggbaGYZg3nmxX6ojMcJPSs4KfLSLnMBCg8VbJUh5n4to2SwLWXdSXnHBkUQx1fVnJ9oKYjPPYAQehjWRpx6ErQyykX", pk);
+            EXPECT_STREQ("0488b21e0691fe4d298000002cb26a08008723cc8f19ac08bce635c087d63d738b63c33e62186d43cf3a5805f302e9156620b5b29e8272e86f1d81fb07d6c57c557cbc25218dfde33ab8cea06b7b", pk_hex);
+          }
+          ret = CfdFreeStringBuffer(pk);
+          EXPECT_EQ(kCfdSuccess, ret);
+          pk = nullptr;
+          ret = CfdFreeStringBuffer(pk_hex);
+          EXPECT_EQ(kCfdSuccess, ret);
+          pk_hex = nullptr;
+        }
+        ret = CfdGetPsbtPubkeyListBip32Data(handle, pubkey_list_handle, index, &pk, &fingerprint, &path);
+        EXPECT_EQ(kCfdSuccess, ret);
+        CfdcapiPsbtDumpLog(ret, handle);
+        if (ret == kCfdSuccess) {
+          if (index == 0) {
+            EXPECT_STREQ("xpub6EkLrUTiaMiLbMAkbLN2BdH4hWkCQT7fLQf3Q6Ymx3gAqbuFeSKHfTMVDtjcsuRtEFqJbAsjYFZMrqeDLgRSsn4yuQygK44HWPrnA7gZC2C", pk);
+            EXPECT_STREQ("b7665978", fingerprint);
+            EXPECT_STREQ("0/44", path);
+          } else if (index == 1) {
+            EXPECT_STREQ("xpub6JNQxQDHv2vcUQiXjggbaGYZg3nmxX6ojMcJPSs4KfLSLnMBCg8VbJUh5n4to2SwLWXdSXnHBkUQx1fVnJ9oKYjPPYAQehjWRpx6ErQyykX", pk);
+            EXPECT_STREQ("ae05dbb7", fingerprint);
+            EXPECT_STREQ("0/44'", path);
+          }
+          ret = CfdFreeStringBuffer(pk);
+          EXPECT_EQ(kCfdSuccess, ret);
+          pk = nullptr;
+          ret = CfdFreeStringBuffer(fingerprint);
+          EXPECT_EQ(kCfdSuccess, ret);
+          fingerprint = nullptr;
+          ret = CfdFreeStringBuffer(path);
+          EXPECT_EQ(kCfdSuccess, ret);
+          path = nullptr;
+        }
+      }
+      ret = CfdFreePsbtPubkeyList(handle, pubkey_list_handle);
+      EXPECT_EQ(kCfdSuccess, ret);
+    }
+
     char* value = nullptr;
     ret = CfdGetPsbtRecord(handle, psbt_handle, kCfdPsbtRecordTypeGlobal, 0, "00", &value);
     EXPECT_EQ(kCfdSuccess, ret);
