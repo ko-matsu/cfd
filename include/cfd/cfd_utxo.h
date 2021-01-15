@@ -65,9 +65,10 @@ struct Utxo {
   uint8_t confidential_key[33];      //!< Confidential key
 #endif  // if 0
   // calculate
-  uint64_t effective_value;  //!< amountからfeeを除外した有効額
-  uint64_t fee;              //!< fee
-  uint64_t long_term_fee;    //!< 長期間後のfee
+  uint64_t effective_value;   //!< amountからfeeを除外した有効額
+  uint64_t fee;               //!< fee
+  uint64_t long_term_fee;     //!< 長期間後のfee
+  int64_t effective_k_value;  //!< knapsack計算用の値
 };
 
 /**
@@ -411,8 +412,8 @@ class CFD_EXPORT CoinSelection {
    * @param[in]  iterations     繰り返し数
    */
   void ApproximateBestSubset(
-      const std::vector<const Utxo*>& utxos, uint64_t n_total_value,
-      uint64_t n_target_value, std::vector<char>* vf_best, uint64_t* n_best,
+      const std::vector<const Utxo*>& utxos, int64_t n_total_value,
+      int64_t n_target_value, std::vector<char>* vf_best, int64_t* n_best,
       int iterations);
 };
 
