@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - features/sprint*
-    - feature/psbt
   pull_request:
     branches:
     - features/sprint*
