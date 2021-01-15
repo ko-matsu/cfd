@@ -465,6 +465,7 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
   if (use_bnb_ && option_params.IsUseBnB()) {
     // Get long term estimate
     FeeCalculator long_term_fee(option_params.GetLongTermFeeBaserate());
+    bool ignore_error = false;
 
     // NOLINT Filter by the min conf specs and add to utxo_pool and calculate effective value
     for (auto& utxo : work_utxos) {
@@ -503,12 +504,13 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
       } else {
         utxo->effective_k_value = static_cast<int64_t>(utxo->amount);
         utxo->effective_k_value -= static_cast<int64_t>(fee);
+        ignore_error = true;
       }
     }
     // Calculate the fees for things that aren't inputs
     std::vector<Utxo> result = SelectCoinsBnB(
         target_value, utxo_pool, cost_of_change.GetSatoshiValue(),
-        tx_fee_value, select_value, utxo_fee_value);
+        tx_fee_value, ignore_error, select_value, utxo_fee_value);
     if (!result.empty()) {
       if (searched_bnb) *searched_bnb = true;
       return result;
@@ -578,7 +580,7 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
 std::vector<Utxo> CoinSelection::SelectCoinsBnB(
     const int64_t& target_value, const std::vector<Utxo*>& utxos,
     const int64_t& cost_of_change, const Amount& not_input_fees,
-    int64_t* select_value, Amount* utxo_fee_value) {
+    bool ignore_error, int64_t* select_value, Amount* utxo_fee_value) {
   info(
       CFD_LOG_SOURCE,
       "SelectCoinsBnB start. cost_of_change={}, not_input_fees={}",
@@ -617,9 +619,14 @@ std::vector<Utxo> CoinSelection::SelectCoinsBnB(
         ": curr_available_value={},"
         "actual_target={}",
         curr_available_value, actual_target);
-    throw CfdException(
-        CfdError::kCfdIllegalStateError,
-        "Failed to select coin. Not enough utxos.");
+    if (ignore_error) {  // go to knapsack route.
+      info(CFD_LOG_SOURCE, "SelectCoinsBnB end. results={}", results.size());
+      return results;
+    } else {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to select coin. Not enough utxos.");
+    }
   }
 
   // Sort the utxos
@@ -731,7 +738,8 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
     const int64_t& target_value, const std::vector<Utxo*>& utxos,
     uint64_t min_change, int64_t* select_value, Amount* utxo_fee_value) {
   std::vector<Utxo> ret_utxos;
-  uint64_t n_target = target_value;
+  int64_t n_target = target_value;
+  int64_t n_min_change = static_cast<int64_t>(min_change);
   info(CFD_LOG_SOURCE, "KnapsackSolver start. target={}", n_target);
 
   // List of values less than target
@@ -754,7 +762,7 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
       info(CFD_LOG_SOURCE, "KnapsackSolver end. results={}", ret_utxos.size());
       return ret_utxos;
 
-    } else if (utxos[index]->effective_k_value < n_target + min_change) {
+    } else if (utxos[index]->effective_k_value < n_target + n_min_change) {
       // } else if ((utxos[index]->amount < n_target + min_change) {
       applicable_groups.push_back(utxos[index]);
       n_total += utxos[index]->amount;
@@ -811,11 +819,11 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
   ApproximateBestSubset(
       applicable_groups, n_effective_total, n_target, &vf_best, &n_best,
       kApproximateBestSubsetIterations);
-  if (n_best != n_target && n_effective_total >= n_target + min_change) {
+  if (n_best != n_target && n_effective_total >= n_target + n_min_change) {
     int64_t n_best2 = n_best;
     std::vector<char> vf_best2;
     ApproximateBestSubset(
-        applicable_groups, n_effective_total, (n_target + min_change),
+        applicable_groups, n_effective_total, (n_target + n_min_change),
         &vf_best2, &n_best2, kApproximateBestSubsetIterations);
     if ((n_best2 == n_target) || (n_best > n_best2)) {
       n_best = n_best2;
@@ -826,7 +834,7 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
   // NOLINT If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
   // NOLINT                                or the next bigger coin is closer), return the bigger coin
   if (lowest_larger != nullptr &&
-      ((n_best != n_target && n_best < n_target + min_change) ||
+      ((n_best != n_target && n_best < n_target + n_min_change) ||
        lowest_larger->effective_k_value <= n_best)) {
     // lowest_larger->amount <= n_best)) {
     ret_utxos.push_back(*lowest_larger);
