@@ -476,7 +476,7 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
 
       uint64_t fee = effective_fee.GetFee(*utxo).GetSatoshiValue();
       // Only include outputs that are positive effective value (i.e. not dust)
-      if (utxo->amount > fee) {
+      if ((utxo->amount > fee) || (!consider_fee)) {
         uint64_t effective_value = utxo->amount;
         if (use_fee) {
           if (consider_fee) {
@@ -523,8 +523,12 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
       if (utxo == nullptr) continue;
       utxo->fee =
           (use_fee) ? effective_fee.GetFee(*utxo).GetSatoshiValue() : 0;
-      if (utxo->amount > utxo->fee) {
-        utxo->effective_value = utxo->amount - utxo->fee;
+      if ((utxo->amount > utxo->fee) || (!consider_fee)) {
+        if (consider_fee) {
+          utxo->effective_value = utxo->amount - utxo->fee;
+        } else {
+          utxo->effective_value = utxo->amount;
+        }
         utxo_pool.push_back(utxo);
       }
     }
