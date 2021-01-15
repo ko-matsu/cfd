@@ -379,6 +379,18 @@ CFDC_API int CfdGetPubkeyFromPrivkey(
     char** pubkey);
 
 /**
+ * @brief get pubkey fingerprint.
+ * @param[in] handle          cfd handle.
+ * @param[in] pubkey          pubkey hex.
+ * @param[out] fingerprint    fingerprint.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetPubkeyFingerprint(
+    void* handle, const char* pubkey, char** fingerprint);
+
+/**
  * @brief Compress pubkey.
  * @param[in] handle          cfd handle.
  * @param[in] pubkey          pubkey hex.

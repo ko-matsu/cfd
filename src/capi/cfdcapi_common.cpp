@@ -883,15 +883,15 @@ extern "C" int CfdDecodeBase58(
   return CfdErrorCode::kCfdUnknownError;
 }
 
-extern "C" int CfdSha256(
-    void* handle, const char* message_hex, char** output) {
+extern "C" int CfdRipemd160(
+    void* handle, const char* message, bool has_text, char** output) {
   try {
     cfd::Initialize();
-    if (message_hex == nullptr) {
-      warn(CFD_LOG_SOURCE, "message_hex is null.");
+    if (message == nullptr) {
+      warn(CFD_LOG_SOURCE, "message is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. message_hex is null.");
+          "Failed to parameter. message is null.");
     }
     if (output == nullptr) {
       warn(CFD_LOG_SOURCE, "output is null.");
@@ -900,7 +900,47 @@ extern "C" int CfdSha256(
           "Failed to parameter. output is null.");
     }
 
-    auto data = cfd::core::HashUtil::Sha256(ByteData(message_hex));
+    cfd::core::ByteData160 data;
+    if (has_text) {
+      data = cfd::core::HashUtil::Ripemd160(std::string(message));
+    } else {
+      data = cfd::core::HashUtil::Ripemd160(ByteData(message));
+    }
+    *output = cfd::capi::CreateString(data.GetHex());
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return cfd::capi::SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    cfd::capi::SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    cfd::capi::SetLastFatalError(handle, "unknown error.");
+  }
+  return CfdErrorCode::kCfdUnknownError;
+}
+
+extern "C" int CfdSha256(
+    void* handle, const char* message, bool has_text, char** output) {
+  try {
+    cfd::Initialize();
+    if (message == nullptr) {
+      warn(CFD_LOG_SOURCE, "message is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. message is null.");
+    }
+    if (output == nullptr) {
+      warn(CFD_LOG_SOURCE, "output is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. output is null.");
+    }
+
+    cfd::core::ByteData256 data;
+    if (has_text) {
+      data = cfd::core::HashUtil::Sha256(std::string(message));
+    } else {
+      data = cfd::core::HashUtil::Sha256(ByteData(message));
+    }
     *output = cfd::capi::CreateString(data.GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -914,14 +954,14 @@ extern "C" int CfdSha256(
 }
 
 extern "C" int CfdHash160(
-    void* handle, const char* message_hex, char** output) {
+    void* handle, const char* message, bool has_text, char** output) {
   try {
     cfd::Initialize();
-    if (message_hex == nullptr) {
-      warn(CFD_LOG_SOURCE, "message_hex is null.");
+    if (message == nullptr) {
+      warn(CFD_LOG_SOURCE, "message is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. message_hex is null.");
+          "Failed to parameter. message is null.");
     }
     if (output == nullptr) {
       warn(CFD_LOG_SOURCE, "output is null.");
@@ -930,7 +970,12 @@ extern "C" int CfdHash160(
           "Failed to parameter. output is null.");
     }
 
-    auto data = cfd::core::HashUtil::Hash160(ByteData(message_hex));
+    cfd::core::ByteData160 data;
+    if (has_text) {
+      data = cfd::core::HashUtil::Hash160(std::string(message));
+    } else {
+      data = cfd::core::HashUtil::Hash160(ByteData(message));
+    }
     *output = cfd::capi::CreateString(data.GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -944,14 +989,14 @@ extern "C" int CfdHash160(
 }
 
 extern "C" int CfdHash256(
-    void* handle, const char* message_hex, char** output) {
+    void* handle, const char* message, bool has_text, char** output) {
   try {
     cfd::Initialize();
-    if (message_hex == nullptr) {
-      warn(CFD_LOG_SOURCE, "message_hex is null.");
+    if (message == nullptr) {
+      warn(CFD_LOG_SOURCE, "message is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. message_hex is null.");
+          "Failed to parameter. message is null.");
     }
     if (output == nullptr) {
       warn(CFD_LOG_SOURCE, "output is null.");
@@ -960,7 +1005,12 @@ extern "C" int CfdHash256(
           "Failed to parameter. output is null.");
     }
 
-    auto data = cfd::core::HashUtil::Sha256D(ByteData(message_hex));
+    cfd::core::ByteData256 data;
+    if (has_text) {
+      data = cfd::core::HashUtil::Sha256D(std::string(message));
+    } else {
+      data = cfd::core::HashUtil::Sha256D(ByteData(message));
+    }
     *output = cfd::capi::CreateString(data.GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {

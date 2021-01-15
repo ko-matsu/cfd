@@ -1123,8 +1123,39 @@ int CfdGetPubkeyFromPrivkey(
   }
 }
 
-CFDC_API int CfdCompressPubkey(
-    void* handle, const char* pubkey, char** output) {
+int CfdGetPubkeyFingerprint(
+    void* handle, const char* pubkey, char** fingerprint) {
+  try {
+    cfd::Initialize();
+    if (fingerprint == nullptr) {
+      warn(CFD_LOG_SOURCE, "fingerprint is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. fingerprint is null.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+
+    Pubkey key(pubkey);
+    *fingerprint = CreateString(key.GetFingerprint().GetHex());
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdCompressPubkey(void* handle, const char* pubkey, char** output) {
   try {
     cfd::Initialize();
     if (output == nullptr) {
