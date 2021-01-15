@@ -11,7 +11,7 @@ env:
 jobs:
   create-releases:
     name: create-releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: checkout
@@ -45,7 +45,7 @@ jobs:
   upload-object-windows:
     name: upload-object-win
     needs: create-releases
-    runs-on: windows-latest
+    runs-on: windows-2019
     strategy:
       matrix:
         bin: [vs2019, vs2019-static, gcc, gcc-static]
@@ -184,7 +184,7 @@ jobs:
   upload-object-alpine-3-10:
     name: upload-object-alpine-3.10
     needs: create-releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: checkout
@@ -237,7 +237,7 @@ jobs:
   upload-object-alpine-3-12:
     name: upload-object-alpine-3.12
     needs: create-releases
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
     - name: checkout
@@ -290,7 +290,7 @@ jobs:
   upload-object-macos:
     name: upload-object-macos
     needs: create-releases
-    runs-on: macos-latest
+    runs-on: macos-10.15
     strategy:
       matrix:
         xcode: [10.3, 11.6]
