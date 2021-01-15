@@ -624,6 +624,42 @@ TEST(cfdcapi_common, CfdEncodeDecodeBase58Check) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_common, CfdHashMessage) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  const char* message_hex = "001412012222880A";
+
+  ret = CfdSha256(handle, message_hex, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("7c90e7f25d3c26b098d43ae18cfc67e2d6c200f8acf8b16737c3ec6143e8ba8b", output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdHash160(handle, message_hex, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("1097f123808affe262cc5b7cb6acfa84a7a61bb6", output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdHash256(handle, message_hex, &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("c6a3953d698f9ed23812c40bcf7aba724d66fbd9f771ffed8f5d6d2b4b267bcf", output);
+    CfdFreeStringBuffer(output);
+    output = nullptr;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
 
 // last test.
 /* comment out.
