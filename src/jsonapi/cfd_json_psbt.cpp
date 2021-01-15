@@ -88,6 +88,9 @@ void PsbtJsonApi::DecodePsbt(
   TransactionJsonApi::DecodeRawTransaction(&tx_req, &tx_res);
   response->SetTx(tx_res);
   auto key_list = psbt.GetGlobalRecordKeyList();
+  if (psbt.GetPsbtVersion() > 0) {
+    key_list.push_back(ByteData("fb"));
+  }
   auto& unknown_list = response->GetUnknown();
   for (const auto& key : key_list) {
     auto data = psbt.GetGlobalRecord(key);
