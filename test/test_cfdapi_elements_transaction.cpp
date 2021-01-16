@@ -1287,9 +1287,9 @@ TEST(ElementsTransactionApi, FundRawTransaction_prod) {
 
   double fee_rate = 0.11;
   ConfidentialAssetId fee_asset = asset1;
-  std::map<std::string, int64_t> map_target_value;
-  map_target_value.emplace(asset1.GetHex(), 0);
-  map_target_value.emplace(asset2.GetHex(), 0);
+  std::map<std::string, Amount> map_target_value;
+  map_target_value.emplace(asset1.GetHex(), Amount());
+  map_target_value.emplace(asset2.GetHex(), Amount());
   std::map<std::string, std::string> reserve_txout_address;
   reserve_txout_address.emplace(asset1.GetHex(), "lq1qqgv5wwfp4h0pfnyy2kkxl0kg3qnahcpfq7emrxu9xusz879axq0spg9cxu8wf72ktsft5r8vxnkfd8s5kmg32fvy8texp5p6s");
   reserve_txout_address.emplace(asset2.GetHex(), "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8");
