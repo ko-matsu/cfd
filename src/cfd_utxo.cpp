@@ -744,8 +744,9 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
   // List of values less than target
   const Utxo* lowest_larger = nullptr;
   std::vector<const Utxo*> applicable_groups;
-  int64_t n_total = 0;
+  // int64_t n_total = 0;
   int64_t n_effective_total = 0;  // amount excluding fee
+  int64_t n_effective_total_max = 0;
   int64_t utxo_fee = 0;
 
   std::vector<uint32_t> indexes =
@@ -764,7 +765,10 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
     } else if (utxos[index]->effective_k_value < n_target + n_min_change) {
       // } else if ((utxos[index]->amount < n_target + min_change) {
       applicable_groups.push_back(utxos[index]);
-      n_total += utxos[index]->amount;
+      // n_total += utxos[index]->amount;
+      if (utxos[index]->effective_k_value > 0) {
+        n_effective_total_max += utxos[index]->effective_k_value;
+      }
       n_effective_total += utxos[index]->effective_k_value;
 
     } else if (
@@ -790,7 +794,7 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
   }
 
   // if (n_total < n_target) {
-  if (n_effective_total < n_target) {
+  if (n_effective_total_max < n_target) {
     if (lowest_larger == nullptr) {
       warn(
           CFD_LOG_SOURCE, "insufficient funds. effective_total:{} target:{}",
@@ -816,13 +820,13 @@ std::vector<Utxo> CoinSelection::KnapsackSolver(
 
   randomize_cache_.clear();
   ApproximateBestSubset(
-      applicable_groups, n_effective_total, n_target, &vf_best, &n_best,
+      applicable_groups, n_effective_total_max, n_target, &vf_best, &n_best,
       kApproximateBestSubsetIterations);
-  if (n_best != n_target && n_effective_total >= n_target + n_min_change) {
+  if (n_best != n_target && n_effective_total_max >= n_target + n_min_change) {
     int64_t n_best2 = n_best;
     std::vector<char> vf_best2;
     ApproximateBestSubset(
-        applicable_groups, n_effective_total, (n_target + n_min_change),
+        applicable_groups, n_effective_total_max, (n_target + n_min_change),
         &vf_best2, &n_best2, kApproximateBestSubsetIterations);
     if ((n_best2 == n_target) || (n_best > n_best2)) {
       n_best = n_best2;
