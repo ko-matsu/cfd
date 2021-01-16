@@ -462,10 +462,10 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
   }
 
   std::vector<Utxo*> utxo_pool;
+  bool ignore_error = false;
   if (use_bnb_ && option_params.IsUseBnB()) {
     // Get long term estimate
     FeeCalculator long_term_fee(option_params.GetLongTermFeeBaserate());
-    bool ignore_error = false;
 
     // NOLINT Filter by the min conf specs and add to utxo_pool and calculate effective value
     for (auto& utxo : work_utxos) {
@@ -502,8 +502,6 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
         utxo->effective_k_value = static_cast<int64_t>(effective_value);
         utxo_pool.push_back(utxo);
       } else {
-        utxo->effective_k_value = static_cast<int64_t>(utxo->amount);
-        utxo->effective_k_value -= static_cast<int64_t>(fee);
         ignore_error = true;
       }
     }
@@ -524,7 +522,8 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
   //   if (!group.EligibleForSpending(eligibility_filter)) continue;
   //   utxo_pool.push_back(group);
   // }
-  if (utxo_pool.empty()) {
+  if (utxo_pool.empty() || ignore_error) {
+    utxo_pool.clear();
     for (auto& utxo : work_utxos) {
       if (utxo == nullptr) continue;
       utxo->fee =
