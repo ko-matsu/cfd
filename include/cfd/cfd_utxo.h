@@ -68,6 +68,7 @@ struct Utxo {
   uint64_t effective_value;  //!< Effective amount excluding fee from amount
   uint64_t fee;              //!< fee
   uint64_t long_term_fee;    //!< Fee after a long term
+  int64_t effective_k_value;  //!< Effective amount for knapsack
 };
 
 /**
@@ -374,6 +375,7 @@ class CFD_EXPORT CoinSelection {
    * @param[in] cost_of_change   コストの変更範囲。
    *              target_value+本値が収集上限値となる。
    * @param[in] not_input_fees   TxIn部を除いたfee額
+   * @param[in] ignore_error     ignore throw exception.
    * @param[out] select_value    UTXO収集成功時、合計収集額
    * @param[out] utxo_fee_value  UTXO収集成功時、utxo分のfee金額
    * @return UTXO一覧。空の場合はエラー終了。
@@ -381,7 +383,7 @@ class CFD_EXPORT CoinSelection {
   std::vector<Utxo> SelectCoinsBnB(
       const int64_t& target_value, const std::vector<Utxo*>& utxos,
       const int64_t& cost_of_change, const Amount& not_input_fees,
-      int64_t* select_value, Amount* utxo_fee_value);
+      bool ignore_error, int64_t* select_value, Amount* utxo_fee_value);
 
   /**
    * @brief CoinSelection(KnapsackSolver)を実施する。
@@ -410,8 +412,8 @@ class CFD_EXPORT CoinSelection {
    * @param[in]  iterations     繰り返し数
    */
   void ApproximateBestSubset(
-      const std::vector<const Utxo*>& utxos, uint64_t n_total_value,
-      uint64_t n_target_value, std::vector<char>* vf_best, uint64_t* n_best,
+      const std::vector<const Utxo*>& utxos, int64_t n_total_value,
+      int64_t n_target_value, std::vector<char>* vf_best, int64_t* n_best,
       int iterations);
 };
 
