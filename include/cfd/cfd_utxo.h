@@ -65,9 +65,9 @@ struct Utxo {
   uint8_t confidential_key[33];      //!< Confidential key
 #endif  // if 0
   // calculate
-  uint64_t effective_value;  //!< Effective amount excluding fee from amount
-  uint64_t fee;              //!< fee
-  uint64_t long_term_fee;    //!< Fee after a long term
+  uint64_t effective_value;   //!< Effective amount excluding fee from amount
+  uint64_t fee;               //!< fee
+  uint64_t long_term_fee;     //!< Fee after a long term
   int64_t effective_k_value;  //!< Effective amount for knapsack
 };
 
