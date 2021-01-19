@@ -91,11 +91,18 @@ class CFD_EXPORT Psbt : public cfd::core::Psbt {
    * @brief constructor
    * @param[in] psbt   Psbt object.
    */
-  explicit Psbt(const Psbt& psbt);
+  Psbt(const Psbt& psbt);
   /**
    * @brief destructor
    */
   virtual ~Psbt() {}
+
+  /**
+   * @brief copy constructor.
+   * @param[in] psbt   Psbt object.
+   * @return Psbt object.
+   */
+  Psbt& operator=(const Psbt& psbt) &;
 
   /**
    * @brief Get transaction context base.

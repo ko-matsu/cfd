@@ -190,6 +190,22 @@ Psbt::Psbt(const Psbt& psbt) : cfd::core::Psbt(psbt.GetData()) {
   verify_ignore_map_ = psbt.verify_ignore_map_;
 }
 
+Psbt& Psbt::operator=(const Psbt& psbt) & {
+  struct wally_psbt* psbt_pointer = nullptr;
+  struct wally_psbt* psbt_src_pointer = nullptr;
+  psbt_src_pointer = static_cast<struct wally_psbt*>(psbt.wally_psbt_pointer_);
+  int ret = wally_psbt_clone_alloc(psbt_src_pointer, 0, &psbt_pointer);
+  if (ret != WALLY_OK) {
+    warn(CFD_LOG_SOURCE, "wally_psbt_clone_alloc NG[{}]", ret);
+    throw CfdException(CfdError::kCfdInternalError, "psbt clone error.");
+  }
+  cfd::core::Psbt::FreeWallyPsbtAddress(wally_psbt_pointer_);  // free
+  wally_psbt_pointer_ = psbt_pointer;
+  base_tx_ = cfd::core::Psbt::RebuildTransaction(wally_psbt_pointer_);
+  verify_ignore_map_ = psbt.verify_ignore_map_;
+  return *this;
+}
+
 TransactionContext Psbt::GetTransactionContext() const {
   TransactionContext tx(GetTransaction().GetHex());
   std::vector<UtxoData> utxo_list = GetUtxoDataAll();
