@@ -136,7 +136,7 @@ class DecodeLockingScript
    * @brief Get of reqSigs
    * @return reqSigs
    */
-  int64_t GetReqSigs() const {
+  int GetReqSigs() const {
     return req_sigs_;
   }
   /**
@@ -144,7 +144,7 @@ class DecodeLockingScript
    * @param[in] req_sigs    setting value.
    */
   void SetReqSigs(  // line separate
-    const int64_t& req_sigs) {  // NOLINT
+    const int& req_sigs) {  // NOLINT
     this->req_sigs_ = req_sigs;
   }
   /**
@@ -152,7 +152,7 @@ class DecodeLockingScript
    * @return Data type of reqSigs
    */
   static std::string GetReqSigsFieldType() {
-    return "int64_t";
+    return "int";
   }
   /**
    * @brief Get json string of reqSigs field.
@@ -342,7 +342,7 @@ class DecodeLockingScript
   /**
    * @brief JsonAPI(reqSigs) value
    */
-  int64_t req_sigs_ = 0;
+  int req_sigs_ = 0;
   /**
    * @brief JsonAPI(type) value
    */
@@ -927,7 +927,7 @@ class DecodeRawTransactionTxIn
    * @brief Get of vout
    * @return vout
    */
-  int64_t GetVout() const {
+  uint32_t GetVout() const {
     return vout_;
   }
   /**
@@ -935,7 +935,7 @@ class DecodeRawTransactionTxIn
    * @param[in] vout    setting value.
    */
   void SetVout(  // line separate
-    const int64_t& vout) {  // NOLINT
+    const uint32_t& vout) {  // NOLINT
     this->vout_ = vout;
   }
   /**
@@ -943,7 +943,7 @@ class DecodeRawTransactionTxIn
    * @return Data type of vout
    */
   static std::string GetVoutFieldType() {
-    return "int64_t";
+    return "uint32_t";
   }
   /**
    * @brief Get json string of vout field.
@@ -1058,7 +1058,7 @@ class DecodeRawTransactionTxIn
    * @brief Get of sequence
    * @return sequence
    */
-  int64_t GetSequence() const {
+  uint32_t GetSequence() const {
     return sequence_;
   }
   /**
@@ -1066,7 +1066,7 @@ class DecodeRawTransactionTxIn
    * @param[in] sequence    setting value.
    */
   void SetSequence(  // line separate
-    const int64_t& sequence) {  // NOLINT
+    const uint32_t& sequence) {  // NOLINT
     this->sequence_ = sequence;
   }
   /**
@@ -1074,7 +1074,7 @@ class DecodeRawTransactionTxIn
    * @return Data type of sequence
    */
   static std::string GetSequenceFieldType() {
-    return "int64_t";
+    return "uint32_t";
   }
   /**
    * @brief Get json string of sequence field.
@@ -1177,7 +1177,7 @@ class DecodeRawTransactionTxIn
   /**
    * @brief JsonAPI(vout) value
    */
-  int64_t vout_ = 0;
+  uint32_t vout_ = 0;
   /**
    * @brief JsonAPI(scriptSig) value
    */
@@ -1189,7 +1189,7 @@ class DecodeRawTransactionTxIn
   /**
    * @brief JsonAPI(sequence) value
    */
-  int64_t sequence_ = 0;
+  uint32_t sequence_ = 0;
 };
 
 // ------------------------------------------------------------------------
@@ -1216,7 +1216,7 @@ class DecodeRawTransactionTxOut
    * @brief Get of value
    * @return value
    */
-  double GetValue() const {
+  int64_t GetValue() const {
     return value_;
   }
   /**
@@ -1224,7 +1224,7 @@ class DecodeRawTransactionTxOut
    * @param[in] value    setting value.
    */
   void SetValue(  // line separate
-    const double& value) {  // NOLINT
+    const int64_t& value) {  // NOLINT
     this->value_ = value;
   }
   /**
@@ -1232,7 +1232,7 @@ class DecodeRawTransactionTxOut
    * @return Data type of value
    */
   static std::string GetValueFieldType() {
-    return "double";
+    return "int64_t";
   }
   /**
    * @brief Get json string of value field.
@@ -1259,7 +1259,7 @@ class DecodeRawTransactionTxOut
    * @brief Get of n
    * @return n
    */
-  int64_t GetN() const {
+  uint32_t GetN() const {
     return n_;
   }
   /**
@@ -1267,7 +1267,7 @@ class DecodeRawTransactionTxOut
    * @param[in] n    setting value.
    */
   void SetN(  // line separate
-    const int64_t& n) {  // NOLINT
+    const uint32_t& n) {  // NOLINT
     this->n_ = n;
   }
   /**
@@ -1275,7 +1275,7 @@ class DecodeRawTransactionTxOut
    * @return Data type of n
    */
   static std::string GetNFieldType() {
-    return "int64_t";
+    return "uint32_t";
   }
   /**
    * @brief Get json string of n field.
@@ -1414,11 +1414,11 @@ class DecodeRawTransactionTxOut
   /**
    * @brief JsonAPI(value) value
    */
-  double value_ = 0;
+  int64_t value_ = 0;
   /**
    * @brief JsonAPI(n) value
    */
-  int64_t n_ = 0;
+  uint32_t n_ = 0;
   /**
    * @brief JsonAPI(scriptPubKey) value
    */
@@ -1764,7 +1764,7 @@ class DecodeRawTransactionResponse
    * @brief Get of size
    * @return size
    */
-  int64_t GetSize() const {
+  uint32_t GetSize() const {
     return size_;
   }
   /**
@@ -1772,7 +1772,7 @@ class DecodeRawTransactionResponse
    * @param[in] size    setting value.
    */
   void SetSize(  // line separate
-    const int64_t& size) {  // NOLINT
+    const uint32_t& size) {  // NOLINT
     this->size_ = size;
   }
   /**
@@ -1780,7 +1780,7 @@ class DecodeRawTransactionResponse
    * @return Data type of size
    */
   static std::string GetSizeFieldType() {
-    return "int64_t";
+    return "uint32_t";
   }
   /**
    * @brief Get json string of size field.
@@ -1807,7 +1807,7 @@ class DecodeRawTransactionResponse
    * @brief Get of vsize
    * @return vsize
    */
-  int64_t GetVsize() const {
+  uint32_t GetVsize() const {
     return vsize_;
   }
   /**
@@ -1815,7 +1815,7 @@ class DecodeRawTransactionResponse
    * @param[in] vsize    setting value.
    */
   void SetVsize(  // line separate
-    const int64_t& vsize) {  // NOLINT
+    const uint32_t& vsize) {  // NOLINT
     this->vsize_ = vsize;
   }
   /**
@@ -1823,7 +1823,7 @@ class DecodeRawTransactionResponse
    * @return Data type of vsize
    */
   static std::string GetVsizeFieldType() {
-    return "int64_t";
+    return "uint32_t";
   }
   /**
    * @brief Get json string of vsize field.
@@ -1850,7 +1850,7 @@ class DecodeRawTransactionResponse
    * @brief Get of weight
    * @return weight
    */
-  int64_t GetWeight() const {
+  uint32_t GetWeight() const {
     return weight_;
   }
   /**
@@ -1858,7 +1858,7 @@ class DecodeRawTransactionResponse
    * @param[in] weight    setting value.
    */
   void SetWeight(  // line separate
-    const int64_t& weight) {  // NOLINT
+    const uint32_t& weight) {  // NOLINT
     this->weight_ = weight;
   }
   /**
@@ -1866,7 +1866,7 @@ class DecodeRawTransactionResponse
    * @return Data type of weight
    */
   static std::string GetWeightFieldType() {
-    return "int64_t";
+    return "uint32_t";
   }
   /**
    * @brief Get json string of weight field.
@@ -2104,15 +2104,15 @@ class DecodeRawTransactionResponse
   /**
    * @brief JsonAPI(size) value
    */
-  int64_t size_ = 0;
+  uint32_t size_ = 0;
   /**
    * @brief JsonAPI(vsize) value
    */
-  int64_t vsize_ = 0;
+  uint32_t vsize_ = 0;
   /**
    * @brief JsonAPI(weight) value
    */
-  int64_t weight_ = 0;
+  uint32_t weight_ = 0;
   /**
    * @brief JsonAPI(locktime) value
    */
@@ -3727,6 +3727,49 @@ class PsbtBip32Data
   }
 
   /**
+   * @brief Get of descriptor
+   * @return descriptor
+   */
+  std::string GetDescriptor() const {
+    return descriptor_;
+  }
+  /**
+   * @brief Set to descriptor
+   * @param[in] descriptor    setting value.
+   */
+  void SetDescriptor(  // line separate
+    const std::string& descriptor) {  // NOLINT
+    this->descriptor_ = descriptor;
+  }
+  /**
+   * @brief Get data type of descriptor
+   * @return Data type of descriptor
+   */
+  static std::string GetDescriptorFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of descriptor field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetDescriptorString(  // line separate
+      const PsbtBip32Data& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.descriptor_);
+  }
+  /**
+   * @brief Set json object to descriptor field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetDescriptorString(  // line separate
+      PsbtBip32Data& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.descriptor_, json_value);
+  }
+
+  /**
    * @brief Set ignore item.
    * @param[in] key   ignore target key name.
    */
@@ -3807,6 +3850,10 @@ class PsbtBip32Data
    * @brief JsonAPI(path) value
    */
   std::string path_ = "";
+  /**
+   * @brief JsonAPI(descriptor) value
+   */
+  std::string descriptor_ = "";
 };
 
 // ------------------------------------------------------------------------
@@ -4412,6 +4459,191 @@ class PsbtSignatureData
 };
 
 // ------------------------------------------------------------------------
+// XpubData
+// ------------------------------------------------------------------------
+/**
+ * @brief JSON-API (XpubData) class
+ */
+class XpubData
+  : public cfd::core::JsonClassBase<XpubData> {
+ public:
+  XpubData() {
+    CollectFieldName();
+  }
+  virtual ~XpubData() {
+    // do nothing
+  }
+  /**
+   * @brief collect field name.
+   */
+  static void CollectFieldName();
+
+  /**
+   * @brief Get of base58
+   * @return base58
+   */
+  std::string GetBase58() const {
+    return base58_;
+  }
+  /**
+   * @brief Set to base58
+   * @param[in] base58    setting value.
+   */
+  void SetBase58(  // line separate
+    const std::string& base58) {  // NOLINT
+    this->base58_ = base58;
+  }
+  /**
+   * @brief Get data type of base58
+   * @return Data type of base58
+   */
+  static std::string GetBase58FieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of base58 field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBase58String(  // line separate
+      const XpubData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.base58_);
+  }
+  /**
+   * @brief Set json object to base58 field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBase58String(  // line separate
+      XpubData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.base58_, json_value);
+  }
+
+  /**
+   * @brief Get of hex
+   * @return hex
+   */
+  std::string GetHex() const {
+    return hex_;
+  }
+  /**
+   * @brief Set to hex
+   * @param[in] hex    setting value.
+   */
+  void SetHex(  // line separate
+    const std::string& hex) {  // NOLINT
+    this->hex_ = hex;
+  }
+  /**
+   * @brief Get data type of hex
+   * @return Data type of hex
+   */
+  static std::string GetHexFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of hex field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetHexString(  // line separate
+      const XpubData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.hex_);
+  }
+  /**
+   * @brief Set json object to hex field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetHexString(  // line separate
+      XpubData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.hex_, json_value);
+  }
+
+  /**
+   * @brief Set ignore item.
+   * @param[in] key   ignore target key name.
+   */
+  void SetIgnoreItem(const std::string& key) {
+    ignore_items.insert(key);
+  }
+
+  /**
+   * @brief Convert struct to class.
+   * @param[in] data   struct data.
+   */
+  void ConvertFromStruct(
+      const XpubDataStruct& data);
+
+  /**
+   * @brief Convert class to struct.
+   * @return  struct data.
+   */
+  XpubDataStruct ConvertToStruct()  const;
+
+ protected:
+  /**
+   * @brief definition type of Map table.
+   */
+  using XpubDataMapTable =
+    cfd::core::JsonTableMap<XpubData>;
+
+  /**
+   * @brief Get JSON mapping object.
+   * @return JSON mapping object.
+   * @see cfd::core::JsonClassBase::GetJsonMapper()
+   */
+  virtual const XpubDataMapTable& GetJsonMapper() const {  // NOLINT
+    return json_mapper;
+  }
+  /**
+   * @brief Get item lists of JSON mapping.
+   * Fetch a list of target variable names in the order of definition.
+   * @return Item lists of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetJsonItemList()
+   */
+  virtual const std::vector<std::string>& GetJsonItemList() const {
+    return item_list;
+  }
+  /**
+   * @brief Get ignore item lists of JSON mapping.
+   * Ignore the target variable at Serialize.
+   * @return Item list of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetIgnoreItem()
+   */
+  virtual const std::set<std::string>& GetIgnoreItem() const {
+    return ignore_items;
+  }
+
+ private:
+ /**
+  * @brief JsonFunctionMap table
+  */
+  static XpubDataMapTable json_mapper;
+  /**
+   * @brief field name list.
+   */
+  static std::vector<std::string> item_list;
+  /**
+   * @brief ignore item list.
+   */
+  std::set<std::string> ignore_items;
+
+  /**
+   * @brief JsonAPI(base58) value
+   */
+  std::string base58_ = "";
+  /**
+   * @brief JsonAPI(hex) value
+   */
+  std::string hex_ = "";
+};
+
+// ------------------------------------------------------------------------
 // DecodePsbtInput
 // ------------------------------------------------------------------------
 /**
@@ -4430,6 +4662,49 @@ class DecodePsbtInput
    * @brief collect field name.
    */
   static void CollectFieldName();
+
+  /**
+   * @brief Get of non_witness_utxo_hex
+   * @return non_witness_utxo_hex
+   */
+  std::string GetNon_witness_utxo_hex() const {
+    return non_witness_utxo_hex_;
+  }
+  /**
+   * @brief Set to non_witness_utxo_hex
+   * @param[in] non_witness_utxo_hex    setting value.
+   */
+  void SetNon_witness_utxo_hex(  // line separate
+    const std::string& non_witness_utxo_hex) {  // NOLINT
+    this->non_witness_utxo_hex_ = non_witness_utxo_hex;
+  }
+  /**
+   * @brief Get data type of non_witness_utxo_hex
+   * @return Data type of non_witness_utxo_hex
+   */
+  static std::string GetNon_witness_utxo_hexFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of non_witness_utxo_hex field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetNon_witness_utxo_hexString(  // line separate
+      const DecodePsbtInput& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.non_witness_utxo_hex_);
+  }
+  /**
+   * @brief Set json object to non_witness_utxo_hex field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetNon_witness_utxo_hexString(  // line separate
+      DecodePsbtInput& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.non_witness_utxo_hex_, json_value);
+  }
 
   /**
    * @brief Get of non_witness_utxo.
@@ -4939,6 +5214,10 @@ class DecodePsbtInput
    */
   std::set<std::string> ignore_items;
 
+  /**
+   * @brief JsonAPI(non_witness_utxo_hex) value
+   */
+  std::string non_witness_utxo_hex_ = "";
   /**
    * @brief JsonAPI(non_witness_utxo) value
    */
@@ -6533,6 +6812,286 @@ class ElementsDecodeRawTransactionTxOut
 };
 
 // ------------------------------------------------------------------------
+// PsbtGlobalXpub
+// ------------------------------------------------------------------------
+/**
+ * @brief JSON-API (PsbtGlobalXpub) class
+ */
+class PsbtGlobalXpub
+  : public cfd::core::JsonClassBase<PsbtGlobalXpub> {
+ public:
+  PsbtGlobalXpub() {
+    CollectFieldName();
+  }
+  virtual ~PsbtGlobalXpub() {
+    // do nothing
+  }
+  /**
+   * @brief collect field name.
+   */
+  static void CollectFieldName();
+
+  /**
+   * @brief Get of xpub.
+   * @return xpub
+   */
+  XpubData& GetXpub() {  // NOLINT
+    return xpub_;
+  }
+  /**
+   * @brief Set to xpub.
+   * @param[in] xpub    setting value.
+   */
+  void SetXpub(  // line separate
+      const XpubData& xpub) {  // NOLINT
+    this->xpub_ = xpub;
+  }
+  /**
+   * @brief Get data type of xpub.
+   * @return Data type of xpub.
+   */
+  static std::string GetXpubFieldType() {
+    return "XpubData";  // NOLINT
+  }
+  /**
+   * @brief Get json string of xpub field.
+   * @param[in,out] obj     class object
+   * @return JSON string.
+   */
+  static std::string GetXpubString(  // line separate
+      const PsbtGlobalXpub& obj) {  // NOLINT
+    // Do not set to const, because substitution of member variables
+    // may occur in pre / post processing inside Serialize
+    return obj.xpub_.Serialize();
+  }
+  /**
+   * @brief Set json object to xpub field.
+   * @param[in,out] obj     class object
+   * @param[in] json_value  JSON object
+   */
+  static void SetXpubString(  // line separate
+      PsbtGlobalXpub& obj,  // NOLINT
+      const UniValue& json_value) {
+    obj.xpub_.DeserializeUniValue(json_value);
+  }
+
+  /**
+   * @brief Get of master_fingerprint
+   * @return master_fingerprint
+   */
+  std::string GetMaster_fingerprint() const {
+    return master_fingerprint_;
+  }
+  /**
+   * @brief Set to master_fingerprint
+   * @param[in] master_fingerprint    setting value.
+   */
+  void SetMaster_fingerprint(  // line separate
+    const std::string& master_fingerprint) {  // NOLINT
+    this->master_fingerprint_ = master_fingerprint;
+  }
+  /**
+   * @brief Get data type of master_fingerprint
+   * @return Data type of master_fingerprint
+   */
+  static std::string GetMaster_fingerprintFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of master_fingerprint field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetMaster_fingerprintString(  // line separate
+      const PsbtGlobalXpub& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.master_fingerprint_);
+  }
+  /**
+   * @brief Set json object to master_fingerprint field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetMaster_fingerprintString(  // line separate
+      PsbtGlobalXpub& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.master_fingerprint_, json_value);
+  }
+
+  /**
+   * @brief Get of path
+   * @return path
+   */
+  std::string GetPath() const {
+    return path_;
+  }
+  /**
+   * @brief Set to path
+   * @param[in] path    setting value.
+   */
+  void SetPath(  // line separate
+    const std::string& path) {  // NOLINT
+    this->path_ = path;
+  }
+  /**
+   * @brief Get data type of path
+   * @return Data type of path
+   */
+  static std::string GetPathFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of path field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetPathString(  // line separate
+      const PsbtGlobalXpub& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.path_);
+  }
+  /**
+   * @brief Set json object to path field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetPathString(  // line separate
+      PsbtGlobalXpub& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.path_, json_value);
+  }
+
+  /**
+   * @brief Get of descriptorXpub
+   * @return descriptorXpub
+   */
+  std::string GetDescriptorXpub() const {
+    return descriptor_xpub_;
+  }
+  /**
+   * @brief Set to descriptorXpub
+   * @param[in] descriptor_xpub    setting value.
+   */
+  void SetDescriptorXpub(  // line separate
+    const std::string& descriptor_xpub) {  // NOLINT
+    this->descriptor_xpub_ = descriptor_xpub;
+  }
+  /**
+   * @brief Get data type of descriptorXpub
+   * @return Data type of descriptorXpub
+   */
+  static std::string GetDescriptorXpubFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of descriptorXpub field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetDescriptorXpubString(  // line separate
+      const PsbtGlobalXpub& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.descriptor_xpub_);
+  }
+  /**
+   * @brief Set json object to descriptorXpub field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetDescriptorXpubString(  // line separate
+      PsbtGlobalXpub& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.descriptor_xpub_, json_value);
+  }
+
+  /**
+   * @brief Set ignore item.
+   * @param[in] key   ignore target key name.
+   */
+  void SetIgnoreItem(const std::string& key) {
+    ignore_items.insert(key);
+  }
+
+  /**
+   * @brief Convert struct to class.
+   * @param[in] data   struct data.
+   */
+  void ConvertFromStruct(
+      const PsbtGlobalXpubStruct& data);
+
+  /**
+   * @brief Convert class to struct.
+   * @return  struct data.
+   */
+  PsbtGlobalXpubStruct ConvertToStruct()  const;
+
+ protected:
+  /**
+   * @brief definition type of Map table.
+   */
+  using PsbtGlobalXpubMapTable =
+    cfd::core::JsonTableMap<PsbtGlobalXpub>;
+
+  /**
+   * @brief Get JSON mapping object.
+   * @return JSON mapping object.
+   * @see cfd::core::JsonClassBase::GetJsonMapper()
+   */
+  virtual const PsbtGlobalXpubMapTable& GetJsonMapper() const {  // NOLINT
+    return json_mapper;
+  }
+  /**
+   * @brief Get item lists of JSON mapping.
+   * Fetch a list of target variable names in the order of definition.
+   * @return Item lists of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetJsonItemList()
+   */
+  virtual const std::vector<std::string>& GetJsonItemList() const {
+    return item_list;
+  }
+  /**
+   * @brief Get ignore item lists of JSON mapping.
+   * Ignore the target variable at Serialize.
+   * @return Item list of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetIgnoreItem()
+   */
+  virtual const std::set<std::string>& GetIgnoreItem() const {
+    return ignore_items;
+  }
+
+ private:
+ /**
+  * @brief JsonFunctionMap table
+  */
+  static PsbtGlobalXpubMapTable json_mapper;
+  /**
+   * @brief field name list.
+   */
+  static std::vector<std::string> item_list;
+  /**
+   * @brief ignore item list.
+   */
+  std::set<std::string> ignore_items;
+
+  /**
+   * @brief JsonAPI(xpub) value
+   */
+  XpubData xpub_;  // NOLINT
+  /**
+   * @brief JsonAPI(master_fingerprint) value
+   */
+  std::string master_fingerprint_ = "";
+  /**
+   * @brief JsonAPI(path) value
+   */
+  std::string path_ = "";
+  /**
+   * @brief JsonAPI(descriptorXpub) value
+   */
+  std::string descriptor_xpub_ = "";
+};
+
+// ------------------------------------------------------------------------
 // DecodePsbtRequest
 // ------------------------------------------------------------------------
 /**
@@ -6639,6 +7198,92 @@ class DecodePsbtRequest
   }
 
   /**
+   * @brief Get of hasDetail
+   * @return hasDetail
+   */
+  bool GetHasDetail() const {
+    return has_detail_;
+  }
+  /**
+   * @brief Set to hasDetail
+   * @param[in] has_detail    setting value.
+   */
+  void SetHasDetail(  // line separate
+    const bool& has_detail) {  // NOLINT
+    this->has_detail_ = has_detail;
+  }
+  /**
+   * @brief Get data type of hasDetail
+   * @return Data type of hasDetail
+   */
+  static std::string GetHasDetailFieldType() {
+    return "bool";
+  }
+  /**
+   * @brief Get json string of hasDetail field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetHasDetailString(  // line separate
+      const DecodePsbtRequest& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.has_detail_);
+  }
+  /**
+   * @brief Set json object to hasDetail field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetHasDetailString(  // line separate
+      DecodePsbtRequest& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.has_detail_, json_value);
+  }
+
+  /**
+   * @brief Get of hasSimple
+   * @return hasSimple
+   */
+  bool GetHasSimple() const {
+    return has_simple_;
+  }
+  /**
+   * @brief Set to hasSimple
+   * @param[in] has_simple    setting value.
+   */
+  void SetHasSimple(  // line separate
+    const bool& has_simple) {  // NOLINT
+    this->has_simple_ = has_simple;
+  }
+  /**
+   * @brief Get data type of hasSimple
+   * @return Data type of hasSimple
+   */
+  static std::string GetHasSimpleFieldType() {
+    return "bool";
+  }
+  /**
+   * @brief Get json string of hasSimple field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetHasSimpleString(  // line separate
+      const DecodePsbtRequest& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.has_simple_);
+  }
+  /**
+   * @brief Set json object to hasSimple field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetHasSimpleString(  // line separate
+      DecodePsbtRequest& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.has_simple_, json_value);
+  }
+
+  /**
    * @brief Set ignore item.
    * @param[in] key   ignore target key name.
    */
@@ -6715,6 +7360,14 @@ class DecodePsbtRequest
    * @brief JsonAPI(network) value
    */
   std::string network_ = "mainnet";
+  /**
+   * @brief JsonAPI(hasDetail) value
+   */
+  bool has_detail_ = false;
+  /**
+   * @brief JsonAPI(hasSimple) value
+   */
+  bool has_simple_ = false;
 };
 
 // ------------------------------------------------------------------------
@@ -6779,6 +7432,136 @@ class DecodePsbtResponse
       DecodePsbtResponse& obj,  // NOLINT
       const UniValue& json_value) {
     obj.tx_.DeserializeUniValue(json_value);
+  }
+
+  /**
+   * @brief Get of tx_hex
+   * @return tx_hex
+   */
+  std::string GetTx_hex() const {
+    return tx_hex_;
+  }
+  /**
+   * @brief Set to tx_hex
+   * @param[in] tx_hex    setting value.
+   */
+  void SetTx_hex(  // line separate
+    const std::string& tx_hex) {  // NOLINT
+    this->tx_hex_ = tx_hex;
+  }
+  /**
+   * @brief Get data type of tx_hex
+   * @return Data type of tx_hex
+   */
+  static std::string GetTx_hexFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of tx_hex field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetTx_hexString(  // line separate
+      const DecodePsbtResponse& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.tx_hex_);
+  }
+  /**
+   * @brief Set json object to tx_hex field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetTx_hexString(  // line separate
+      DecodePsbtResponse& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.tx_hex_, json_value);
+  }
+
+  /**
+   * @brief Get of xpubs.
+   * @return xpubs
+   */
+  JsonObjectVector<PsbtGlobalXpub, PsbtGlobalXpubStruct>& GetXpubs() {  // NOLINT
+    return xpubs_;
+  }
+  /**
+   * @brief Set to xpubs.
+   * @param[in] xpubs    setting value.
+   */
+  void SetXpubs(  // line separate
+      const JsonObjectVector<PsbtGlobalXpub, PsbtGlobalXpubStruct>& xpubs) {  // NOLINT
+    this->xpubs_ = xpubs;
+  }
+  /**
+   * @brief Get data type of xpubs.
+   * @return Data type of xpubs.
+   */
+  static std::string GetXpubsFieldType() {
+    return "JsonObjectVector<PsbtGlobalXpub, PsbtGlobalXpubStruct>";  // NOLINT
+  }
+  /**
+   * @brief Get json string of xpubs field.
+   * @param[in,out] obj     class object
+   * @return JSON string.
+   */
+  static std::string GetXpubsString(  // line separate
+      const DecodePsbtResponse& obj) {  // NOLINT
+    // Do not set to const, because substitution of member variables
+    // may occur in pre / post processing inside Serialize
+    return obj.xpubs_.Serialize();
+  }
+  /**
+   * @brief Set json object to xpubs field.
+   * @param[in,out] obj     class object
+   * @param[in] json_value  JSON object
+   */
+  static void SetXpubsString(  // line separate
+      DecodePsbtResponse& obj,  // NOLINT
+      const UniValue& json_value) {
+    obj.xpubs_.DeserializeUniValue(json_value);
+  }
+
+  /**
+   * @brief Get of version
+   * @return version
+   */
+  uint32_t GetVersion() const {
+    return version_;
+  }
+  /**
+   * @brief Set to version
+   * @param[in] version    setting value.
+   */
+  void SetVersion(  // line separate
+    const uint32_t& version) {  // NOLINT
+    this->version_ = version;
+  }
+  /**
+   * @brief Get data type of version
+   * @return Data type of version
+   */
+  static std::string GetVersionFieldType() {
+    return "uint32_t";
+  }
+  /**
+   * @brief Get json string of version field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetVersionString(  // line separate
+      const DecodePsbtResponse& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.version_);
+  }
+  /**
+   * @brief Set json object to version field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetVersionString(  // line separate
+      DecodePsbtResponse& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.version_, json_value);
   }
 
   /**
@@ -7029,6 +7812,18 @@ class DecodePsbtResponse
    * @brief JsonAPI(tx) value
    */
   DecodeRawTransactionResponse tx_;  // NOLINT
+  /**
+   * @brief JsonAPI(tx_hex) value
+   */
+  std::string tx_hex_ = "";
+  /**
+   * @brief JsonAPI(xpubs) value
+   */
+  JsonObjectVector<PsbtGlobalXpub, PsbtGlobalXpubStruct> xpubs_;  // NOLINT
+  /**
+   * @brief JsonAPI(version) value
+   */
+  uint32_t version_ = 0;
   /**
    * @brief JsonAPI(unknown) value
    */

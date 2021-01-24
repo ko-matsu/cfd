@@ -819,6 +819,13 @@ void PsbtBip32Data::CollectFieldName() {
   };
   json_mapper.emplace("path", func_table);
   item_list.push_back("path");
+  func_table = {
+    PsbtBip32Data::GetDescriptorString,
+    PsbtBip32Data::SetDescriptorString,
+    PsbtBip32Data::GetDescriptorFieldType,
+  };
+  json_mapper.emplace("descriptor", func_table);
+  item_list.push_back("descriptor");
 }
 
 void PsbtBip32Data::ConvertFromStruct(
@@ -826,6 +833,7 @@ void PsbtBip32Data::ConvertFromStruct(
   pubkey_ = data.pubkey;
   master_fingerprint_ = data.master_fingerprint;
   path_ = data.path;
+  descriptor_ = data.descriptor;
   ignore_items = data.ignore_items;
 }
 
@@ -834,6 +842,7 @@ PsbtBip32DataStruct PsbtBip32Data::ConvertToStruct() const {  // NOLINT
   result.pubkey = pubkey_;
   result.master_fingerprint = master_fingerprint_;
   result.path = path_;
+  result.descriptor = descriptor_;
   result.ignore_items = ignore_items;
   return result;
 }
@@ -980,6 +989,50 @@ PsbtSignatureDataStruct PsbtSignatureData::ConvertToStruct() const {  // NOLINT
 }
 
 // ------------------------------------------------------------------------
+// XpubData
+// ------------------------------------------------------------------------
+cfd::core::JsonTableMap<XpubData>
+  XpubData::json_mapper;
+std::vector<std::string> XpubData::item_list;
+
+void XpubData::CollectFieldName() {
+  if (!json_mapper.empty()) {
+    return;
+  }
+  cfd::core::CLASS_FUNCTION_TABLE<XpubData> func_table;  // NOLINT
+
+  func_table = {
+    XpubData::GetBase58String,
+    XpubData::SetBase58String,
+    XpubData::GetBase58FieldType,
+  };
+  json_mapper.emplace("base58", func_table);
+  item_list.push_back("base58");
+  func_table = {
+    XpubData::GetHexString,
+    XpubData::SetHexString,
+    XpubData::GetHexFieldType,
+  };
+  json_mapper.emplace("hex", func_table);
+  item_list.push_back("hex");
+}
+
+void XpubData::ConvertFromStruct(
+    const XpubDataStruct& data) {
+  base58_ = data.base58;
+  hex_ = data.hex;
+  ignore_items = data.ignore_items;
+}
+
+XpubDataStruct XpubData::ConvertToStruct() const {  // NOLINT
+  XpubDataStruct result;
+  result.base58 = base58_;
+  result.hex = hex_;
+  result.ignore_items = ignore_items;
+  return result;
+}
+
+// ------------------------------------------------------------------------
 // DecodePsbtInput
 // ------------------------------------------------------------------------
 cfd::core::JsonTableMap<DecodePsbtInput>
@@ -992,6 +1045,13 @@ void DecodePsbtInput::CollectFieldName() {
   }
   cfd::core::CLASS_FUNCTION_TABLE<DecodePsbtInput> func_table;  // NOLINT
 
+  func_table = {
+    DecodePsbtInput::GetNon_witness_utxo_hexString,
+    DecodePsbtInput::SetNon_witness_utxo_hexString,
+    DecodePsbtInput::GetNon_witness_utxo_hexFieldType,
+  };
+  json_mapper.emplace("non_witness_utxo_hex", func_table);
+  item_list.push_back("non_witness_utxo_hex");
   func_table = {
     DecodePsbtInput::GetNon_witness_utxoString,
     DecodePsbtInput::SetNon_witness_utxoString,
@@ -1066,6 +1126,7 @@ void DecodePsbtInput::CollectFieldName() {
 
 void DecodePsbtInput::ConvertFromStruct(
     const DecodePsbtInputStruct& data) {
+  non_witness_utxo_hex_ = data.non_witness_utxo_hex;
   non_witness_utxo_.ConvertFromStruct(data.non_witness_utxo);
   witness_utxo_.ConvertFromStruct(data.witness_utxo);
   partial_signatures_.ConvertFromStruct(data.partial_signatures);
@@ -1081,6 +1142,7 @@ void DecodePsbtInput::ConvertFromStruct(
 
 DecodePsbtInputStruct DecodePsbtInput::ConvertToStruct() const {  // NOLINT
   DecodePsbtInputStruct result;
+  result.non_witness_utxo_hex = non_witness_utxo_hex_;
   result.non_witness_utxo = non_witness_utxo_.ConvertToStruct();
   result.witness_utxo = witness_utxo_.ConvertToStruct();
   result.partial_signatures = partial_signatures_.ConvertToStruct();
@@ -1417,6 +1479,68 @@ ElementsDecodeRawTransactionTxOutStruct ElementsDecodeRawTransactionTxOut::Conve
 }
 
 // ------------------------------------------------------------------------
+// PsbtGlobalXpub
+// ------------------------------------------------------------------------
+cfd::core::JsonTableMap<PsbtGlobalXpub>
+  PsbtGlobalXpub::json_mapper;
+std::vector<std::string> PsbtGlobalXpub::item_list;
+
+void PsbtGlobalXpub::CollectFieldName() {
+  if (!json_mapper.empty()) {
+    return;
+  }
+  cfd::core::CLASS_FUNCTION_TABLE<PsbtGlobalXpub> func_table;  // NOLINT
+
+  func_table = {
+    PsbtGlobalXpub::GetXpubString,
+    PsbtGlobalXpub::SetXpubString,
+    PsbtGlobalXpub::GetXpubFieldType,
+  };
+  json_mapper.emplace("xpub", func_table);
+  item_list.push_back("xpub");
+  func_table = {
+    PsbtGlobalXpub::GetMaster_fingerprintString,
+    PsbtGlobalXpub::SetMaster_fingerprintString,
+    PsbtGlobalXpub::GetMaster_fingerprintFieldType,
+  };
+  json_mapper.emplace("master_fingerprint", func_table);
+  item_list.push_back("master_fingerprint");
+  func_table = {
+    PsbtGlobalXpub::GetPathString,
+    PsbtGlobalXpub::SetPathString,
+    PsbtGlobalXpub::GetPathFieldType,
+  };
+  json_mapper.emplace("path", func_table);
+  item_list.push_back("path");
+  func_table = {
+    PsbtGlobalXpub::GetDescriptorXpubString,
+    PsbtGlobalXpub::SetDescriptorXpubString,
+    PsbtGlobalXpub::GetDescriptorXpubFieldType,
+  };
+  json_mapper.emplace("descriptorXpub", func_table);
+  item_list.push_back("descriptorXpub");
+}
+
+void PsbtGlobalXpub::ConvertFromStruct(
+    const PsbtGlobalXpubStruct& data) {
+  xpub_.ConvertFromStruct(data.xpub);
+  master_fingerprint_ = data.master_fingerprint;
+  path_ = data.path;
+  descriptor_xpub_ = data.descriptor_xpub;
+  ignore_items = data.ignore_items;
+}
+
+PsbtGlobalXpubStruct PsbtGlobalXpub::ConvertToStruct() const {  // NOLINT
+  PsbtGlobalXpubStruct result;
+  result.xpub = xpub_.ConvertToStruct();
+  result.master_fingerprint = master_fingerprint_;
+  result.path = path_;
+  result.descriptor_xpub = descriptor_xpub_;
+  result.ignore_items = ignore_items;
+  return result;
+}
+
+// ------------------------------------------------------------------------
 // DecodePsbtRequest
 // ------------------------------------------------------------------------
 cfd::core::JsonTableMap<DecodePsbtRequest>
@@ -1443,12 +1567,28 @@ void DecodePsbtRequest::CollectFieldName() {
   };
   json_mapper.emplace("network", func_table);
   item_list.push_back("network");
+  func_table = {
+    DecodePsbtRequest::GetHasDetailString,
+    DecodePsbtRequest::SetHasDetailString,
+    DecodePsbtRequest::GetHasDetailFieldType,
+  };
+  json_mapper.emplace("hasDetail", func_table);
+  item_list.push_back("hasDetail");
+  func_table = {
+    DecodePsbtRequest::GetHasSimpleString,
+    DecodePsbtRequest::SetHasSimpleString,
+    DecodePsbtRequest::GetHasSimpleFieldType,
+  };
+  json_mapper.emplace("hasSimple", func_table);
+  item_list.push_back("hasSimple");
 }
 
 void DecodePsbtRequest::ConvertFromStruct(
     const DecodePsbtRequestStruct& data) {
   psbt_ = data.psbt;
   network_ = data.network;
+  has_detail_ = data.has_detail;
+  has_simple_ = data.has_simple;
   ignore_items = data.ignore_items;
 }
 
@@ -1456,6 +1596,8 @@ DecodePsbtRequestStruct DecodePsbtRequest::ConvertToStruct() const {  // NOLINT
   DecodePsbtRequestStruct result;
   result.psbt = psbt_;
   result.network = network_;
+  result.has_detail = has_detail_;
+  result.has_simple = has_simple_;
   result.ignore_items = ignore_items;
   return result;
 }
@@ -1480,6 +1622,27 @@ void DecodePsbtResponse::CollectFieldName() {
   };
   json_mapper.emplace("tx", func_table);
   item_list.push_back("tx");
+  func_table = {
+    DecodePsbtResponse::GetTx_hexString,
+    DecodePsbtResponse::SetTx_hexString,
+    DecodePsbtResponse::GetTx_hexFieldType,
+  };
+  json_mapper.emplace("tx_hex", func_table);
+  item_list.push_back("tx_hex");
+  func_table = {
+    DecodePsbtResponse::GetXpubsString,
+    DecodePsbtResponse::SetXpubsString,
+    DecodePsbtResponse::GetXpubsFieldType,
+  };
+  json_mapper.emplace("xpubs", func_table);
+  item_list.push_back("xpubs");
+  func_table = {
+    DecodePsbtResponse::GetVersionString,
+    DecodePsbtResponse::SetVersionString,
+    DecodePsbtResponse::GetVersionFieldType,
+  };
+  json_mapper.emplace("version", func_table);
+  item_list.push_back("version");
   func_table = {
     DecodePsbtResponse::GetUnknownString,
     DecodePsbtResponse::SetUnknownString,
@@ -1513,6 +1676,9 @@ void DecodePsbtResponse::CollectFieldName() {
 void DecodePsbtResponse::ConvertFromStruct(
     const DecodePsbtResponseStruct& data) {
   tx_.ConvertFromStruct(data.tx);
+  tx_hex_ = data.tx_hex;
+  xpubs_.ConvertFromStruct(data.xpubs);
+  version_ = data.version;
   unknown_.ConvertFromStruct(data.unknown);
   inputs_.ConvertFromStruct(data.inputs);
   outputs_.ConvertFromStruct(data.outputs);
@@ -1523,6 +1689,9 @@ void DecodePsbtResponse::ConvertFromStruct(
 DecodePsbtResponseStruct DecodePsbtResponse::ConvertToStruct() const {  // NOLINT
   DecodePsbtResponseStruct result;
   result.tx = tx_.ConvertToStruct();
+  result.tx_hex = tx_hex_;
+  result.xpubs = xpubs_.ConvertToStruct();
+  result.version = version_;
   result.unknown = unknown_.ConvertToStruct();
   result.inputs = inputs_.ConvertToStruct();
   result.outputs = outputs_.ConvertToStruct();

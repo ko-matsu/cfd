@@ -24,7 +24,7 @@
 struct DecodeLockingScriptStruct {
   std::string asm_ = "";               //!< asm_  // NOLINT
   std::string hex = "";                //!< hex  // NOLINT
-  int64_t req_sigs = 0;                //!< req_sigs  // NOLINT
+  int req_sigs = 0;                    //!< req_sigs  // NOLINT
   std::string type = "";               //!< type  // NOLINT
   std::vector<std::string> addresses;  //!< addresses  // NOLINT
   std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
@@ -65,10 +65,10 @@ struct DecodePsbtLockingScriptStruct {
 struct DecodeRawTransactionTxInStruct {
   std::string coinbase = "";               //!< coinbase  // NOLINT
   std::string txid = "";                   //!< txid  // NOLINT
-  int64_t vout = 0;                        //!< vout  // NOLINT
+  uint32_t vout = 0;                       //!< vout  // NOLINT
   DecodeUnlockingScriptStruct script_sig;  //!< script_sig  // NOLINT
   std::vector<std::string> txinwitness;    //!< txinwitness  // NOLINT
-  int64_t sequence = 0;                    //!< sequence  // NOLINT
+  uint32_t sequence = 0;                   //!< sequence  // NOLINT
   std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
 };
 
@@ -79,8 +79,8 @@ struct DecodeRawTransactionTxInStruct {
  * @brief DecodeRawTransactionTxOutStruct struct
  */
 struct DecodeRawTransactionTxOutStruct {
-  double value = 0;                          //!< value  // NOLINT
-  int64_t n = 0;                             //!< n  // NOLINT
+  int64_t value = 0;                         //!< value  // NOLINT
+  uint32_t n = 0;                            //!< n  // NOLINT
   DecodeLockingScriptStruct script_pub_key;  //!< script_pub_key  // NOLINT
   std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
 };
@@ -107,9 +107,9 @@ struct DecodeRawTransactionResponseStruct {
   std::string txid = "";                              //!< txid  // NOLINT
   std::string hash = "";                              //!< hash  // NOLINT
   uint32_t version = 0;                               //!< version  // NOLINT
-  int64_t size = 0;                                   //!< size  // NOLINT
-  int64_t vsize = 0;                                  //!< vsize  // NOLINT
-  int64_t weight = 0;                                 //!< weight  // NOLINT
+  uint32_t size = 0;                                  //!< size  // NOLINT
+  uint32_t vsize = 0;                                 //!< vsize  // NOLINT
+  uint32_t weight = 0;                                //!< weight  // NOLINT
   uint32_t locktime = 0;                              //!< locktime  // NOLINT
   std::vector<DecodeRawTransactionTxInStruct> vin;    //!< vin  // NOLINT
   std::vector<DecodeRawTransactionTxOutStruct> vout;  //!< vout  // NOLINT
@@ -181,6 +181,7 @@ struct PsbtBip32DataStruct {
   std::string pubkey = "";              //!< pubkey  // NOLINT
   std::string master_fingerprint = "";  //!< master_fingerprint  // NOLINT
   std::string path = "";                //!< path  // NOLINT
+  std::string descriptor = "";          //!< descriptor  // NOLINT
   std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
 };
 
@@ -222,12 +223,25 @@ struct PsbtSignatureDataStruct {
 };
 
 // ------------------------------------------------------------------------
+// XpubDataStruct
+// ------------------------------------------------------------------------
+/**
+ * @brief XpubDataStruct struct
+ */
+struct XpubDataStruct {
+  std::string base58 = "";  //!< base58  // NOLINT
+  std::string hex = "";     //!< hex  // NOLINT
+  std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
+};
+
+// ------------------------------------------------------------------------
 // DecodePsbtInputStruct
 // ------------------------------------------------------------------------
 /**
  * @brief DecodePsbtInputStruct struct
  */
 struct DecodePsbtInputStruct {
+  std::string non_witness_utxo_hex = "";                    //!< non_witness_utxo_hex  // NOLINT
   DecodeRawTransactionResponseStruct non_witness_utxo;      //!< non_witness_utxo  // NOLINT
   DecodePsbtUtxoStruct witness_utxo;                        //!< witness_utxo  // NOLINT
   std::vector<PsbtSignatureDataStruct> partial_signatures;  //!< partial_signatures  // NOLINT
@@ -297,6 +311,20 @@ struct ElementsDecodeRawTransactionTxOutStruct {
   std::string rangeproof = "";                       //!< rangeproof  // NOLINT
   std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
 };
+
+// ------------------------------------------------------------------------
+// PsbtGlobalXpubStruct
+// ------------------------------------------------------------------------
+/**
+ * @brief PsbtGlobalXpubStruct struct
+ */
+struct PsbtGlobalXpubStruct {
+  XpubDataStruct xpub;                  //!< xpub  // NOLINT
+  std::string master_fingerprint = "";  //!< master_fingerprint  // NOLINT
+  std::string path = "";                //!< path  // NOLINT
+  std::string descriptor_xpub = "";     //!< descriptor_xpub  // NOLINT
+  std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
+};
 namespace cfd {
 namespace api {
 
@@ -309,6 +337,8 @@ namespace api {
 struct DecodePsbtRequestStruct {
   std::string psbt = "";            //!< psbt  // NOLINT
   std::string network = "mainnet";  //!< network  // NOLINT
+  bool has_detail = false;          //!< has_detail  // NOLINT
+  bool has_simple = false;          //!< has_simple  // NOLINT
   std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
 };
 
@@ -320,6 +350,9 @@ struct DecodePsbtRequestStruct {
  */
 struct DecodePsbtResponseStruct {
   DecodeRawTransactionResponseStruct tx;        //!< tx  // NOLINT
+  std::string tx_hex = "";                      //!< tx_hex  // NOLINT
+  std::vector<PsbtGlobalXpubStruct> xpubs;      //!< xpubs  // NOLINT
+  uint32_t version = 0;                         //!< version  // NOLINT
   std::vector<PsbtMapDataStruct> unknown;       //!< unknown  // NOLINT
   std::vector<DecodePsbtInputStruct> inputs;    //!< inputs  // NOLINT
   std::vector<DecodePsbtOutputStruct> outputs;  //!< outputs  // NOLINT
