@@ -2374,7 +2374,7 @@ int CfdFinalizeFundPsbt(
 
     auto used_utxos = psbt_obj->psbt->FundTransaction(
         *(buffer->utxos), buffer->fee_rate, change_address_ptr, &tx_fee_value,
-        &option_params, &filter);
+        &option_params, &filter, psbt_obj->net_type);
     {
       buffer->indexes->clear();
       buffer->indexes->reserve(used_utxos.size());
