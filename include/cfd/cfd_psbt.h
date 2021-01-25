@@ -502,6 +502,7 @@ class CFD_EXPORT Psbt : public cfd::core::Psbt {
    * @param[out] estimate_fee       estimate fee
    * @param[in] option_params       coin selection option data
    * @param[in] filter              utxo filter
+   * @param[in] net_type            network type
    * @return selected utxo list.
    */
   std::vector<UtxoData> FundTransaction(
@@ -510,20 +511,25 @@ class CFD_EXPORT Psbt : public cfd::core::Psbt {
       const Descriptor* change_address = nullptr,
       Amount* estimate_fee = nullptr,
       const CoinSelectionOption* option_params = nullptr,
-      const UtxoFilter* filter = nullptr);
+      const UtxoFilter* filter = nullptr,
+      NetType net_type = NetType::kMainnet);
 
   /**
    * @brief Get utxo.
    * @param[in] index       txin index
+   * @param[in] net_type    network type
    * @return utxo data.
    */
-  UtxoData GetUtxoData(uint32_t index) const;
+  UtxoData GetUtxoData(
+      uint32_t index, NetType net_type = NetType::kMainnet) const;
 
   /**
    * @brief Get all utxo.
+   * @param[in] net_type    network type
    * @return utxo list.
    */
-  std::vector<UtxoData> GetUtxoDataAll() const;
+  std::vector<UtxoData> GetUtxoDataAll(
+      NetType net_type = NetType::kMainnet) const;
 
  private:
   /**

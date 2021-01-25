@@ -929,6 +929,7 @@ TEST(cfdcapi_psbt, FundPsbt) {
           &fee, &used_utxo_num);
       EXPECT_EQ(kCfdSuccess, ret);
       EXPECT_EQ(1, used_utxo_num);
+      EXPECT_EQ(1158, fee);
 
       uint32_t utxo_index = 0;
       char* txid = nullptr;

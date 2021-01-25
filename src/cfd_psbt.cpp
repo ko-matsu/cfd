@@ -76,15 +76,35 @@ static ByteData256 CollectSighashByTx(
  * @brief parse descriptor
  * @param[in] descriptor      descriptor string.
  * @param[out] key_list       key list.
+ * @param[in] net_type        network type
  * @return descriptor script data
  */
 cfd::api::DescriptorScriptData ParseDescriptor(
-    const std::string& descriptor, std::vector<KeyData>* key_list) {
+    const std::string& descriptor, std::vector<KeyData>* key_list,
+    NetType* net_type = nullptr) {
   std::vector<KeyData> temp_key_list;
   cfd::api::AddressApi addr_api;
-  cfd::api::DescriptorScriptData script_data = addr_api.ParseOutputDescriptor(
-      descriptor, NetType::kMainnet, "", nullptr, nullptr, nullptr,
-      &temp_key_list);
+  cfd::api::DescriptorScriptData script_data;
+  if (net_type == nullptr) {
+    NetType target_list[] = {
+        NetType::kMainnet, NetType::kTestnet, NetType::kRegtest};
+    size_t max = (sizeof(target_list) / sizeof(NetType)) - 1;
+    for (size_t index = 0; index <= max; ++index) {
+      try {
+        script_data = addr_api.ParseOutputDescriptor(
+            descriptor, target_list[index], "", nullptr, nullptr, nullptr,
+            &temp_key_list);
+        break;
+      } catch (const CfdException& except) {
+        if (index == max) {
+          throw except;
+        }
+      }
+    }
+  } else {
+    script_data = addr_api.ParseOutputDescriptor(
+        descriptor, *net_type, "", nullptr, nullptr, nullptr, &temp_key_list);
+  }
   if (key_list != nullptr) {
     for (const auto& key : temp_key_list) {
       if (key.IsValid() && (!key.GetFingerprint().IsEmpty())) {
@@ -103,13 +123,14 @@ cfd::api::DescriptorScriptData ParseDescriptor(
  * @param[out] key_list       key data list
  * @param[out] redeem_script  redeem script
  * @param[in] ignore_error    ignore error flag
+ * @param[in] net_type        network type
  * @retval true   witness
  * @retval flse   other
  */
 bool ConvertFromUtxoData(
     const UtxoData& utxo, OutPoint* outpoint, TxOut* txout,
     std::vector<KeyData>* key_list, Script* redeem_script,
-    bool ignore_error = false) {
+    bool ignore_error = false, NetType* net_type = nullptr) {
   if (utxo.descriptor.empty()) {
     warn(CFD_LOG_SOURCE, "psbt not supported utxo data. need descriptor.");
     throw CfdException(
@@ -120,7 +141,7 @@ bool ConvertFromUtxoData(
 
   std::vector<KeyData> work_key_list;
   cfd::api::DescriptorScriptData script_data =
-      ParseDescriptor(utxo.descriptor, &work_key_list);
+      ParseDescriptor(utxo.descriptor, &work_key_list, net_type);
 
   if (key_list != nullptr) {
     for (const auto& key : work_key_list) {
@@ -583,13 +604,14 @@ void Psbt::Verify(const OutPoint& outpoint) const {
 std::vector<UtxoData> Psbt::FundTransaction(
     const std::vector<UtxoData>& witness_utxos, double effective_fee_rate,
     const Descriptor* change_address, Amount* estimate_fee,
-    const CoinSelectionOption* option_params, const UtxoFilter* filter) {
+    const CoinSelectionOption* option_params, const UtxoFilter* filter,
+    NetType net_type) {
   std::vector<UtxoData> input_utxos = GetUtxoDataAll();
   for (const auto& utxo : witness_utxos) {
-    ConvertFromUtxoData(utxo, nullptr, nullptr, nullptr, nullptr, false);
+    ConvertFromUtxoData(
+        utxo, nullptr, nullptr, nullptr, nullptr, false, &net_type);
   }
 
-  NetType net_type = NetType::kMainnet;
   std::string reserve_txout_address;
   if (change_address != nullptr) {
     auto key_list = change_address->GetKeyDataAll();
@@ -661,7 +683,7 @@ std::vector<UtxoData> Psbt::FundTransaction(
     if (change_address != nullptr) {
       std::vector<KeyData> key_list;
       cfd::api::DescriptorScriptData script_data =
-          ParseDescriptor(change_address->ToString(), &key_list);
+          ParseDescriptor(change_address->ToString(), &key_list, &net_type);
       auto txout = fund_basetx.GetTxOut(base_tx_.GetTxOutCount());
       if (!script_data.locking_script.Equals(txout.GetLockingScript())) {
         warn(
@@ -688,7 +710,7 @@ uint32_t Psbt::GetDefaultSequence() const {
                                        : kSequenceEnableLockTimeMax;
 }
 
-UtxoData Psbt::GetUtxoData(uint32_t index) const {
+UtxoData Psbt::GetUtxoData(uint32_t index, NetType net_type) const {
   CheckTxInIndex(index, __LINE__, __FUNCTION__);
   struct wally_psbt* psbt_pointer;
   psbt_pointer = static_cast<struct wally_psbt*>(wally_psbt_pointer_);
@@ -701,6 +723,7 @@ UtxoData Psbt::GetUtxoData(uint32_t index) const {
       sizeof(psbt_pointer->tx->inputs[index].txhash))));
   utxo.vout = psbt_pointer->tx->inputs[index].index;
 
+  bool witness_only = false;
   if (psbt_pointer->inputs[index].witness_utxo != nullptr) {
     utxo.amount = Amount(static_cast<int64_t>(
         psbt_pointer->inputs[index].witness_utxo->satoshi));
@@ -708,29 +731,36 @@ UtxoData Psbt::GetUtxoData(uint32_t index) const {
         psbt_pointer->inputs[index].witness_utxo->script,
         static_cast<uint32_t>(
             psbt_pointer->inputs[index].witness_utxo->script_len)));
-    if (utxo.locking_script.IsP2shScript()) {
-      utxo.address_type = AddressType::kP2shAddress;
-    } else if (utxo.locking_script.IsP2wpkhScript()) {
-      utxo.address_type = AddressType::kP2wpkhAddress;
-    } else if (utxo.locking_script.IsP2wshScript()) {
-      utxo.address_type = AddressType::kP2wshAddress;
+    witness_only = true;
+  } else if (psbt_pointer->inputs[index].utxo != nullptr) {
+    if (psbt_pointer->inputs[index].utxo->num_outputs > utxo.vout) {
+      auto output = &psbt_pointer->inputs[index].utxo->outputs[utxo.vout];
+      utxo.amount = Amount(static_cast<int64_t>(output->satoshi));
+      utxo.locking_script = Script(
+          ByteData(output->script, static_cast<uint32_t>(output->script_len)));
     }
+  }
+  if (utxo.locking_script.IsP2shScript()) {
+    utxo.address_type = AddressType::kP2shAddress;
+  } else if (utxo.locking_script.IsP2pkhScript()) {
+    utxo.address_type = AddressType::kP2pkhAddress;
+  } else if (utxo.locking_script.IsP2wpkhScript()) {
+    utxo.address_type = AddressType::kP2wpkhAddress;
+  } else if (utxo.locking_script.IsP2wshScript()) {
+    utxo.address_type = AddressType::kP2wshAddress;
   }
 
   std::vector<KeyData> key_list;
   bool is_finalized = IsFinalizedInput(index);
   if (is_finalized) {
-    if (psbt_pointer->inputs[index].final_witness != nullptr) {
-      uint32_t last_index =
-          psbt_pointer->inputs[index].final_witness->num_items;
+    if (witness_only &&
+        (psbt_pointer->inputs[index].final_witness != nullptr)) {
+      auto witness_stack = psbt_pointer->inputs[index].final_witness;
+      uint32_t last_index = witness_stack->num_items;
       if (last_index > 0) {
         ByteData last_data(
-            psbt_pointer->inputs[index]
-                .final_witness->items[last_index - 1]
-                .witness,
-            psbt_pointer->inputs[index]
-                .final_witness->items[last_index - 1]
-                .witness_len);
+            witness_stack->items[last_index - 1].witness,
+            witness_stack->items[last_index - 1].witness_len);
         if (Pubkey::IsValid(last_data)) {
           key_list.emplace_back(KeyData(Pubkey(last_data), "", ByteData()));
           if (utxo.address_type == AddressType::kP2shAddress) {
@@ -748,8 +778,27 @@ UtxoData Psbt::GetUtxoData(uint32_t index) const {
           }
         }
       }
+    } else if (psbt_pointer->inputs[index].final_scriptsig != nullptr) {
+      Script scriptsig(ByteData(
+          psbt_pointer->inputs[index].final_scriptsig,
+          psbt_pointer->inputs[index].final_scriptsig_len));
+      auto items = scriptsig.GetElementList();
+      uint32_t last_index = items.size();
+      if (last_index > 0) {
+        ByteData last_data = items[last_index - 1].GetBinaryData();
+        if (Pubkey::IsValid(last_data)) {
+          key_list.emplace_back(KeyData(Pubkey(last_data), "", ByteData()));
+        } else {
+          utxo.redeem_script = Script(last_data);
+          if (utxo.redeem_script.IsP2pkScript()) {
+            key_list.emplace_back(KeyData(
+                Pubkey(utxo.redeem_script.GetElementList()[0].GetData()), "",
+                ByteData()));
+          }
+        }
+      }
     }
-  } else {
+  } else if (witness_only) {
     if (psbt_pointer->inputs[index].witness_script != nullptr) {
       utxo.redeem_script = Script(ByteData(
           psbt_pointer->inputs[index].witness_script,
@@ -762,6 +811,14 @@ UtxoData Psbt::GetUtxoData(uint32_t index) const {
       utxo.address_type = AddressType::kP2shP2wpkhAddress;
     }
 
+    key_list = cfd::core::Psbt::GetTxInKeyDataList(index);
+  } else {
+    if (psbt_pointer->inputs[index].redeem_script != nullptr) {
+      utxo.redeem_script = Script(ByteData(
+          psbt_pointer->inputs[index].redeem_script,
+          static_cast<uint32_t>(
+              psbt_pointer->inputs[index].redeem_script_len)));
+    }
     key_list = cfd::core::Psbt::GetTxInKeyDataList(index);
   }
 
@@ -814,13 +871,24 @@ UtxoData Psbt::GetUtxoData(uint32_t index) const {
       // not key support
       utxo.descriptor = utxo.redeem_script.GetHex();
     }
-    utxo.descriptor = "wsh(" + utxo.descriptor + ")";
+    if (witness_only) {
+      utxo.descriptor = "wsh(" + utxo.descriptor + ")";
+    }
     if (utxo.locking_script.IsP2shScript()) {
       utxo.descriptor = "sh(" + utxo.descriptor + ")";
     }
+  } else if (utxo.locking_script.IsP2pkhScript()) {
+    if (key_list.size() != 1) {
+      warn(CFD_LOG_SOURCE, "psbt not supported. many pubkey for p2pkh.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "psbt not supported. many pubkey for p2pkh.");
+    }
+    utxo.descriptor = "pkh(" + key_list[0].ToString() + ")";
   } else {
     // unsupported format
   }
+
   if (!utxo.descriptor.empty()) {
     Descriptor desc = Descriptor::Parse(utxo.descriptor);
     auto ref = desc.GetReference();
@@ -832,14 +900,14 @@ UtxoData Psbt::GetUtxoData(uint32_t index) const {
           CfdError::kCfdIllegalStateError,
           "psbt invalid state. unmatch descriptor & lockingScript.");
     }
-    utxo.address = ref.GenerateAddress(NetType::kMainnet);
+    utxo.address = ref.GenerateAddress(net_type);
     utxo.address_type = ref.GetAddressType();
   }
 
   return utxo;
 }
 
-std::vector<UtxoData> Psbt::GetUtxoDataAll() const {
+std::vector<UtxoData> Psbt::GetUtxoDataAll(NetType net_type) const {
   std::vector<UtxoData> list;
   if (!HasAllUtxos()) return list;
 
@@ -847,7 +915,7 @@ std::vector<UtxoData> Psbt::GetUtxoDataAll() const {
   psbt_pointer = static_cast<struct wally_psbt*>(wally_psbt_pointer_);
   uint32_t max = static_cast<uint32_t>(psbt_pointer->num_inputs);
   for (uint32_t index = 0; index < max; ++index) {
-    list.emplace_back(GetUtxoData(index));
+    list.emplace_back(GetUtxoData(index, net_type));
   }
   return list;
 }
