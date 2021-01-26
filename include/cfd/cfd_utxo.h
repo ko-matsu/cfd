@@ -2,7 +2,7 @@
 /**
  * @file cfd_utxo.h
  *
- * @brief UTXO操作の関連クラス定義
+ * @brief Related class definitions for UTXO operations
  */
 #ifndef CFD_INCLUDE_CFD_CFD_UTXO_H_
 #define CFD_INCLUDE_CFD_CFD_UTXO_H_
@@ -30,13 +30,13 @@ using cfd::core::Txid;
 #ifndef CFD_DISABLE_ELEMENTS
 using cfd::core::ConfidentialAssetId;
 #endif  // CFD_DISABLE_ELEMENTS
-//! Asset Amountマップへのエイリアス (key: asset(str), value: amount)
+//! Alias ​​to Asset Amount map (key: asset(str), value: amount)
 using AmountMap = std::map<std::string, int64_t>;
 
 /**
- * @brief 最小のデータのみを保持するUTXO構造体。
+ * @brief A UTXO structure that holds only the smallest data.
  * @details witness_size_max, uscript_size_max, address_type
- *  は専用APIで算出する。
+ *  is calculated by the dedicated API.
  * @see cfd::CoinSelection::ConvertToUtxo()
  */
 struct Utxo {
@@ -55,8 +55,8 @@ struct Utxo {
   uint8_t asset[33];  //!< asset
 #endif                // CFD_DISABLE_ELEMENTS
   /**
-   * @brief 任意のバイナリデータアドレス
-   * @details cfdでは領域だけ設けておき、アクセスはしない
+   * @brief Any binary data address
+   * @details In cfd, only the area is provided and it is not accessed.
    */
   void* binary_data;
 #if 0
@@ -65,27 +65,26 @@ struct Utxo {
   uint8_t confidential_key[33];      //!< Confidential key
 #endif  // if 0
   // calculate
-  uint64_t effective_value;   //!< amountからfeeを除外した有効額
+  uint64_t effective_value;   //!< Effective amount excluding fee from amount
   uint64_t fee;               //!< fee
-  uint64_t long_term_fee;     //!< 長期間後のfee
-  int64_t effective_k_value;  //!< knapsack計算用の値
+  uint64_t long_term_fee;     //!< Fee after a long term
+  int64_t effective_k_value;  //!< Effective amount for knapsack
 };
 
 /**
- * @brief UTXOのフィルタリング条件を指定する。
- *   utxoのamount上限などの指定に利用することを想定
+ * @brief Specify UTXO filtering conditions.
  */
 struct UtxoFilter {
-  uint32_t reserved;  //!< 予約領域
+  uint32_t reserved;  //!< reserved
 };
 
 /**
- * @brief CoinSelectionのオプション情報を保持するクラス
+ * @brief Class that holds option information of CoinSelection.
  */
 class CFD_EXPORT CoinSelectionOption {
  public:
   /**
-   * @brief コンストラクタ
+   * @brief constructor.
    */
   CoinSelectionOption();
 

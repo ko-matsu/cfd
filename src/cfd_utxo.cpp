@@ -496,7 +496,7 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
             utxo->long_term_fee);
 #endif
         if (utxo->long_term_fee > utxo->fee) {
-          utxo->long_term_fee = utxo->fee;  // TODO(k-matsuzawa): 後で見直し
+          utxo->long_term_fee = utxo->fee;  // TODO(k-matsuzawa): Check later
         }
         utxo->effective_value = effective_value;
         utxo->effective_k_value = static_cast<int64_t>(effective_value);
@@ -517,7 +517,7 @@ std::vector<Utxo> CoinSelection::SelectCoinsMinConf(
   }
 
   // Filter by the min conf specs and add to utxo_pool
-  // TODO(k-matsuzawa): 現状はフィルタリングしていないためUtxo一覧の再作成不要
+  // TODO(k-matsuzawa): Currently it is not filtered, so there is no need to recreate the Utxo list.  // NOLINT
   // for (const OutputGroup& group : groups) {
   //   if (!group.EligibleForSpending(eligibility_filter)) continue;
   //   utxo_pool.push_back(group);

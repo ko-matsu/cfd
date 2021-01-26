@@ -305,6 +305,35 @@ TEST(cfdcapi_key, CompressUncompressTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_key, GetPubkeyFingerprint) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  char* output = nullptr;
+  ret = CfdGetPubkeyFingerprint(handle,
+        "03662a01c232918c9deb3b330272483c3e4ec0c6b5da86df59252835afeb4ab5f9", &output);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ("7df5646a", output);
+    CfdFreeStringBuffer(output);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("7df5646a", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 TEST(cfdcapi_key, CombinePubkeysTest1) {
   void* handle = NULL;
   int ret = CfdCreateHandle(&handle);
