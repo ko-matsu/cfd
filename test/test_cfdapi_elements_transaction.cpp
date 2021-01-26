@@ -184,7 +184,8 @@ TEST(ElementsTransactionApi, EstimateFee_CheckRealValue)
 
   EXPECT_NO_THROW(tx = txc.Finalize());
 
-  if ((tx.GetDataSize() != 9400) && (tx.GetDataSize() != 9401) && (tx.GetDataSize() != 9402)) {
+  if ((tx.GetDataSize() != 9399) && (tx.GetDataSize() != 9400) &&
+      (tx.GetDataSize() != 9401) && (tx.GetDataSize() != 9402)) {
     EXPECT_EQ(tx.GetDataSize(), 0);
   }
 
