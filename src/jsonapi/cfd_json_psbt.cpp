@@ -1,10 +1,9 @@
-// Copyright 2020 CryptoGarage
+// Copyright 2021 CryptoGarage
 /**
- * @file cfdjs_elements_transaction.cpp
+ * @file cfd_json_psbt.cpp
  *
- * @brief cfd-apiで利用するConfidential Transaction操作の実装ファイル
+ * @brief This file is defines Partially Signed Bitcoin Transaction by json.
  */
-#ifndef CFD_DISABLE_ELEMENTS
 #include <algorithm>
 #include <limits>
 #include <map>
@@ -363,5 +362,3 @@ void PsbtJsonApi::DecodePsbt(
 }  // namespace json
 }  // namespace api
 }  // namespace cfd
-
-#endif  // CFD_DISABLE_ELEMENTS
