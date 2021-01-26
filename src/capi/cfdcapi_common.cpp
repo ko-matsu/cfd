@@ -20,6 +20,7 @@
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_logger.h"
+#include "cfdcore/cfdcore_util.h"
 
 using cfd::core::AddressType;
 using cfd::core::CfdError;
