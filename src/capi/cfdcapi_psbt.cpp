@@ -2446,14 +2446,18 @@ int CfdGetFundPsbtUsedUtxo(
     if (amount != nullptr) *amount = utxo.amount.GetSatoshiValue();
 
     if (txid != nullptr) work_txid = CreateString(utxo.txid.GetHex());
+#ifndef CFD_DISABLE_ELEMENTS
     if (asset != nullptr) work_asset = CreateString(utxo.asset.GetHex());
+#endif  // CFD_DISABLE_ELEMENTS
     if (descriptor != nullptr) work_descriptor = CreateString(utxo.descriptor);
     if (scriptsig_template != nullptr) {
       work_scriptsig = CreateString(utxo.scriptsig_template.GetHex());
     }
 
     if (txid != nullptr) *txid = work_txid;
+#ifndef CFD_DISABLE_ELEMENTS
     if (asset != nullptr) *asset = work_asset;
+#endif  // CFD_DISABLE_ELEMENTS
     if (descriptor != nullptr) *descriptor = work_descriptor;
     if (scriptsig_template != nullptr) *scriptsig_template = work_scriptsig;
     return CfdErrorCode::kCfdSuccess;
