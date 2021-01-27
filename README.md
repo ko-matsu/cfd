@@ -197,6 +197,7 @@ npm run ctest
 
 - cfd-core
   - [libwally-core](https://github.com/cryptogarageinc/libwally-core/tree/cfd-develop) (forked from [ElementsProject/libwally-core](https://github.com/ElementsProject/libwally-core))
+    - [secp256k1-zkp](https://github.com/cryptogarageinc/secp256k1-zkp/tree/cfd-develop) (forked from [ElementsProject/secp256k1-zkp](https://github.com/ElementsProject/secp256k1-zkp))
   - [univalue](https://github.com/jgarzik/univalue) (for JSON encoding and decoding)
 - [googletest](https://github.com/google/googletest) (for testing)
 
