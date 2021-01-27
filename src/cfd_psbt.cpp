@@ -34,14 +34,6 @@ using cfd::core::TxIn;
 using cfd::core::logger::warn;
 
 // -----------------------------------------------------------------------------
-// File constants
-// -----------------------------------------------------------------------------
-//! KB size
-static constexpr const uint64_t kKiloByteSize = 1000;
-//! psbt default version
-static constexpr const uint32_t kPsbtDefaultVersion = 0;
-
-// -----------------------------------------------------------------------------
 // File internal function
 // -----------------------------------------------------------------------------
 /**
@@ -196,7 +188,7 @@ Psbt::Psbt(uint32_t psbt_version, const Transaction& transaction)
     : cfd::core::Psbt(psbt_version, transaction) {}
 
 Psbt::Psbt(const TransactionContext& context)
-    : Psbt(kPsbtDefaultVersion, context) {}
+    : Psbt(GetDefaultVersion(), context) {}
 
 Psbt::Psbt(uint32_t psbt_version, const TransactionContext& context)
     : cfd::core::Psbt(psbt_version, static_cast<const Transaction>(context)) {
