@@ -420,34 +420,34 @@ CFDC_API int CfdGetPsbtTxInIndex(
  * @brief Get PSBT with pubkey record.
  * @param[in,out] handle        cfd handle.
  * @param[in] psbt_handle       psbt handle.
- * @param[in] kind              PSBT kind.
+ * @param[in] kind              PSBT kind. (see CfdPsbtRecordKind)
  * @param[in] index             input or output index.
  * @param[in] pubkey            pubkey or xpubkey.
  * @param[out] value            record value.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtPubkeyRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     const char* pubkey, char** value);  // (txin:signature, key. txout:key)
 
 /**
  * @brief Find PSBT with pubkey record.
  * @param[in,out] handle        cfd handle.
  * @param[in] psbt_handle       psbt handle.
- * @param[in] kind              PSBT kind.
+ * @param[in] kind              PSBT kind. (see CfdPsbtRecordKind)
  * @param[in] index             input or output index.
  * @param[in] pubkey            pubkey or xpubkey.
  * @return CfdErrorCode
  */
 CFDC_API int CfdIsFindPsbtPubkeyRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     const char* pubkey);
 
 /**
  * @brief Get PSBT bip32 key data.
  * @param[in,out] handle        cfd handle.
  * @param[in] psbt_handle       psbt handle.
- * @param[in] kind              PSBT kind.
+ * @param[in] kind              PSBT kind. (see CfdPsbtRecordKind)
  * @param[in] index             input or output index.
  * @param[in] pubkey            pubkey or xpubkey.
  * @param[out] fingerprint      fingerprint.
@@ -459,14 +459,14 @@ CFDC_API int CfdIsFindPsbtPubkeyRecord(
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtBip32Data(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     const char* pubkey, char** fingerprint, char** bip32_path);
 
 /**
  * @brief Get PSBT pubkey list handle.
  * @param[in,out] handle        cfd handle.
  * @param[in] psbt_handle       psbt handle.
- * @param[in] kind              PSBT kind.
+ * @param[in] kind              PSBT kind. (see CfdPsbtRecordKind)
  * @param[in] index             input or output index.
  * @param[out] list_num             pubkey list count.
  * @param[out] pubkey_list_handle   pubkey list handle.
@@ -474,7 +474,7 @@ CFDC_API int CfdGetPsbtBip32Data(
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtPubkeyList(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     uint32_t* list_num, void** pubkey_list_handle);
 
 /**
@@ -539,21 +539,21 @@ CFDC_API int CfdAddPsbtGlobalXpubkey(
  * @brief Add PSBT record.
  * @param[in,out] handle    cfd handle.
  * @param[in] psbt_handle   psbt handle.
- * @param[in] type          psbt type.
+ * @param[in] type          psbt type. (see CfdPsbtRecordType)
  * @param[in] index         index. (if type is global, this field is not use.)
  * @param[in] key           key hex.
  * @param[in] value         value hex.
  * @return CfdErrorCode
  */
 CFDC_API int CfdAddPsbtRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordType type, uint32_t index,
+    void* handle, void* psbt_handle, int type, uint32_t index,
     const char* key, const char* value);
 
 /**
  * @brief Get PSBT record.
  * @param[in,out] handle    cfd handle.
  * @param[in] psbt_handle   psbt handle.
- * @param[in] type          psbt type.
+ * @param[in] type          psbt type. (see CfdPsbtRecordType)
  * @param[in] index         index. (if type is global, this field is not use.)
  * @param[in] key           key hex.
  * @param[out] value        value hex.
@@ -562,20 +562,20 @@ CFDC_API int CfdAddPsbtRecord(
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordType type, uint32_t index,
+    void* handle, void* psbt_handle, int type, uint32_t index,
     const char* key, char** value);
 
 /**
  * @brief Find PSBT record.
  * @param[in,out] handle    cfd handle.
  * @param[in] psbt_handle   psbt handle.
- * @param[in] type          psbt type.
+ * @param[in] type          psbt type. (see CfdPsbtRecordType)
  * @param[in] index         index. (if type is global, this field is not use.)
  * @param[in] key           key hex.
  * @return CfdErrorCode
  */
 CFDC_API int CfdIsFindPsbtRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordType type, uint32_t index,
+    void* handle, void* psbt_handle, int type, uint32_t index,
     const char* key);
 
 /**

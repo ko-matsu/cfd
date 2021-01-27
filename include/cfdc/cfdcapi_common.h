@@ -63,7 +63,7 @@ enum CfdErrorCode {
   /** Signature Verification Fail */
   kCfdSignVerificationError = 7,
   /** NotFound error */
-  kCfdNotFoundError = 7
+  kCfdNotFoundError = 8
 };
 
 /**
