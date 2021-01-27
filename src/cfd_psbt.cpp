@@ -1,6 +1,6 @@
 // Copyright 2021 CryptoGarage
 /**
- * @file cfd_fee.cpp
+ * @file cfd_psbt.cpp
  *
  * @brief This file is implements Partially Signed Bitcoin Transaction.
  */
