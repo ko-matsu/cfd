@@ -132,7 +132,7 @@ struct CfdCapiPsbtFundHandle {
  * @return key data.
  */
 static KeyData ParsePubkey(
-    CfdPsbtRecordKind kind, const char* pubkey, NetType net_type) {
+    int kind, const char* pubkey, NetType net_type) {
   constexpr size_t kCompressPubkeyHexSize = Pubkey::kCompressedPubkeySize * 2;
   std::string pubkey_str(pubkey);
 
@@ -1459,7 +1459,7 @@ int CfdGetPsbtTxInIndex(
 }
 
 int CfdGetPsbtPubkeyRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     const char* pubkey, char** value) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
@@ -1529,7 +1529,7 @@ int CfdGetPsbtPubkeyRecord(
 }
 
 int CfdIsFindPsbtPubkeyRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     const char* pubkey) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
@@ -1593,7 +1593,7 @@ int CfdIsFindPsbtPubkeyRecord(
 }
 
 int CfdGetPsbtBip32Data(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     const char* pubkey, char** fingerprint, char** bip32_path) {
   int result = CfdErrorCode::kCfdUnknownError;
   char* work_fingerprint = nullptr;
@@ -1674,7 +1674,7 @@ int CfdGetPsbtBip32Data(
 }
 
 int CfdGetPsbtPubkeyList(
-    void* handle, void* psbt_handle, CfdPsbtRecordKind kind, uint32_t index,
+    void* handle, void* psbt_handle, int kind, uint32_t index,
     uint32_t* list_num, void** pubkey_list_handle) {
   int result = CfdErrorCode::kCfdUnknownError;
   CfdCapiPsbtPubkeyListHandle* buffer = nullptr;
@@ -1977,7 +1977,7 @@ int CfdAddPsbtGlobalXpubkey(
 }
 
 int CfdAddPsbtRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordType type, uint32_t index,
+    void* handle, void* psbt_handle, int type, uint32_t index,
     const char* key, const char* value) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
@@ -2034,7 +2034,7 @@ int CfdAddPsbtRecord(
 }
 
 int CfdGetPsbtRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordType type, uint32_t index,
+    void* handle, void* psbt_handle, int type, uint32_t index,
     const char* key, char** value) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
@@ -2092,7 +2092,7 @@ int CfdGetPsbtRecord(
 }
 
 int CfdIsFindPsbtRecord(
-    void* handle, void* psbt_handle, CfdPsbtRecordType type, uint32_t index,
+    void* handle, void* psbt_handle, int type, uint32_t index,
     const char* key) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
