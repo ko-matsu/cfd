@@ -245,7 +245,7 @@ void PsbtJsonApi::DecodePsbt(
     }
 
     auto bip32_pubkey_list = psbt.GetTxInKeyDataList(index);
-    if (sig_pubkey_list.empty()) {
+    if (bip32_pubkey_list.empty()) {
       input.SetIgnoreItem("bip32_derivs");
     } else {
       auto& bip32_list = input.GetBip32_derivs();
