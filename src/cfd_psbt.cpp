@@ -378,6 +378,16 @@ void Psbt::SetTxInUtxo(
       GetTxInIndex(outpoint), txout, redeem_script, key_list);
 }
 
+void Psbt::SetTxInWitnessUtxoDirect(
+    const OutPoint& outpoint, const TxOutReference& txout) {
+  cfd::core::Psbt::SetTxInWitnessUtxoDirect(GetTxInIndex(outpoint), txout);
+}
+
+void Psbt::SetTxInBip32KeyDirect(
+    const OutPoint& outpoint, const KeyData& key_data) {
+  cfd::core::Psbt::SetTxInBip32KeyDirect(GetTxInIndex(outpoint), key_data);
+}
+
 void Psbt::SetTxInSignature(
     const OutPoint& outpoint, const KeyData& key, const ByteData& signature) {
   cfd::core::Psbt::SetTxInSignature(GetTxInIndex(outpoint), key, signature);

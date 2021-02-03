@@ -84,6 +84,8 @@ namespace capi {
 constexpr const char* const kPrefixPsbtHandle = "PsbtHandle";
 //! prefix: PsbtPubkeyList
 constexpr const char* const kPrefixPsbtPubkeyList = "PsbtPubkeyList";
+//! prefix: PsbtByteDataList
+constexpr const char* const kPrefixPsbtByteDataList = "PsbtDataList";
 //! prefix: PsbtFund
 constexpr const char* const kPrefixPsbtFundHandle = "PsbtFund";
 
@@ -105,6 +107,14 @@ struct CfdCapiPsbtPubkeyListHandle {
   bool has_bip32_list;             //!< bip32 list
   bool has_xpub_list;              //!< xpubkey list
   std::vector<KeyData>* key_list;  //!< key list
+};
+
+/**
+ * @brief cfd-capi PsbtByteDataListHandle struct.
+ */
+struct CfdCapiPsbtByteDataListHandle {
+  char prefix[kPrefixLength];        //!< buffer prefix
+  std::vector<ByteData>* data_list;  //!< data list
 };
 
 /**
@@ -131,8 +141,7 @@ struct CfdCapiPsbtFundHandle {
  * @param[in] net_type  network type.
  * @return key data.
  */
-static KeyData ParsePubkey(
-    int kind, const char* pubkey, NetType net_type) {
+static KeyData ParsePubkey(int kind, const char* pubkey, NetType net_type) {
   constexpr size_t kCompressPubkeyHexSize = Pubkey::kCompressedPubkeySize * 2;
   std::string pubkey_str(pubkey);
 
@@ -181,6 +190,46 @@ static KeyData ParsePubkey(
   return data;
 }
 
+/**
+ * @brief convert to keyData.
+ * @param[in] pubkey          pubkey or descriptor.
+ * @param[in] fingerprint     fingerprint.
+ * @param[in] bip32_path      bip32 path.
+ * @param[out] key_list       key data list.
+ */
+static void ConvertToKeyData(
+    const std::string& pubkey, const char* fingerprint, const char* bip32_path,
+    std::vector<KeyData>* key_list) {
+  KeyData key_data;
+  try {
+    auto desc = Descriptor::Parse(pubkey);
+    key_data = desc.GetKeyData();
+  } catch (const CfdException&) {
+    // fall through
+  }
+  if (!key_data.IsValid()) key_data = KeyData(pubkey);
+
+  if (key_data.GetBip32Path().empty() ||
+      (key_data.GetFingerprint().GetDataSize() != 4)) {
+    if (IsEmptyString(fingerprint)) {
+      warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. fingerprint is null or empty.");
+    }
+    if (IsEmptyString(bip32_path)) {
+      warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. bip32_path is null or empty.");
+    }
+    key_list->emplace_back(
+        Pubkey(pubkey), std::string(bip32_path), ByteData(fingerprint));
+  } else {
+    key_list->emplace_back(key_data.ToString());
+  }
+}
+
 }  // namespace capi
 }  // namespace cfd
 
@@ -189,15 +238,18 @@ static KeyData ParsePubkey(
 // =============================================================================
 // API
 using cfd::capi::AllocBuffer;
+using cfd::capi::CfdCapiPsbtByteDataListHandle;
 using cfd::capi::CfdCapiPsbtFundHandle;
 using cfd::capi::CfdCapiPsbtHandle;
 using cfd::capi::CfdCapiPsbtPubkeyListHandle;
 using cfd::capi::CheckBuffer;
 using cfd::capi::ConvertNetType;
+using cfd::capi::ConvertToKeyData;
 using cfd::capi::CreateString;
 using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
 using cfd::capi::IsEmptyString;
+using cfd::capi::kPrefixPsbtByteDataList;
 using cfd::capi::kPrefixPsbtFundHandle;
 using cfd::capi::kPrefixPsbtHandle;
 using cfd::capi::kPrefixPsbtPubkeyList;
@@ -620,24 +672,14 @@ int CfdAddPsbtTxInWithPubkey(
         locking_script_obj = Script(locking_script);
       }
       key_list.push_back(key);
-    } else {
-      if (IsEmptyString(locking_script)) {
-        warn(CFD_LOG_SOURCE, "locking_script is null or empty.");
-        throw CfdException(
-            CfdError::kCfdIllegalArgumentError,
-            "Failed to parameter. locking_script is null or empty.");
-      }
+    } else if (!IsEmptyString(locking_script)) {
       locking_script_obj = Script(locking_script);
     }
 
     psbt_obj->psbt->AddTxIn(outpoint, sequence);
     can_restore_psbt = true;
 
-    if (IsEmptyString(full_tx_hex)) {
-      TxOut txout(Amount(amount), locking_script_obj);
-      psbt_obj->psbt->SetTxInUtxo(
-          outpoint, TxOutReference(txout), Script(), key_list);
-    } else {
+    if (!IsEmptyString(full_tx_hex)) {
       Transaction tx(full_tx_hex);
       if (!tx.GetTxOut(vout).GetLockingScript().Equals(locking_script_obj)) {
         warn(CFD_LOG_SOURCE, "unmatch locking script.");
@@ -646,6 +688,10 @@ int CfdAddPsbtTxInWithPubkey(
             "Failed to parameter. unmatch locking script.");
       }
       psbt_obj->psbt->SetTxInUtxo(outpoint, tx, Script(), key_list);
+    } else if (!locking_script_obj.IsEmpty()) {
+      TxOut txout(Amount(amount), locking_script_obj);
+      psbt_obj->psbt->SetTxInUtxo(
+          outpoint, TxOutReference(txout), Script(), key_list);
     }
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -719,11 +765,7 @@ int CfdAddPsbtTxInWithScript(
     psbt_obj->psbt->AddTxIn(outpoint, sequence);
     can_restore_psbt = true;
 
-    if (IsEmptyString(full_tx_hex)) {
-      TxOut txout(Amount(amount), locking_script_obj);
-      psbt_obj->psbt->SetTxInUtxo(
-          outpoint, TxOutReference(txout), script, key_list);
-    } else {
+    if (!IsEmptyString(full_tx_hex)) {
       Transaction tx(full_tx_hex);
       if (!tx.GetTxOut(vout).GetLockingScript().Equals(locking_script_obj)) {
         warn(CFD_LOG_SOURCE, "unmatch locking script.");
@@ -732,6 +774,10 @@ int CfdAddPsbtTxInWithScript(
             "Failed to parameter. unmatch locking script.");
       }
       psbt_obj->psbt->SetTxInUtxo(outpoint, tx, script, key_list);
+    } else if (!locking_script_obj.IsEmpty()) {
+      TxOut txout(Amount(amount), locking_script_obj);
+      psbt_obj->psbt->SetTxInUtxo(
+          outpoint, TxOutReference(txout), script, key_list);
     }
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -742,6 +788,56 @@ int CfdAddPsbtTxInWithScript(
     SetLastFatalError(handle, "unknown error.");
   }
   if (can_restore_psbt) *(psbt_obj->psbt) = backup_psbt;
+  return result;
+}
+
+int CfdSetPsbtTxInUtxo(
+    void* handle, void* psbt_handle, const char* txid, uint32_t vout,
+    int64_t amount, const char* locking_script, const char* full_tx_hex) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(psbt_handle, kPrefixPsbtHandle);
+    CfdCapiPsbtHandle* psbt_obj = static_cast<CfdCapiPsbtHandle*>(psbt_handle);
+    if (IsEmptyString(txid)) {
+      warn(CFD_LOG_SOURCE, "txid is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. txid is null or empty.");
+    }
+    if (psbt_obj->psbt == nullptr) {
+      warn(CFD_LOG_SOURCE, "psbt is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to handle statement. psbt is null.");
+    }
+    OutPoint outpoint(Txid(txid), vout);
+    auto redeem_script = psbt_obj->psbt->GetTxInRedeemScript(outpoint, true);
+    std::vector<KeyData> key_list;
+    if (!IsEmptyString(full_tx_hex)) {
+      Transaction tx(full_tx_hex);
+      psbt_obj->psbt->SetTxInUtxo(outpoint, tx, redeem_script, key_list);
+    } else if (!IsEmptyString(locking_script)) {
+      Script script(locking_script);
+      TxOut txout(Amount(amount), script);
+      auto pubkeys = psbt_obj->psbt->GetTxInKeyDataList(outpoint);
+      if (script.IsWitnessProgram() || (!redeem_script.IsEmpty()) ||
+          (!pubkeys.empty())) {
+        psbt_obj->psbt->SetTxInUtxo(
+            outpoint, TxOutReference(txout), redeem_script, key_list);
+      } else {  // on P2SH-segwit
+        psbt_obj->psbt->SetTxInWitnessUtxoDirect(
+            outpoint, TxOutReference(txout));
+      }
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
   return result;
 }
 
@@ -772,36 +868,21 @@ int CfdSetPsbtTxInBip32Pubkey(
           "Failed to handle statement. psbt is null.");
     }
     OutPoint outpoint(Txid(txid), vout);
-
     std::vector<KeyData> key_list;
-    KeyData key_data(pubkey);
-    if (key_data.GetBip32Path().empty() ||
-        (key_data.GetFingerprint().GetDataSize() != 4)) {
-      if (IsEmptyString(fingerprint)) {
-        warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
-        throw CfdException(
-            CfdError::kCfdIllegalArgumentError,
-            "Failed to parameter. fingerprint is null or empty.");
-      }
-      if (IsEmptyString(bip32_path)) {
-        warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
-        throw CfdException(
-            CfdError::kCfdIllegalArgumentError,
-            "Failed to parameter. bip32_path is null or empty.");
-      }
-      key_list.emplace_back(
-          Pubkey(pubkey), std::string(bip32_path), ByteData(fingerprint));
-    } else {
-      key_list.emplace_back(key_data.ToString());
-    }
+    ConvertToKeyData(pubkey, fingerprint, bip32_path, &key_list);
+
     auto script = psbt_obj->psbt->GetTxInRedeemScript(outpoint, true);
     auto tx = psbt_obj->psbt->GetTxInUtxoFull(outpoint, true);
     if (tx.GetTxOutCount() > vout) {
       psbt_obj->psbt->SetTxInUtxo(outpoint, tx, script, key_list);
     } else {
-      auto txout = psbt_obj->psbt->GetTxInUtxo(outpoint);
-      psbt_obj->psbt->SetTxInUtxo(
-          outpoint, TxOutReference(txout), script, key_list);
+      auto txout = psbt_obj->psbt->GetTxInUtxo(outpoint, true);
+      if (!txout.GetLockingScript().IsEmpty()) {
+        psbt_obj->psbt->SetTxInUtxo(
+            outpoint, TxOutReference(txout), script, key_list);
+      } else {
+        psbt_obj->psbt->SetTxInBip32KeyDirect(outpoint, key_list[0]);
+      }
     }
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -1385,26 +1466,8 @@ int CfdSetPsbtTxOutBip32Pubkey(
     }
 
     std::vector<KeyData> key_list;
-    KeyData key_data(pubkey);
-    if (key_data.GetBip32Path().empty() ||
-        (key_data.GetFingerprint().GetDataSize() != 4)) {
-      if (IsEmptyString(fingerprint)) {
-        warn(CFD_LOG_SOURCE, "fingerprint is null or empty.");
-        throw CfdException(
-            CfdError::kCfdIllegalArgumentError,
-            "Failed to parameter. fingerprint is null or empty.");
-      }
-      if (IsEmptyString(bip32_path)) {
-        warn(CFD_LOG_SOURCE, "bip32_path is null or empty.");
-        throw CfdException(
-            CfdError::kCfdIllegalArgumentError,
-            "Failed to parameter. bip32_path is null or empty.");
-      }
-      key_list.emplace_back(
-          Pubkey(pubkey), std::string(bip32_path), ByteData(fingerprint));
-    } else {
-      key_list.emplace_back(key_data.ToString());
-    }
+    ConvertToKeyData(pubkey, fingerprint, bip32_path, &key_list);
+
     auto script = psbt_obj->psbt->GetTxOutScript(index, true);
     psbt_obj->psbt->SetTxOutData(index, script, key_list);
     return CfdErrorCode::kCfdSuccess;
@@ -1901,6 +1964,139 @@ int CfdFreePsbtPubkeyList(void* handle, void* pubkey_list_handle) {
   return result;
 }
 
+int CfdGetPsbtByteDataList(
+    void* handle, void* psbt_handle, int kind, uint32_t index,
+    uint32_t* list_num, void** data_list_handle) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  CfdCapiPsbtByteDataListHandle* buffer = nullptr;
+  try {
+    cfd::Initialize();
+    CheckBuffer(psbt_handle, kPrefixPsbtHandle);
+    CfdCapiPsbtHandle* psbt_obj = static_cast<CfdCapiPsbtHandle*>(psbt_handle);
+    if (data_list_handle == nullptr) {
+      warn(CFD_LOG_SOURCE, "data_list_handle is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. data_list_handle is null.");
+    }
+    if (list_num == nullptr) {
+      warn(CFD_LOG_SOURCE, "list_num is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. list_num is null.");
+    }
+    if (psbt_obj->psbt == nullptr) {
+      warn(CFD_LOG_SOURCE, "psbt is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to handle statement. psbt is null.");
+    }
+
+    std::vector<ByteData> data_list;
+    switch (kind) {
+      case kCfdPsbtRecordFinalWitness:
+        data_list = psbt_obj->psbt->GetTxInFinalScript(index, true);
+        break;
+      case kCfdPsbtRecordInputUnknownKeys:
+        data_list = psbt_obj->psbt->GetTxInRecordKeyList(index);
+        break;
+      case kCfdPsbtRecordOutputUnknownKeys:
+        data_list = psbt_obj->psbt->GetTxOutRecordKeyList(index);
+        break;
+      case kCfdPsbtRecordGlobalUnknownKeys:
+        data_list = psbt_obj->psbt->GetGlobalRecordKeyList();
+        break;
+      default:
+        warn(CFD_LOG_SOURCE, "kind is invalid: {}", kind);
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. kind is invalid.");
+    }
+
+    buffer = static_cast<CfdCapiPsbtByteDataListHandle*>(AllocBuffer(
+        kPrefixPsbtByteDataList, sizeof(CfdCapiPsbtByteDataListHandle)));
+    buffer->data_list = new std::vector<ByteData>();
+    *(buffer->data_list) = data_list;
+    *list_num = static_cast<uint32_t>(data_list.size());
+    *data_list_handle = buffer;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  CfdFreePsbtByteDataList(handle, buffer);
+  return result;
+}
+
+int CfdGetPsbtByteDataItem(
+    void* handle, void* data_list_handle, uint32_t index, char** data) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(data_list_handle, kPrefixPsbtByteDataList);
+    CfdCapiPsbtByteDataListHandle* list_handle =
+        static_cast<CfdCapiPsbtByteDataListHandle*>(data_list_handle);
+    if (data == nullptr) {
+      warn(CFD_LOG_SOURCE, "data is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. data is null.");
+    }
+    if (list_handle->data_list == nullptr) {
+      warn(CFD_LOG_SOURCE, "data_list is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to handle statement. data_list is null.");
+    }
+    if (index >= list_handle->data_list->size()) {
+      warn(CFD_LOG_SOURCE, "out of range error.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError, "Failed to out of range.");
+    }
+
+    auto byte_data = list_handle->data_list->at(index);
+    *data = CreateString(byte_data.GetHex());
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdFreePsbtByteDataList(void* handle, void* data_list_handle) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    if (data_list_handle != nullptr) {
+      CheckBuffer(data_list_handle, kPrefixPsbtByteDataList);
+      CfdCapiPsbtByteDataListHandle* list_handle =
+          static_cast<CfdCapiPsbtByteDataListHandle*>(data_list_handle);
+      if (list_handle->data_list != nullptr) {
+        delete list_handle->data_list;
+        list_handle->data_list = nullptr;
+      }
+      FreeBuffer(
+          data_list_handle, kPrefixPsbtByteDataList,
+          sizeof(CfdCapiPsbtByteDataListHandle));
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
 int CfdAddPsbtGlobalXpubkey(
     void* handle, void* psbt_handle, const char* xpubkey,
     const char* fingerprint, const char* bip32_path) {
@@ -1976,9 +2172,58 @@ int CfdAddPsbtGlobalXpubkey(
   return result;
 }
 
-int CfdAddPsbtRecord(
+int CfdSetPsbtRedeemScript(
     void* handle, void* psbt_handle, int type, uint32_t index,
-    const char* key, const char* value) {
+    const char* redeem_script) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(psbt_handle, kPrefixPsbtHandle);
+    CfdCapiPsbtHandle* psbt_obj = static_cast<CfdCapiPsbtHandle*>(psbt_handle);
+    if (IsEmptyString(redeem_script)) {
+      warn(CFD_LOG_SOURCE, "redeem_script is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. redeem_script is null or empty.");
+    }
+    if (psbt_obj->psbt == nullptr) {
+      warn(CFD_LOG_SOURCE, "psbt is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to handle statement. psbt is null.");
+    }
+
+    Script script(redeem_script);
+    std::vector<KeyData> key_list;
+    switch (type) {
+      case kCfdPsbtRecordTypeInput: {
+        auto txout = psbt_obj->psbt->GetTxInUtxo(index);
+        psbt_obj->psbt->SetTxInUtxo(
+            index, TxOutReference(txout), script, key_list);
+      } break;
+      case kCfdPsbtRecordTypeOutput:
+        psbt_obj->psbt->SetTxOutData(index, script, key_list);
+        break;
+      default:
+        warn(CFD_LOG_SOURCE, "type is invalid: {}", type);
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. type is invalid.");
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdAddPsbtRecord(
+    void* handle, void* psbt_handle, int type, uint32_t index, const char* key,
+    const char* value) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -2034,8 +2279,8 @@ int CfdAddPsbtRecord(
 }
 
 int CfdGetPsbtRecord(
-    void* handle, void* psbt_handle, int type, uint32_t index,
-    const char* key, char** value) {
+    void* handle, void* psbt_handle, int type, uint32_t index, const char* key,
+    char** value) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();

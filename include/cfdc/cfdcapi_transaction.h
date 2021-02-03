@@ -96,6 +96,30 @@ CFDC_API int CfdAddTransactionOutput(
     const char* asset_string);
 
 /**
+ * @brief clear witness stack on transaction input.
+ * @param[in] handle            cfd handle.
+ * @param[in] create_handle     create transaction handle.
+ * @param[in] txid              txin txid.
+ * @param[in] vout              txin vout.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdClearWitnessStack(
+    void* handle, void* create_handle, const char* txid, uint32_t vout);
+
+/**
+ * @brief update scriptsig on transaction input.
+ * @param[in] handle            cfd handle.
+ * @param[in] create_handle     create transaction handle.
+ * @param[in] txid              txin txid.
+ * @param[in] vout              txin vout.
+ * @param[in] script_sig        unlocking script(script signature).
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdUpdateTxInScriptSig(
+    void* handle, void* create_handle, const char* txid, uint32_t vout,
+    const char* script_sig);
+
+/**
  * @brief finalize and execute createrawtransaction.
  * @param[in] handle            cfd handle.
  * @param[in] create_handle     create transaction handle.

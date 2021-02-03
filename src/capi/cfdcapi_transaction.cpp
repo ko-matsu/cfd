@@ -381,6 +381,108 @@ int CfdAddTransactionOutput(
   }
 }
 
+int CfdClearWitnessStack(
+    void* handle, void* create_handle, const char* txid, uint32_t vout) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(create_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(create_handle);
+    if (IsEmptyString(txid)) {
+      warn(CFD_LOG_SOURCE, "txid is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. txid is null or empty.");
+    }
+
+    Txid txid_obj(txid);
+    bool is_bitcoin = false;
+    ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    } else if (is_bitcoin) {
+      TransactionContext* tx =
+          static_cast<TransactionContext*>(tx_data->tx_obj);
+      auto index = tx->GetTxInIndex(txid_obj, vout);
+      tx->RemoveScriptWitnessStackAll(index);
+    } else {
+#ifndef CFD_DISABLE_ELEMENTS
+      ConfidentialTransactionContext* tx =
+          static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+      auto index = tx->GetTxInIndex(txid_obj, vout);
+      tx->RemoveScriptWitnessStackAll(index);
+#else
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
+#endif  // CFD_DISABLE_ELEMENTS
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdUpdateTxInScriptSig(
+    void* handle, void* create_handle, const char* txid, uint32_t vout,
+    const char* script_sig) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(create_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(create_handle);
+    if (IsEmptyString(txid)) {
+      warn(CFD_LOG_SOURCE, "txid is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. txid is null or empty.");
+    }
+
+    Txid txid_obj(txid);
+    Script script;
+    if (!IsEmptyString(script_sig)) script = Script(script_sig);
+
+    bool is_bitcoin = false;
+    ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    } else if (is_bitcoin) {
+      TransactionContext* tx =
+          static_cast<TransactionContext*>(tx_data->tx_obj);
+      auto index = tx->GetTxInIndex(txid_obj, vout);
+      tx->SetUnlockingScript(index, script);
+    } else {
+#ifndef CFD_DISABLE_ELEMENTS
+      ConfidentialTransactionContext* tx =
+          static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+      auto index = tx->GetTxInIndex(txid_obj, vout);
+      tx->SetUnlockingScript(index, script);
+#else
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
+#endif  // CFD_DISABLE_ELEMENTS
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
 int CfdFinalizeTransaction(
     void* handle, void* create_handle, char** tx_hex_string) {
   return CfdGetModifiedTxByHandle(handle, create_handle, tx_hex_string);
