@@ -235,6 +235,24 @@ class CFD_EXPORT Psbt : public cfd::core::Psbt {
       const OutPoint& outpoint, const TxOutReference& txout,
       const Script& redeem_script, const std::vector<KeyData>& key_list);
 
+  using cfd::core::Psbt::SetTxInWitnessUtxoDirect;
+  /**
+   * @brief set input utxo data on direct.
+   * @param[in] outpoint    outpoint
+   * @param[in] txout       utxo witness transaction output
+   */
+  void SetTxInWitnessUtxoDirect(
+      const OutPoint& outpoint, const TxOutReference& txout);
+
+  using cfd::core::Psbt::SetTxInBip32KeyDirect;
+  /**
+   * @brief set input bip32 key on direct.
+   * @param[in] outpoint    outpoint
+   * @param[in] key_data    key data
+   */
+  void SetTxInBip32KeyDirect(
+      const OutPoint& outpoint, const KeyData& key_data);
+
   using cfd::core::Psbt::SetTxInSignature;
   /**
    * @brief set input signature.

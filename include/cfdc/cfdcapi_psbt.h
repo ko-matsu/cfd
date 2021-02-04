@@ -27,7 +27,7 @@ enum CfdPsbtRecordType {
   kCfdPsbtRecordTypeOutput = 3,
 };
 
-/** PSBT pubkey record kind */
+/** PSBT record kind */
 enum CfdPsbtRecordKind {
   /** record: input signature */
   kCfdPsbtRecordInputSignature = 1,
@@ -37,6 +37,14 @@ enum CfdPsbtRecordKind {
   kCfdPsbtRecordOutputBip32 = 3,
   /** record: global xpub bip32 */
   kCfdPsbtRecordGloalXpub = 4,
+  /** record: input final witness */
+  kCfdPsbtRecordFinalWitness = 5,
+  /** record: input unknown keys */
+  kCfdPsbtRecordInputUnknownKeys = 6,
+  /** record: output unknown keys */
+  kCfdPsbtRecordOutputUnknownKeys = 7,
+  /** record: global unknown keys */
+  kCfdPsbtRecordGlobalUnknownKeys = 8,
 };
 
 /** fund psbt option */
@@ -224,6 +232,21 @@ CFDC_API int CfdAddPsbtTxInWithScript(
     uint32_t sequence, int64_t amount, const char* locking_script,
     const char* redeem_script, const char* descriptor,
     const char* full_tx_hex);
+
+/**
+ * @brief set PSBT input utxo.
+ * @param[in,out] handle        cfd handle.
+ * @param[in] psbt_handle       psbt handle.
+ * @param[in] txid              txid.
+ * @param[in] vout              vout.
+ * @param[in] amount            utxo amount.
+ * @param[in] locking_script    utxo locking script.
+ * @param[in] full_tx_hex       full transaction hex.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetPsbtTxInUtxo(
+    void* handle, void* psbt_handle, const char* txid, uint32_t vout,
+    int64_t amount, const char* locking_script, const char* full_tx_hex);
 
 /**
  * @brief Set PSBT input bip32 pubkey.
@@ -523,6 +546,42 @@ CFDC_API int CfdGetPsbtPubkeyListBip32Data(
 CFDC_API int CfdFreePsbtPubkeyList(void* handle, void* pubkey_list_handle);
 
 /**
+ * @brief Get PSBT data list handle.
+ * @param[in,out] handle        cfd handle.
+ * @param[in] psbt_handle       psbt handle.
+ * @param[in] kind              PSBT kind. (see CfdPsbtRecordKind)
+ * @param[in] index             input or output index.
+ * @param[out] list_num             pubkey list count.
+ * @param[out] pubkey_list_handle   pubkey list handle.
+ *   Call 'CfdFreePsbtPubkeyList' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetPsbtByteDataList(
+    void* handle, void* psbt_handle, int kind, uint32_t index,
+    uint32_t* list_num, void** pubkey_list_handle);
+
+/**
+ * @brief Get PSBT data list item.
+ * @param[in,out] handle            cfd handle.
+ * @param[in] data_list_handle      data list handle.
+ * @param[in] index                 list index.
+ * @param[out] data                 data.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetPsbtByteDataItem(
+    void* handle, void* data_list_handle, uint32_t index, char** data);
+
+/**
+ * @brief Free PSBT data list.
+ * @param[in,out] handle            cfd handle.
+ * @param[in] data_list_handle      data list handle.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdFreePsbtByteDataList(void* handle, void* data_list_handle);
+
+/**
  * @brief Add PSBT global bip32 xpubkey.
  * @param[in,out] handle        cfd handle.
  * @param[in] psbt_handle       psbt handle.
@@ -536,6 +595,19 @@ CFDC_API int CfdAddPsbtGlobalXpubkey(
     const char* fingerprint, const char* bip32_path);
 
 /**
+ * @brief Set PSBT redeem script or witness script.
+ * @param[in,out] handle        cfd handle.
+ * @param[in] psbt_handle       psbt handle.
+ * @param[in] type              psbt type. (see CfdPsbtRecordType)
+ * @param[in] index             index.
+ * @param[in] redeem_script     redeem script
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetPsbtRedeemScript(
+    void* handle, void* psbt_handle, int type, uint32_t index,
+    const char* redeem_script);
+
+/**
  * @brief Add PSBT record.
  * @param[in,out] handle    cfd handle.
  * @param[in] psbt_handle   psbt handle.
@@ -546,8 +618,8 @@ CFDC_API int CfdAddPsbtGlobalXpubkey(
  * @return CfdErrorCode
  */
 CFDC_API int CfdAddPsbtRecord(
-    void* handle, void* psbt_handle, int type, uint32_t index,
-    const char* key, const char* value);
+    void* handle, void* psbt_handle, int type, uint32_t index, const char* key,
+    const char* value);
 
 /**
  * @brief Get PSBT record.
@@ -562,8 +634,8 @@ CFDC_API int CfdAddPsbtRecord(
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetPsbtRecord(
-    void* handle, void* psbt_handle, int type, uint32_t index,
-    const char* key, char** value);
+    void* handle, void* psbt_handle, int type, uint32_t index, const char* key,
+    char** value);
 
 /**
  * @brief Find PSBT record.
