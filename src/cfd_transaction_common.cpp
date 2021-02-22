@@ -161,6 +161,12 @@ void UtxoUtil::ConvertToUtxo(
         utxo->address_type = AddressType::kP2wshAddress;
       } else if (utxo_data.locking_script.IsP2pkhScript()) {
         utxo->address_type = AddressType::kP2pkhAddress;
+      } else if (utxo_data.locking_script.IsTaprootScript()) {
+        utxo->address_type = AddressType::kTaprootAddress;
+      } else if (
+          utxo_data.locking_script.IsWitnessProgram() &&
+          (utxo_data.locking_script.GetElementList()[0].GetNumber() != 0)) {
+        utxo->address_type = AddressType::kWitnessUnknown;
       } else {  // TODO(k-matsuzawa): unbknown type is convert to p2sh
         utxo->address_type = AddressType::kP2shAddress;
       }

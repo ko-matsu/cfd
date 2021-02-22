@@ -2,8 +2,7 @@
 /**
  * @file cfdapi_address.cpp
  *
- * @brief \~english implementation of address operation that uses cfd-api
- *   \~japanese cfd-apiで利用するAddress操作の実装ファイル
+ * @brief implementation of address operation that uses cfd-api
  */
 #include "cfd/cfdapi_address.h"
 
@@ -17,6 +16,7 @@
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_logger.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 #include "cfdcore/cfdcore_script.h"
 
 namespace cfd {
@@ -37,6 +37,7 @@ using cfd::core::DescriptorScriptType;
 using cfd::core::KeyData;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrPubkey;
 using cfd::core::Script;
 using cfd::core::ScriptUtil;
 using cfd::core::WitnessVersion;
@@ -49,7 +50,8 @@ Address AddressApi::CreateAddress(
   if ((pubkey == nullptr) || (!pubkey->IsValid())) {
     if (address_type == AddressType::kP2pkhAddress ||
         address_type == AddressType::kP2wpkhAddress ||
-        address_type == AddressType::kP2shP2wpkhAddress) {
+        address_type == AddressType::kP2shP2wpkhAddress ||
+        address_type == AddressType::kTaprootAddress) {
       warn(
           CFD_LOG_SOURCE,
           "Failed to CreateAddress. Invalid pubkey hex: pubkey is empty.");
@@ -105,6 +107,11 @@ Address AddressApi::CreateAddress(
       if (redeem_script != nullptr) {
         *redeem_script = temp_script;
       }
+      break;
+    case AddressType::kTaprootAddress:
+      addr = Address(
+          net_type, WitnessVersion::kVersion1,
+          SchnorrPubkey::FromPubkey(*pubkey), addr_prefixes);
       break;
     default:
       warn(

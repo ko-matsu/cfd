@@ -31,6 +31,8 @@ using cfd::core::NetType;
 using cfd::core::Pubkey;
 using cfd::core::Script;
 using cfd::core::ScriptElement;
+using cfd::core::ScriptOperator;
+using cfd::core::ScriptType;
 using cfd::core::ScriptUtil;
 using cfd::core::WitnessVersion;
 
@@ -89,6 +91,15 @@ Address AddressFactory::GetAddressByLockingScript(
   } else if (
       locking_script.IsP2wpkhScript() || locking_script.IsP2wshScript()) {
     return GetSegwitAddressByHash(items[1].GetBinaryData());
+  } else if (locking_script.IsTaprootScript()) {
+    return GetSegwitAddressByHash(
+        items[1].GetBinaryData(), WitnessVersion::kVersion1);
+  } else if (
+      locking_script.IsWitnessProgram() &&
+      (items[0].GetOpCode() != ScriptOperator::OP_0)) {
+    uint8_t var = items[0].GetOpCode().GetDataType() - ScriptType::kOp_1;
+    return GetSegwitAddressByHash(
+        items[1].GetBinaryData(), static_cast<WitnessVersion>(var + 1));
   } else if (locking_script.IsMultisigScript()) {
     throw CfdException(
         CfdError::kCfdIllegalArgumentError, "script type is multisig script.");
@@ -163,7 +174,12 @@ bool AddressFactory::CheckAddressNetType(
           result = (prefix.GetP2shPrefix() == addr_format.GetP2shPrefix());
           break;
         case AddressType::kP2wpkhAddress:
+          // fall-through
         case AddressType::kP2wshAddress:
+          // fall-through
+        case AddressType::kTaprootAddress:
+          // fall-through
+        case AddressType::kWitnessUnknown:
           result = (prefix.GetBech32Hrp() == addr_format.GetBech32Hrp());
           break;
         default:

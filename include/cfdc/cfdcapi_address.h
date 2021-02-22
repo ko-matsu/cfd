@@ -49,7 +49,11 @@ enum CfdAddressType {
   /** P2sh wrapped segwit address (Script Hash) */
   kCfdP2shP2wshAddress,
   /** P2sh wrapped segwit address (Pubkey Hash) */
-  kCfdP2shP2wpkhAddress
+  kCfdP2shP2wpkhAddress,
+  /** Taproot address */
+  kCfdTaprootAddress,
+  /** Witness unknown address */
+  kCfdWitnessUnknownAddress = 0xff
 };
 
 /**
@@ -67,7 +71,11 @@ enum CfdHashType {
   /** P2sh wrapped segwit Script Hash */
   kCfdP2shP2wsh,
   /** P2sh wrapped segwit Pubkey Hash */
-  kCfdP2shP2wpkh
+  kCfdP2shP2wpkh,
+  /** Taproot */
+  kCfdTaproot,
+  /** Unknown */
+  kCfdUnknown = 0xff
 };
 
 /**

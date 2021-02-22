@@ -74,6 +74,10 @@ WitnessVersion TransactionContextUtil::CheckSignWithPrivkeySimple(
     case AddressType::kP2wpkhAddress:
     case AddressType::kP2shP2wpkhAddress:
       version = WitnessVersion::kVersion0;
+      break;
+    case AddressType::kTaprootAddress:
+      version = WitnessVersion::kVersion1;
+      break;
     default:
       break;
   }

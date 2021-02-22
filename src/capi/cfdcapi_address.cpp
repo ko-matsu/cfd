@@ -992,6 +992,12 @@ int CfdGetAddressInfo(
         case AddressType::kP2shP2wpkhAddress:
           *hash_type = kCfdP2shP2wpkh;
           break;
+        case AddressType::kTaprootAddress:
+          *hash_type = kCfdTaproot;
+          break;
+        case AddressType::kWitnessUnknown:
+          *hash_type = kCfdUnknown;
+          break;
         default:
           warn(
               CFD_LOG_SOURCE, "Illegal hash type.({})", addr.GetAddressType());
