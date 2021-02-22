@@ -218,7 +218,7 @@ TEST(ElementsTransactionApi, EstimateFee_MinimumValue)
   // utxo1.redeem_script = Script("");
   utxo1.address = factory.GetAddress("ert1qav7q64dhpx9y4m62rrhpa67trmvjf2ptxfddld");
   utxo1.descriptor = "wpkh(03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6)";
-  utxo1.amount = Amount(int64_t{2000000000});
+  utxo1.amount = Amount(int64_t{100000200});
   utxo1.address_type = AddressType::kP2wpkhAddress;
   utxo1.asset = ConfidentialAssetId("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225");
   utxo1.asset_blind_factor = BlindFactor("ebfecaae1665f32a3843ce65c42fb6e3f51136fa9d37274b810887923ae89339");
