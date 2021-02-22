@@ -108,11 +108,20 @@ class CFD_EXPORT AddressFactory {
       AddressType address_type, const ByteData160& hash) const;
 
   /**
-   * @brief Hash情報から segwit native アドレスを作成する
+   * @brief Create a segwit native address from hash data.
    * @param[in] hash  hash data
    * @return address
    */
   Address GetSegwitAddressByHash(const ByteData& hash) const;
+
+  /**
+   * @brief Create a segwit native address from hash data.
+   * @param[in] hash        hash data
+   * @param[in] version     witness version
+   * @return address
+   */
+  Address GetSegwitAddressByHash(
+      const ByteData& hash, WitnessVersion version) const;
 
   /**
    * @brief P2PKHアドレスを生成する.

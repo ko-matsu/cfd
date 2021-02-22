@@ -112,6 +112,11 @@ Address AddressFactory::GetSegwitAddressByHash(const ByteData& hash) const {
   return Address(type_, wit_ver_, hash, prefix_list_);
 }
 
+Address AddressFactory::GetSegwitAddressByHash(
+    const ByteData& hash, WitnessVersion version) const {
+  return Address(type_, version, hash, prefix_list_);
+}
+
 Address AddressFactory::CreateP2pkhAddress(const Pubkey& pubkey) const {
   return Address(type_, pubkey, prefix_list_);
 }
