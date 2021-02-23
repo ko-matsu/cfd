@@ -137,17 +137,34 @@ Address AddressFactory::CreateP2shAddress(const Script& script) const {
 }
 
 Address AddressFactory::CreateP2wpkhAddress(const Pubkey& pubkey) const {
-  return Address(type_, wit_ver_, pubkey, prefix_list_);
+  return Address(type_, WitnessVersion::kVersion0, pubkey, prefix_list_);
 }
 
 Address AddressFactory::CreateP2wshAddress(const Script& script) const {
-  return Address(type_, wit_ver_, script, prefix_list_);
+  return Address(type_, WitnessVersion::kVersion0, script, prefix_list_);
 }
 
 Address AddressFactory::CreateP2wshMultisigAddress(
     uint32_t require_num, const std::vector<Pubkey>& pubkeys) const {
   Script script = ScriptUtil::CreateMultisigRedeemScript(require_num, pubkeys);
-  return Address(type_, wit_ver_, script, prefix_list_);
+  return Address(type_, WitnessVersion::kVersion0, script, prefix_list_);
+}
+
+Address AddressFactory::CreateTaprootAddress(
+    const SchnorrPubkey& pubkey) const {
+  return Address(type_, WitnessVersion::kVersion1, pubkey, prefix_list_);
+}
+
+Address AddressFactory::CreateTaprootAddress(
+    const TaprootMerkleTree& tree,
+    const SchnorrPubkey& internal_pubkey) const {
+  auto pk = tree.GetTweakedPubkey(internal_pubkey);
+  return CreateTaprootAddress(pk);
+}
+
+Address AddressFactory::CreateTaprootAddress(const ByteData256& hash) const {
+  return Address(
+      type_, WitnessVersion::kVersion1, SchnorrPubkey(hash), prefix_list_);
 }
 
 bool AddressFactory::CheckAddressNetType(

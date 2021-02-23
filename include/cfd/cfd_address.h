@@ -14,7 +14,9 @@
 #include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_bytedata.h"
 #include "cfdcore/cfdcore_key.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 #include "cfdcore/cfdcore_script.h"
+#include "cfdcore/cfdcore_taproot.h"
 
 namespace cfd {
 
@@ -23,9 +25,12 @@ using cfd::core::AddressFormatData;
 using cfd::core::AddressType;
 using cfd::core::ByteData;
 using cfd::core::ByteData160;
+using cfd::core::ByteData256;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrPubkey;
 using cfd::core::Script;
+using cfd::core::TaprootMerkleTree;
 using cfd::core::WitnessVersion;
 
 /**
@@ -159,6 +164,30 @@ class CFD_EXPORT AddressFactory {
    */
   Address CreateP2wshMultisigAddress(
       uint32_t require_num, const std::vector<Pubkey>& pubkeys) const;
+
+  /**
+   * @brief Create taproot address by schnorr pubkey.
+   * @param[in] pubkey      schnorr pubkey
+   * @return Address by taproot
+   */
+  Address CreateTaprootAddress(const SchnorrPubkey& pubkey) const;
+
+  /**
+   * @brief Create taproot address by tapscript.
+   * @param[in] tree                merkle tree
+   * @param[in] internal_pubkey     internal schnorr pubkey
+   * @return Address by taproot
+   */
+  Address CreateTaprootAddress(
+      const TaprootMerkleTree& tree,
+      const SchnorrPubkey& internal_pubkey) const;
+
+  /**
+   * @brief Create taproot address by hash.
+   * @param[in] hash      hash
+   * @return Address by taproot
+   */
+  Address CreateTaprootAddress(const ByteData256& hash) const;
 
   /**
    * @brief check address's network type is valid.
