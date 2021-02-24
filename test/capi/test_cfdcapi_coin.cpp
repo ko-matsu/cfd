@@ -134,8 +134,8 @@ TEST(cfdcapi_coin, EstimateFeeTest) {
     ret = CfdFinalizeEstimateFee(
         handle, fee_handle, kTxData, nullptr, &tx_fee, &utxo_fee, true, 20.0);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(static_cast<int64_t>(2780), tx_fee);
-    EXPECT_EQ(static_cast<int64_t>(3600), utxo_fee);
+    EXPECT_EQ(static_cast<int64_t>(2820), tx_fee);
+    EXPECT_EQ(static_cast<int64_t>(3660), utxo_fee);
 
     ret = CfdFreeEstimateFeeHandle(handle, fee_handle);
     EXPECT_EQ(kCfdSuccess, ret);
@@ -386,7 +386,7 @@ TEST(cfdcapi_coin, CfCoinSelection_BTC1) {
     int64_t utxo_fee_amount = 0;
     ret = CfdFinalizeCoinSelection(handle, coin_select_handle, &utxo_fee_amount);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(7200, utxo_fee_amount);
+    EXPECT_EQ(7360, utxo_fee_amount);
 
     int32_t utxo_index = 0;
     std::vector<int32_t> indexes;
@@ -490,7 +490,7 @@ TEST(cfdcapi_coin, CfCoinSelection_Asset1) {
     int64_t utxo_fee_amount = 0;
     ret = CfdFinalizeCoinSelection(handle, coin_select_handle, &utxo_fee_amount);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(9100, utxo_fee_amount);
+    EXPECT_EQ(9200, utxo_fee_amount);
 
     int32_t utxo_index = 0;
     std::vector<int32_t> indexes;

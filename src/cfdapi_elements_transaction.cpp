@@ -668,7 +668,7 @@ Amount ElementsTransactionApi::EstimateFee(
     witness_size += wit_size;
     if (wit_size == 0) ++not_witness_count;
   }
-  if ((not_witness_count != 0) &&
+  if ((witness_size != 0) && (not_witness_count != 0) &&
       (not_witness_count < static_cast<uint32_t>(utxos.size()))) {
     // append witness size for p2pkh or p2sh
     witness_size += not_witness_count * 4;
@@ -677,13 +677,20 @@ Amount ElementsTransactionApi::EstimateFee(
   uint32_t utxo_vsize =
       AbstractTransaction::GetVsizeFromSize(size, witness_size);
 
+  uint32_t tx_witness_size = 0;
+  uint32_t tx_size = 0;
+  txc.GetSizeIgnoreTxIn(
+      is_blind, &tx_witness_size, &tx_size, exponent, minimum_bits,
+      asset_count);
   uint32_t tx_vsize =
-      txc.GetVsizeIgnoreTxIn(is_blind, exponent, minimum_bits, asset_count);
+      AbstractTransaction::GetVsizeFromSize(tx_size, tx_witness_size);
 
   FeeCalculator fee_calc(effective_fee_rate);
   Amount tx_fee_amount = fee_calc.GetFee(tx_vsize);
   Amount utxo_fee_amount = fee_calc.GetFee(utxo_vsize);
-  Amount fee = tx_fee_amount + utxo_fee_amount;
+  uint32_t total_vsize = AbstractTransaction::GetVsizeFromSize(
+      tx_size + size, tx_witness_size + witness_size);
+  Amount fee = fee_calc.GetFee(total_vsize);
 
   if (txout_fee) *txout_fee = tx_fee_amount;
   if (utxo_fee) *utxo_fee = utxo_fee_amount;

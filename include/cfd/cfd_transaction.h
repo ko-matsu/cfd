@@ -174,16 +174,18 @@ class CFD_EXPORT TransactionContext : public Transaction {
   virtual uint32_t AddTxOut(const Address& address, const Amount& value);
 
   /**
-   * @brief TxInを除外したサイズを取得する。
-   * @return TxInを除外したTxサイズ(Serialize)
+   * @brief Get the size excluding TxIn.
+   * @param[in] use_witness     witness use flag.
+   * @return Tx size excluding TxIn
    */
-  uint32_t GetSizeIgnoreTxIn() const;
+  uint32_t GetSizeIgnoreTxIn(bool use_witness = true) const;
 
   /**
-   * @brief TxInを除外した仮想サイズを取得する。
-   * @return TxInを除外したTx仮想サイズ(Serialize)
+   * @brief Get the virtual size excluding TxIn.
+   * @param[in] use_witness     witness use flag.
+   * @return Tx virtual size excluding TxIn
    */
-  uint32_t GetVsizeIgnoreTxIn() const;
+  uint32_t GetVsizeIgnoreTxIn(bool use_witness = true) const;
 
   // state-sequence-api
   /**

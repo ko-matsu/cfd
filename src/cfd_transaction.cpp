@@ -227,8 +227,9 @@ uint32_t TransactionContext::AddTxOut(
   return AddTxOut(value, address.GetLockingScript());
 }
 
-uint32_t TransactionContext::GetSizeIgnoreTxIn() const {
+uint32_t TransactionContext::GetSizeIgnoreTxIn(bool use_witness) const {
   uint32_t result = AbstractTransaction::kTransactionMinimumSize;
+  if (use_witness) result += 2;
   std::vector<TxOutReference> txouts = GetTxOutList();
   for (const auto& txout : txouts) {
     result += txout.GetSerializeSize();
@@ -236,8 +237,9 @@ uint32_t TransactionContext::GetSizeIgnoreTxIn() const {
   return result;
 }
 
-uint32_t TransactionContext::GetVsizeIgnoreTxIn() const {
-  return AbstractTransaction::GetVsizeFromSize(GetSizeIgnoreTxIn(), 0);
+uint32_t TransactionContext::GetVsizeIgnoreTxIn(bool use_witness) const {
+  return AbstractTransaction::GetVsizeFromSize(
+      GetSizeIgnoreTxIn(use_witness), 0);
 }
 
 void TransactionContext::AddInput(const UtxoData& utxo) {
