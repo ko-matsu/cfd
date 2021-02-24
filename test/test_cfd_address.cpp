@@ -5,13 +5,9 @@
 #include "cfd/cfd_address.h"
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_elements_address.h"
-
-
-// https://qiita.com/yohm/items/477bac065f4b772127c7
-
-// The main function are using gtest's main().
-
-// TEST(test_suite_name, test_name)
+#include "cfdcore/cfdcore_schnorrsig.h"
+#include "cfdcore/cfdcore_script.h"
+#include "cfdcore/cfdcore_taproot.h"
 
 using cfd::core::Address;
 using cfd::core::AddressType;
@@ -21,7 +17,11 @@ using cfd::core::CfdException;
 using cfd::core::GetBitcoinAddressFormatList;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrPubkey;
 using cfd::core::Script;
+using cfd::core::ScriptBuilder;
+using cfd::core::ScriptOperator;
+using cfd::core::TaprootScriptTree;
 using cfd::core::WitnessVersion;
 using cfd::AddressFactory;
 
@@ -305,6 +305,25 @@ TEST(AddressFactory, CreateP2wshMultisigAddress)
    EXPECT_THROW(factory.CreateP2wshMultisigAddress(5, pubkeys), CfdException);
 }
 
+TEST(AddressFactory, CreateTaprootAddress)
+{
+  AddressFactory factory;
+  Address addr;
+  const SchnorrPubkey pubkey = SchnorrPubkey(
+    "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb");
+  EXPECT_NO_THROW(addr = factory.CreateTaprootAddress(pubkey));
+  EXPECT_EQ("bc1pzamhq9jglfxaj0r5ahvatr8uc77u973s5tm04yytdltsey5r8naspp3kr4", addr.GetAddress());
+
+  EXPECT_NO_THROW(addr = factory.CreateTaprootAddress(pubkey.GetByteData256()));
+  EXPECT_EQ("bc1pzamhq9jglfxaj0r5ahvatr8uc77u973s5tm04yytdltsey5r8naspp3kr4", addr.GetAddress());
+
+  ScriptBuilder build;
+  build.AppendOperator(ScriptOperator::OP_TRUE);
+  TaprootScriptTree tree(build.Build());
+  EXPECT_NO_THROW(addr = factory.CreateTaprootAddress(tree, pubkey));
+  EXPECT_EQ("bc1p3r0p5kdn3yultra5lrzlls74vwgdg057j8rmr4nlj8s8pucss7vsftyvah", addr.GetAddress());
+}
+
 TEST(AddressFactory, CheckAddressNetType_bitcoin)
 {
   AddressFactory factory(NetType::kMainnet, GetBitcoinAddressFormatList());
@@ -539,4 +558,16 @@ TEST(AddressFactory, GetAddressByLockingScript)
   EXPECT_STREQ(address.GetHash().GetHex().c_str(), "87cb0bc07de5b5befd7565b2c63fb1681efd8af7bd85a3f0f98a529a5c50a437");
   EXPECT_EQ(address.GetAddressType(), AddressType::kP2wshAddress);
   EXPECT_STREQ(address.GetAddress().c_str(), "bc1qsl9shsrauk6malt4vkevv0a3dq00mzhhhkz68u8e3fff5hzs5smsz3fm4a");
+  
+  script = Script("51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb");
+  EXPECT_NO_THROW(address = factory.GetAddressByLockingScript(script));
+  EXPECT_STREQ(address.GetHash().GetHex().c_str(), "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb");
+  EXPECT_EQ(address.GetAddressType(), AddressType::kTaprootAddress);
+  EXPECT_STREQ(address.GetAddress().c_str(), "bc1pzamhq9jglfxaj0r5ahvatr8uc77u973s5tm04yytdltsey5r8naspp3kr4");
+  
+  script = Script("512088de1a59b38939f58fb4f8c5ffc3d56390d43e9e91c7b1d67f91e070f3108799");
+  EXPECT_NO_THROW(address = factory.GetAddressByLockingScript(script));
+  EXPECT_STREQ(address.GetHash().GetHex().c_str(), "88de1a59b38939f58fb4f8c5ffc3d56390d43e9e91c7b1d67f91e070f3108799");
+  EXPECT_EQ(address.GetAddressType(), AddressType::kTaprootAddress);
+  EXPECT_STREQ(address.GetAddress().c_str(), "bc1p3r0p5kdn3yultra5lrzlls74vwgdg057j8rmr4nlj8s8pucss7vsftyvah");
 }

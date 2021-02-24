@@ -34,6 +34,7 @@ using cfd::core::ScriptElement;
 using cfd::core::ScriptOperator;
 using cfd::core::ScriptType;
 using cfd::core::ScriptUtil;
+using cfd::core::TaprootScriptTree;
 using cfd::core::WitnessVersion;
 
 AddressFactory::AddressFactory()
@@ -156,15 +157,14 @@ Address AddressFactory::CreateTaprootAddress(
 }
 
 Address AddressFactory::CreateTaprootAddress(
-    const TaprootMerkleTree& tree,
+    const TaprootScriptTree& tree,
     const SchnorrPubkey& internal_pubkey) const {
   auto pk = tree.GetTweakedPubkey(internal_pubkey);
   return CreateTaprootAddress(pk);
 }
 
 Address AddressFactory::CreateTaprootAddress(const ByteData256& hash) const {
-  return Address(
-      type_, WitnessVersion::kVersion1, SchnorrPubkey(hash), prefix_list_);
+  return CreateTaprootAddress(SchnorrPubkey(hash));
 }
 
 bool AddressFactory::CheckAddressNetType(

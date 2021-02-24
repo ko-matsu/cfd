@@ -30,7 +30,7 @@ using cfd::core::NetType;
 using cfd::core::Pubkey;
 using cfd::core::SchnorrPubkey;
 using cfd::core::Script;
-using cfd::core::TaprootMerkleTree;
+using cfd::core::TaprootScriptTree;
 using cfd::core::WitnessVersion;
 
 /**
@@ -179,7 +179,7 @@ class CFD_EXPORT AddressFactory {
    * @return Address by taproot
    */
   Address CreateTaprootAddress(
-      const TaprootMerkleTree& tree,
+      const TaprootScriptTree& tree,
       const SchnorrPubkey& internal_pubkey) const;
 
   /**
