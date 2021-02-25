@@ -2,7 +2,7 @@
 /**
  * @file cfd_transaction.h
  *
- * @brief Transaction操作の関連クラス定義
+ * @brief Related class definition for Transaction operation
  */
 #ifndef CFD_INCLUDE_CFD_CFD_TRANSACTION_H_
 #define CFD_INCLUDE_CFD_CFD_TRANSACTION_H_
@@ -18,7 +18,9 @@
 #include "cfdcore/cfdcore_amount.h"
 #include "cfdcore/cfdcore_coin.h"
 #include "cfdcore/cfdcore_key.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 #include "cfdcore/cfdcore_script.h"
+#include "cfdcore/cfdcore_taproot.h"
 #include "cfdcore/cfdcore_transaction.h"
 #include "cfdcore/cfdcore_util.h"
 
@@ -32,8 +34,11 @@ using cfd::core::ByteData;
 using cfd::core::OutPoint;
 using cfd::core::Privkey;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrPubkey;
+using cfd::core::SchnorrSignature;
 using cfd::core::Script;
 using cfd::core::SigHashType;
+using cfd::core::TaprootScriptTree;
 using cfd::core::Transaction;
 using cfd::core::Txid;
 using cfd::core::TxInReference;
@@ -92,9 +97,9 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   using Transaction::GetTxInIndex;
   /**
-   * @brief TxInのindexを取得する.
+   * @brief Get the index of TxIn.
    * @param[in] outpoint  TxIn txid and vout
-   * @return 条件に合致するTxInのindex番号
+   * @return TxIn index
    */
   virtual uint32_t GetTxInIndex(const OutPoint& outpoint) const;
   /**
@@ -102,34 +107,34 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   using Transaction::GetTxOutIndex;
   /**
-   * @brief TxOutのindexを取得する.
+   * @brief Get the index of TxOut.
    * @param[in] address  address
-   * @return 条件に合致するTxOutのindex番号
+   * @return TxOut index
    */
   virtual uint32_t GetTxOutIndex(const Address& address) const;
   /**
-   * @brief TxInの有無を確認する.
+   * @brief Exist for TxIn.
    * @param[in] outpoint  TxIn txid and vout
    * @param[out] index  txout index.
-   * @retval true  存在
-   * @retval false 未存在
+   * @retval true   exist
+   * @retval false  not exist
    */
   bool IsFindTxIn(const OutPoint& outpoint, uint32_t* index = nullptr) const;
   /**
-   * @brief TxOutの有無を確認する.
+   * @brief Check if TxOut exists.
    * @param[in] locking_script  locking script
    * @param[out] index  txout index.
-   * @retval true  存在
-   * @retval false 未存在
+   * @retval true   exist
+   * @retval false  not exist
    */
   bool IsFindTxOut(
       const Script& locking_script, uint32_t* index = nullptr) const;
   /**
-   * @brief TxOutの有無を確認する.
+   * @brief Check if TxOut exists.
    * @param[in] address  address
    * @param[out] index  txout index.
-   * @retval true  存在
-   * @retval false 未存在
+   * @retval true   exist
+   * @retval false  not exist
    */
   bool IsFindTxOut(const Address& address, uint32_t* index = nullptr) const;
   /**
@@ -156,9 +161,9 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   using Transaction::AddTxIn;
   /**
-   * @brief TxInを追加する.
+   * @brief Add TxIn.
    * @param[in] outpoint  TxIn txid and vout
-   * @return 追加したTxInのindex位置
+   * @return Index position of added TxIn
    */
   virtual uint32_t AddTxIn(const OutPoint& outpoint);
   /**
@@ -166,10 +171,10 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   using Transaction::AddTxOut;
   /**
-   * @brief TxOutを追加する.
-   * @param[in] address  送金先アドレス
-   * @param[in] value  送金額
-   * @return 追加したTxOutのIndex番号
+   * @brief Add TxOut.
+   * @param[in] address  Remittance destination address
+   * @param[in] value  Amount
+   * @return TxOut Index
    */
   virtual uint32_t AddTxOut(const Address& address, const Amount& value);
 
@@ -251,41 +256,29 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   ByteData Finalize();
 
-#if 0
-  /**
-   * @brief clear sign area all.
-   */
-  void ClearSign();
-  /**
-   * @brief clear sign area on outpoint.
-   * @param[in] outpoint    utxo target.
-   */
-  void ClearSign(const OutPoint& outpoint);
-#endif
-
   // sign-api
   /**
-   * @brief 指定されたPubkeyHash形式のTxInのSignatureHashを計算する.
-   * @param[in] outpoint SignatureHash算出対象のTxInのtxid&vout
-   * @param[in] pubkey SignatureHashの公開鍵
-   * @param[in] sighash_type SigHashType値
-   * @param[in] value TxInで指定したUTXOのamount
-   * @param[in] version TxInで指定したUTXOのWitnessVersion
-   * @return 算出されたSignatureHashのHex文字列
+   * @brief Calculates the TxIn Signature Hash in the specified PubkeyHash format.
+   * @param[in] outpoint TxIn txid and vout
+   * @param[in] pubkey  Public key
+   * @param[in] sighash_type SigHash type
+   * @param[in] value UTXO amount specified by TxIn
+   * @param[in] version Witness Version of UTXO specified by TxIn
+   * @return Signature hash
    */
   virtual ByteData CreateSignatureHash(
       const OutPoint& outpoint, const Pubkey& pubkey, SigHashType sighash_type,
       const Amount& value = Amount(),
       WitnessVersion version = WitnessVersion::kVersionNone) const;
   /**
-   * @brief 指定されたScriptHash形式のTxInのSignatureHashを計算する.
-   * @details OP_CODESEPARATORが存在するScriptについては未対応
-   * @param[in] outpoint SignatureHash算出対象のTxInのtxid&vout
-   * @param[in] redeem_script ScriptHashのRedeem Script
-   * @param[in] sighash_type SigHashType値
-   * @param[in] value TxInで指定したUTXOのamount
-   * @param[in] version TxInで指定したUTXOのWitnessVersion
-   * @return 算出されたSignatureHashのHex文字列
+   * @brief Calculates the TxIn Signature Hash in the specified ScriptHash format.
+   * @details Not supported for Scripts with OP_CODESEPARATOR
+   * @param[in] outpoint TxIn txid and vout
+   * @param[in] redeem_script   Script Hash Redeem Script
+   * @param[in] sighash_type    SigHash type
+   * @param[in] value UTXO amount specified by TxIn
+   * @param[in] version Witness Version of UTXO specified by TxIn
+   * @return Signature hash
    */
   virtual ByteData CreateSignatureHash(
       const OutPoint& outpoint, const Script& redeem_script,
@@ -293,14 +286,30 @@ class CFD_EXPORT TransactionContext : public Transaction {
       WitnessVersion version = WitnessVersion::kVersionNone) const;
 
   /**
-   * @brief 指定されたPubkeyHash形式のTxInに署名する.
-   * @param[in] outpoint    TxIn
-   * @param[in] pubkey      SignatureHashの公開鍵
-   * @param[in] privkey     SignatureHashの秘密鍵
-   * @param[in] sighash_type SigHashType値
-   * @param[in] value TxInで指定したUTXOのamount
-   * @param[in] address_type address-type.(P2WPKH, P2SH-P2WPKH, P2PKH)
-   * @param[in] has_grind_r signature計算時のオプション
+   * @brief Calculate Taproot Signature Hash.
+   * @details It is necessary to set UTXO of all Inputs in advance.
+   * @param[in] outpoint        target outpoint
+   * @param[in] sighash_type    sighash type
+   * @param[in] tap_leaf_hash   tapleaf hash.
+   * @param[in] code_separator_position     OP_CODESEPARATOR position.
+   * @param[in] annex           annex byte data.
+   * @return Signature hash
+   */
+  virtual ByteData CreateSignatureHashByTaproot(
+      const OutPoint& outpoint, SigHashType sighash_type,
+      const ByteData256* tap_leaf_hash = nullptr,
+      uint32_t code_separator_position = 0,
+      const ByteData* annex = nullptr) const;
+
+  /**
+   * @brief Sign the specified TxIn with pubkey hash.
+   * @param[in] outpoint        outpoint
+   * @param[in] pubkey          Public key
+   * @param[in] privkey         Private key
+   * @param[in] sighash_type    SigHash Type
+   * @param[in] value           amount of UTXO
+   * @param[in] address_type    address-type.(P2WPKH, P2SH-P2WPKH, P2PKH)
+   * @param[in] has_grind_r     Grind-R option for sign.
    */
   void SignWithPrivkeySimple(
       const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
@@ -309,8 +318,24 @@ class CFD_EXPORT TransactionContext : public Transaction {
       bool has_grind_r = true);
 
   /**
+   * @brief Sign the specified TxIn with Taproot.
+   * @details It is necessary to set UTXO of all Inputs in advance.
+   * @param[in] outpoint        outpoint
+   * @param[in] privkey         private key for schnorr pubkey
+   * @param[in] sighash_type    SigHashType
+   * @param[in] has_grind_r     Grind-R option for sign.
+   * @param[in] aux_rand        auxiliary random data used to create the nonce.
+   * @param[in] annex           annex byte data.
+   */
+  void SignWithSchnorrPrivkeySimple(
+      const OutPoint& outpoint, const Privkey& privkey,
+      SigHashType sighash_type = SigHashType(), bool has_grind_r = true,
+      const ByteData256& aux_rand = ByteData256(),
+      const ByteData& annex = ByteData());
+
+  /**
    * @brief add pubkey-hash sign data to target outpoint.
-   * @param[in] outpoint        TxIn
+   * @param[in] outpoint        outpoint
    * @param[in] signature       signature
    * @param[in] pubkey          pubkey
    * @param[in] address_type    address-type.(P2WPKH, P2SH-P2WPKH, P2PKH)
@@ -334,11 +359,12 @@ class CFD_EXPORT TransactionContext : public Transaction {
 
   /**
    * @brief add multisig sign data to target outpoint.
-   * @details 追加するsignatureの順序は、redeem
-   * scriptのpubkeyとsignatures内のrelatedPubkeyで
-   *   対応をとって自動的に整列される.
-   * (relatedPubkeyが設定されていない場合は、relatedPubkeyが
-   *   設定されているsignatureを追加した後にsignParamの順序でsignatureを追加)
+   * @details The order of the signatures to be added is \
+   *    automatically arranged by correspondence between \
+   *    the pubkey of the redeem script and the relatedPubkey \
+   *    in the signatures.
+   *    (If relatedPubkey is not set, add signatures in the order of \
+   *    signParam after adding signatures with relatedPubkey set)
    * @param[in] outpoint          TxIn
    * @param[in] signatures        signature list
    * @param[in] redeem_script     redeem script
@@ -347,6 +373,25 @@ class CFD_EXPORT TransactionContext : public Transaction {
   void AddMultisigSign(
       const OutPoint& outpoint, const std::vector<SignParameter>& signatures,
       const Script& redeem_script, AddressType hash_type);
+
+  /**
+   * @brief add schnorr-taproot sign data to target outpoint.
+   * @param[in] outpoint        TxIn outpoint
+   * @param[in] signature       signature
+   */
+  void AddSign(const OutPoint& outpoint, const SchnorrSignature& signature);
+
+  /**
+   * @brief add schnorr-taproot sign data to target outpoint.
+   * @param[in] outpoint            xIn outpoint
+   * @param[in] tree                script tree
+   * @param[in] internal_pubkey     internal schnorr pubkey
+   * @param[in] sign_data_list      sign data list
+   */
+  void AddTaprootSign(
+      const OutPoint& outpoint, const TaprootScriptTree& tree,
+      const SchnorrPubkey& internal_pubkey,
+      const std::vector<SignParameter>& sign_data_list);
 
   /**
    * @brief add sign data to target outpoint.
@@ -400,15 +445,15 @@ class CFD_EXPORT TransactionContext : public Transaction {
       WitnessVersion version = WitnessVersion::kVersionNone) const;
 
   /**
-   * @brief ロックタイムからデフォルトのシーケンス番号を取得する。
-   * @retval 0xffffffff     locktime値無効
-   * @retval 0xfffffffe     locktime値有効
+   * @brief Get the default sequence number from the lock time.
+   * @retval 0xffffffff     locktime disable
+   * @retval 0xfffffffe     locktime enable
    */
   uint32_t GetDefaultSequence() const;
 
   /**
-   * @brief ロックタイムからlocktime値無効のシーケンス番号を取得する。
-   * @retval 0xffffffff     locktime値無効
+   * @brief Get the default sequence number from the lock time.
+   * @retval 0xffffffff     locktime disable
    */
   static uint32_t GetLockTimeDisabledSequence();
 

@@ -2,7 +2,7 @@
 /**
  * @file cfd_address.h
  *
- * @brief Address操作の関連クラス定義
+ * @brief Related class definition for Address operation
  */
 #ifndef CFD_INCLUDE_CFD_CFD_ADDRESS_H_
 #define CFD_INCLUDE_CFD_CFD_ADDRESS_H_
@@ -34,30 +34,30 @@ using cfd::core::TaprootScriptTree;
 using cfd::core::WitnessVersion;
 
 /**
- * @brief Addressを生成するFactoryクラス
+ * @brief Factory class that generates Address
  */
 class CFD_EXPORT AddressFactory {
  public:
   /**
-   * @brief コンストラクタ.
+   * @brief Constructor.
    */
   AddressFactory();
 
   /**
-   * @brief コンストラクタ.
+   * @brief Constructor.
    * @param[in] type      network type
    */
   explicit AddressFactory(NetType type);
 
   /**
-   * @brief コンストラクタ.
+   * @brief Constructor.
    * @param[in] type      network type
    * @param[in] wit_ver   witness version
    */
   explicit AddressFactory(NetType type, WitnessVersion wit_ver);
 
   /**
-   * @brief コンストラクタ.
+   * @brief Constructor.
    * @param[in] type          network type
    * @param[in] wit_ver       witness version
    * @param[in] prefix_list   address prefix list
@@ -67,7 +67,7 @@ class CFD_EXPORT AddressFactory {
       const std::vector<AddressFormatData>& prefix_list);
 
   /**
-   * @brief コンストラクタ.
+   * @brief Constructor.
    * @param[in] type          network type
    * @param[in] prefix_list   address prefix list
    */
@@ -75,28 +75,28 @@ class CFD_EXPORT AddressFactory {
       NetType type, const std::vector<AddressFormatData>& prefix_list);
 
   /**
-   * @brief デストラクタ.
+   * @brief Destructor.
    */
   virtual ~AddressFactory() {
     // do nothing
   }
 
   /**
-   * @brief アドレスを作成する
-   * @param[in] address_string address文字列
+   * @brief Create an address
+   * @param[in] address_string  address string
    * @return address
    */
   Address GetAddress(const std::string& address_string) const;
 
   /**
-   * @brief LockingScriptからアドレスを作成する
+   * @brief Create an address from locking script
    * @param[in] locking_script  locking script
    * @return address
    */
   Address GetAddressByLockingScript(const Script& locking_script) const;
 
   /**
-   * @brief Hash情報からアドレスを作成する
+   * @brief Create an address from hash data
    * @param[in] address_type  address type
    * @param[in] hash          hash data
    * @return address
@@ -104,7 +104,7 @@ class CFD_EXPORT AddressFactory {
   Address GetAddressByHash(
       AddressType address_type, const ByteData& hash) const;
   /**
-   * @brief Hash情報からアドレスを作成する
+   * @brief Create an address from hash data
    * @param[in] address_type  address type
    * @param[in] hash          hash data
    * @return address
@@ -129,38 +129,38 @@ class CFD_EXPORT AddressFactory {
       const ByteData& hash, WitnessVersion version) const;
 
   /**
-   * @brief P2PKHアドレスを生成する.
-   * @param[in] pubkey  Pubkeyインスタンス
-   * @return P2PKHアドレスのAddressインスタンス
+   * @brief Create a P2PKH address.
+   * @param[in] pubkey  Pubkey
+   * @return address
    */
   Address CreateP2pkhAddress(const Pubkey& pubkey) const;
 
   /**
-   * @brief P2SHのアドレスを生成する.
-   * @param[in] script  Scriptインスタンス
-   * @return P2SHアドレスのAddressインスタンス
+   * @brief Create a P2SH address.
+   * @param[in] script  Redeem script
+   * @return address
    */
   Address CreateP2shAddress(const Script& script) const;
 
   /**
-   * @brief P2WPKHのアドレスを生成する.
-   * @param[in] pubkey      Pubkeyインスタンス
-   * @return P2WPKHのAddressインスタンス
+   * @brief Create a P2WPKH address.
+   * @param[in] pubkey      Pubkey
+   * @return address
    */
   Address CreateP2wpkhAddress(const Pubkey& pubkey) const;
 
   /**
-   * @brief P2WSHのアドレスを生成する.
-   * @param[in] script      Scriptインスタンス
-   * @return P2WSHのAddressインスタンス
+   * @brief Create a P2WSH address.
+   * @param[in] script      Redeem script
+   * @return address
    */
   Address CreateP2wshAddress(const Script& script) const;
 
   /**
-   * @brief P2WSHのMultisig(n of m)アドレスを生成する.
-   * @param[in] require_num signature要求数(n)
-   * @param[in] pubkeys     Pubkeyリスト(m)
-   * @return P2WSH MultisigのAddressインスタンス
+   * @brief Create a P2WSH Multisig (n of m) address.
+   * @param[in] require_num     signature require num(n)
+   * @param[in] pubkeys         Pubkey list(m)
+   * @return address
    */
   Address CreateP2wshMultisigAddress(
       uint32_t require_num, const std::vector<Pubkey>& pubkeys) const;

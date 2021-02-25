@@ -2,7 +2,7 @@
 /**
  * @file cfd_transaction_common.h
  *
- * @brief Transaction操作共通の関連クラス定義
+ * @brief Related class definition common to Transaction operations
  */
 #ifndef CFD_INCLUDE_CFD_CFD_TRANSACTION_COMMON_H_
 #define CFD_INCLUDE_CFD_CFD_TRANSACTION_COMMON_H_
@@ -47,7 +47,7 @@ using cfd::core::ElementsConfidentialAddress;
 
 /**
  * @typedef SignDataType
- * @brief SignData種別
+ * @brief Sign data type
  */
 enum SignDataType {
   kSign = 0,
@@ -58,7 +58,7 @@ enum SignDataType {
 };
 
 /**
- * @brief UTXO構造体
+ * @brief UTXO structure
  */
 struct UtxoData {
   uint64_t block_height;     //!< blick高
@@ -85,7 +85,7 @@ struct UtxoData {
 };
 
 /**
- * @brief Coin関連のAPIクラス
+ * @brief Utxo related API classes
  */
 class CFD_EXPORT UtxoUtil {
  public:
@@ -112,16 +112,16 @@ class CFD_EXPORT UtxoUtil {
 };
 
 /**
- * @brief Sign生成のためのデータモデル
+ * @brief Data model for sign generation
  */
 class CFD_EXPORT SignParameter {
  public:
   /**
-   * @brief コンストラクタ(for vector)
+   * @brief constructor(for vector)
    */
   SignParameter();
   /**
-   * @brief コンストラクタ(Type: auto)
+   * @brief constructor(Type: auto)
    * @param[in] text_message            text data
    * @param[in] der_encode              flag of need der encode
    * @param[in] sighash_type            sighash type (SigHashType)
@@ -131,7 +131,7 @@ class CFD_EXPORT SignParameter {
       const SigHashType sighash_type =
           SigHashType(SigHashAlgorithm::kSigHashAll));
   /**
-   * @brief コンストラクタ(Type: Sign)
+   * @brief constructor(Type: Sign)
    * @param[in] data                    byte data
    * @param[in] der_encode              flag of need der encode
    * @param[in] sighash_type            sighash type (SigHashType)
@@ -141,44 +141,44 @@ class CFD_EXPORT SignParameter {
       const SigHashType sighash_type =
           SigHashType(SigHashAlgorithm::kSigHashAll));
   /**
-   * @brief コンストラクタ(Type: Binary)
+   * @brief constructor(Type: Binary)
    * @param[in] data  data
    */
   explicit SignParameter(const ByteData& data);
   /**
-   * @brief コンストラクタ(Type: Pubkey)
+   * @brief constructor(Type: Pubkey)
    * @param[in] pubkey  pubkey data
    */
   explicit SignParameter(const Pubkey& pubkey);
   /**
-   * @brief コンストラクタ(Type: RedeemScript)
+   * @brief constructor(Type: RedeemScript)
    * @param[in] redeem_script  redeem script data
    */
   explicit SignParameter(const Script& redeem_script);
   /**
-   * @brief コンストラクタ(Type: ScriptOperator)
+   * @brief constructor(Type: ScriptOperator)
    * @param[in] op_code  op code
    */
   explicit SignParameter(const ScriptOperator& op_code);
   /**
-   * @brief コピーコンストラクタ.
-   * @param[in] sign_parameter     Sign生成情報オブジェクト
+   * @brief copy constructor.
+   * @param[in] sign_parameter     object
    */
   SignParameter(const SignParameter& sign_parameter);
   /**
-   * @brief コピーコンストラクタ.
-   * @param[in] sign_parameter     Sign生成情報オブジェクト
-   * @return SignParameterオブジェクト
+   * @brief copy constructor.
+   * @param[in] sign_parameter     object
+   * @return object
    */
   SignParameter& operator=(const SignParameter& sign_parameter);
   /**
-   * @brief RelatedPubkeyのセット
+   * @brief Set the related pubkey.
    * @param[in] pubkey  realated pubkey
    */
   void SetRelatedPubkey(const Pubkey& pubkey);
 
   /**
-   * @brief dataを取得する
+   * @brief Get data
    * @return data
    */
   ByteData GetData() const;
@@ -194,27 +194,27 @@ class CFD_EXPORT SignParameter {
    */
   bool IsOpCode() const;
   /**
-   * @brief data typeを取得する
+   * @brief Get data type
    * @return data
    */
   SignDataType GetDataType() const;
   /**
-   * @brief RelatedPubkeyを取得する
+   * @brief Get RelatedPubkey
    * @return related pubkey data
    */
   Pubkey GetRelatedPubkey() const;
   /**
-   * @brief DerEncodeフラグを取得する
-   * @return der encode 実施フラグ
+   * @brief Get DerEncode
+   * @return der encode use flag
    */
   bool IsDerEncode() const;
   /**
-   * @brief SigHashTypeを取得する
+   * @brief Get sighash type
    * @return sighash type
    */
   SigHashType GetSigHashType() const;
   /**
-   * @brief 格納された情報でdataをsignatureへ変換する
+   * @brief Convert data to signature with stored information
    * @return signature data
    */
   ByteData ConvertToSignature() const;
