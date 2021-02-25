@@ -1,12 +1,53 @@
 # Crypto Finance Development Kit (CFD)
 
-cfd library in C/C++
-
-<!-- TODO: Write Summary and Overview
+CFD library for C/C++.
 
 ## Overview
 
--->
+This library is development kit for crypto finance application.
+Useful when developing applications for cryptocurrencies.
+
+### Target Network
+
+- Bitcoin
+- Liquid Network
+
+### Support function by cfd
+
+- Estimate Fee
+- Coin Selection (FundRawTransaction)
+- Simple pubkey-hash sign / verify
+- C language API (for reference from other languages)
+- from cfd-core function:
+  - Bitcoin
+    - Bitcoin Script (builder, viewer)
+    - Transaction
+    - PSBT (v0)
+    - ECDSA Pubkey/Privkey (TweakAdd/Mul, Negate, Sign, Verify)
+    - BIP32, BIP39
+    - Output Descriptor (contains miniscript parser)
+    - Schnorr/Taproot
+    - Bitcoin Address (Segwit-v0, Segwit-v1, P2PKH/P2SH)
+  - Liquid Network
+    - Confidential Transaction
+      - Blind, Unblind
+      - Issuance, Reissuance
+      - PegIn, PegOut
+    - Confidential Address
+
+### Libraries for each language
+
+- C++ : cfd-core
+  - Core library. Definition base class.
+- C/C++ : cfd
+  - Extend the cfd-core library. Defines the C language API and extension classes.
+- Libraries to link cfd library:
+  - JavaScript : cfd-js
+  - WebAssembly : cfd-js-wasm
+  - Python : cfd-python
+  - C# : cfd-csharp
+  - Go : cfd-go
+  - Rust : cfd-rust
 
 ## Dependencies
 
@@ -20,7 +61,8 @@ cfd library in C/C++
 
 ### Windows
 
-download and install files.
+download and install files:
+
 - [CMake](https://cmake.org/) (3.14.3 or higher)
 - Compiler or development environment (One of the following)
   - MSVC
