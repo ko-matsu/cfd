@@ -371,14 +371,6 @@ ByteData TransactionContext::Finalize() {
   return AbstractTransaction::GetData();
 }
 
-#if 0
-// priority: low
-void TransactionContext::ClearSign() { return; }
-
-// priority: low
-void TransactionContext::ClearSign(const OutPoint& outpoint) { return; }
-#endif
-
 ByteData TransactionContext::CreateSignatureHash(
     const OutPoint& outpoint, const Pubkey& pubkey, SigHashType sighash_type,
     const Amount& value, WitnessVersion version) const {

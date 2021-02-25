@@ -787,16 +787,6 @@ ByteData ConfidentialTransactionContext::Finalize() {
   return AbstractTransaction::GetData();
 }
 
-#if 0
-// priority: low
-void ConfidentialTransactionContext::ClearSign() { return; }
-
-// priority: low
-void ConfidentialTransactionContext::ClearSign(const OutPoint& outpoint) {
-  return;
-}
-#endif
-
 ByteData ConfidentialTransactionContext::CreateSignatureHash(
     const OutPoint& outpoint, const Pubkey& pubkey, SigHashType sighash_type,
     const Amount& value, WitnessVersion version) const {
