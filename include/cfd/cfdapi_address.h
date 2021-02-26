@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "cfd/cfd_address.h"
 #include "cfd/cfd_common.h"
 #include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_descriptor.h"
@@ -31,31 +32,9 @@ using cfd::core::Pubkey;
 using cfd::core::Script;
 
 /**
- * @brief DescriptorのScript系情報構造体
- */
-struct DescriptorScriptData {
-  DescriptorScriptType type;      //!< script type
-  Script locking_script;          //!< locking script
-  uint32_t depth;                 //!< depth
-  Address address;                //!< address
-  AddressType address_type;       //!< address type
-  Script redeem_script;           //!< redeem script
-  DescriptorKeyType key_type;     //!< key type
-  std::string key;                //!< key string
-  uint32_t multisig_req_sig_num;  //!< multisig num of require signatures
-};
-
-/**
- * @brief DescriptorのKey系情報構造体
- */
-struct DescriptorKeyData {
-  DescriptorKeyType type;  //!< key type
-  std::string key;         //!< key string
-};
-
-/**
  * @brief Address関連の関数群クラス
  * @details 現状は内部クラス扱い。あとで名称変更予定.
+ * @deprecated The function has moved to AddressFactory.
  */
 class CFD_EXPORT AddressApi {
  public:

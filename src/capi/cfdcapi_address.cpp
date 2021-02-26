@@ -27,9 +27,9 @@
 #include "cfdcore/cfdcore_logger.h"
 
 using cfd::AddressFactory;
+using cfd::DescriptorKeyData;
+using cfd::DescriptorScriptData;
 using cfd::api::AddressApi;
-using cfd::api::DescriptorKeyData;
-using cfd::api::DescriptorScriptData;
 using cfd::core::Address;
 using cfd::core::AddressType;
 using cfd::core::CfdError;
