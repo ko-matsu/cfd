@@ -220,16 +220,16 @@ Amount TransactionApi::EstimateFee(
   uint32_t wit_size = 0;
   uint32_t nowit_size = 0;
   uint32_t not_witness_count = 0;
-  AddressApi address_api;
   for (const auto& utxo : utxos) {
     NetType net_type = NetType::kMainnet;
     if (!utxo.address.GetAddress().empty()) {
       net_type = utxo.address.GetNetType();
     }
+    AddressFactory address_factory(net_type);
     // check descriptor
     std::string descriptor = utxo.descriptor;
     // set dummy NetType for getting AddressType.
-    auto data = address_api.ParseOutputDescriptor(descriptor, net_type, "");
+    auto data = address_factory.ParseOutputDescriptor(descriptor);
 
     AddressType addr_type;
     if (utxo.address.GetAddress().empty() ||

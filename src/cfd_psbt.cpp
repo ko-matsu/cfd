@@ -78,7 +78,6 @@ cfd::DescriptorScriptData ParseDescriptor(
     const std::string& descriptor, std::vector<KeyData>* key_list,
     NetType* net_type = nullptr) {
   std::vector<KeyData> temp_key_list;
-  cfd::api::AddressApi addr_api;
   cfd::DescriptorScriptData script_data;
   if (net_type == nullptr) {
     NetType target_list[] = {
@@ -86,9 +85,9 @@ cfd::DescriptorScriptData ParseDescriptor(
     size_t max = (sizeof(target_list) / sizeof(NetType)) - 1;
     for (size_t index = 0; index <= max; ++index) {
       try {
-        script_data = addr_api.ParseOutputDescriptor(
-            descriptor, target_list[index], "", nullptr, nullptr, nullptr,
-            &temp_key_list);
+        cfd::AddressFactory addr_factory(target_list[index]);
+        script_data = addr_factory.ParseOutputDescriptor(
+            descriptor, "", nullptr, nullptr, &temp_key_list);
         break;
       } catch (const CfdException& except) {
         if (index == max) {
@@ -97,8 +96,9 @@ cfd::DescriptorScriptData ParseDescriptor(
       }
     }
   } else {
-    script_data = addr_api.ParseOutputDescriptor(
-        descriptor, *net_type, "", nullptr, nullptr, nullptr, &temp_key_list);
+    cfd::AddressFactory addr_factory(*net_type);
+    script_data = addr_factory.ParseOutputDescriptor(
+        descriptor, "", nullptr, nullptr, &temp_key_list);
   }
   if (key_list != nullptr) {
     for (const auto& key : temp_key_list) {

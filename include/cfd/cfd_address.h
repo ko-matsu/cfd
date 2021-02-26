@@ -225,6 +225,19 @@ class CFD_EXPORT AddressFactory {
   bool CheckAddressNetType(const Address& address, NetType net_type) const;
 
   /**
+   * @brief Create address.
+   * @param[in] address_type    address type
+   * @param[in] pubkey          public key (default: nullptr)
+   * @param[in] script          script (default: nullptr)
+   * @param[out] locking_script locking script
+   * @param[out] redeem_script  redeem script
+   * @return Address
+   */
+  Address CreateAddress(
+      AddressType address_type, const Pubkey* pubkey, const Script* script,
+      Script* locking_script = nullptr, Script* redeem_script = nullptr) const;
+
+  /**
    * @brief Create a Pubkey Address list from Multisig Script.
    * @param[in] address_type    address type
    * @param[in] redeem_script   multisig script

@@ -577,8 +577,13 @@ Amount ElementsTransactionApi::EstimateFee(
   uint32_t rangeproof_size_cache = 0;
   uint32_t asset_count = 0;
   uint32_t not_witness_count = 0;
-  ElementsAddressApi address_api;
   for (const auto& utxo : utxos) {
+    NetType net_type = NetType::kLiquidV1;
+    if (!utxo.utxo.address.GetAddress().empty()) {
+      net_type = utxo.utxo.address.GetNetType();
+    }
+    ElementsAddressFactory factory(net_type);
+
     uint32_t pegin_btc_tx_size = 0;
     txin_size = 0;
     wit_size = 0;
@@ -590,8 +595,7 @@ Amount ElementsTransactionApi::EstimateFee(
     // check descriptor
     std::string descriptor = utxo.utxo.descriptor;
     // set dummy NetType for getting AddressType.
-    auto data =
-        address_api.ParseOutputDescriptor(descriptor, NetType::kLiquidV1, "");
+    auto data = factory.ParseOutputDescriptor(descriptor, "");
 
     AddressType addr_type;
     if (utxo.utxo.address.GetAddress().empty() ||

@@ -16,7 +16,6 @@
 #include "capi/cfdc_internal.h"
 #include "cfd/cfd_address.h"
 #include "cfd/cfd_elements_address.h"
-#include "cfd/cfdapi_address.h"
 #include "cfd/cfdapi_elements_address.h"
 #include "cfdc/cfdcapi_common.h"
 #include "cfdcore/cfdcore_address.h"
@@ -29,7 +28,6 @@
 using cfd::AddressFactory;
 using cfd::DescriptorKeyData;
 using cfd::DescriptorScriptData;
-using cfd::api::AddressApi;
 using cfd::core::Address;
 using cfd::core::AddressType;
 using cfd::core::CfdError;
@@ -42,13 +40,14 @@ using cfd::core::ExtPubkey;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
 using cfd::core::Script;
+using cfd::core::ScriptUtil;
+using cfd::core::WitnessVersion;
 
 using cfd::core::logger::info;
 using cfd::core::logger::warn;
 
 #ifndef CFD_DISABLE_ELEMENTS
 using cfd::ElementsAddressFactory;
-using cfd::api::ElementsAddressApi;
 #endif  // CFD_DISABLE_ELEMENTS
 
 // =============================================================================
@@ -159,16 +158,14 @@ int CfdCreateAddress(
     }
 
     if (is_bitcoin) {
-      AddressApi api;
-      addr = api.CreateAddress(
-          net_type, addr_type, &pubkey_obj, &script, &lock_script,
-          &unlocking_script);
+      AddressFactory factory(net_type);
+      addr = factory.CreateAddress(
+          addr_type, &pubkey_obj, &script, &lock_script, &unlocking_script);
     } else {
 #ifndef CFD_DISABLE_ELEMENTS
-      ElementsAddressApi e_api;
-      addr = e_api.CreateAddress(
-          net_type, addr_type, &pubkey_obj, &script, &lock_script,
-          &unlocking_script);
+      ElementsAddressFactory factory(net_type);
+      addr = factory.CreateAddress(
+          addr_type, &pubkey_obj, &script, &lock_script, &unlocking_script);
 #else
       throw CfdException(
           CfdError::kCfdIllegalStateError, "Elements not supported.");
@@ -329,22 +326,28 @@ int CfdFinalizeMultisigScript(
     for (uint32_t index = 0; index < data->current_index; ++index) {
       pubkeys.emplace_back(std::string(data->pubkeys[index]));
     }
+    Script multisig_script =
+        ScriptUtil::CreateMultisigRedeemScript(require_num, pubkeys);
 
     if (is_bitcoin) {
-      AddressApi api;
-      addr = api.CreateMultisig(
-          net_type, addr_type, require_num, pubkeys, &redeem_script_obj,
-          &witness_script_obj);
+      AddressFactory factory(net_type);
+      addr = factory.CreateAddress(
+          addr_type, nullptr, &multisig_script, nullptr, &redeem_script_obj);
     } else {
 #ifndef CFD_DISABLE_ELEMENTS
-      ElementsAddressApi e_api;
-      addr = e_api.CreateMultisig(
-          net_type, addr_type, require_num, pubkeys, &redeem_script_obj,
-          &witness_script_obj);
+      ElementsAddressFactory factory(net_type);
+      addr = factory.CreateAddress(
+          addr_type, nullptr, &multisig_script, nullptr, &redeem_script_obj);
 #else
       throw CfdException(
           CfdError::kCfdIllegalStateError, "Elements not supported.");
 #endif  // CFD_DISABLE_ELEMENTS
+    }
+    if ((addr_type == AddressType::kP2pkhAddress) ||
+        (addr_type == AddressType::kP2shAddress)) {
+      redeem_script_obj = multisig_script;
+    } else {
+      witness_script_obj = multisig_script;
     }
 
     work_address = CreateString(addr.GetAddress());
@@ -429,14 +432,14 @@ int CfdParseDescriptor(
     std::vector<DescriptorKeyData> multisig_key_list;
     DescriptorScriptData desc_data;
     if (is_bitcoin) {
-      AddressApi api;
-      desc_data = api.ParseOutputDescriptor(
-          descriptor, net_type, derive_path, &script_list, &multisig_key_list);
+      AddressFactory factory(net_type);
+      desc_data = factory.ParseOutputDescriptor(
+          descriptor, derive_path, &script_list, &multisig_key_list);
     } else {
 #ifndef CFD_DISABLE_ELEMENTS
-      ElementsAddressApi e_api;
-      desc_data = e_api.ParseOutputDescriptor(
-          descriptor, net_type, derive_path, &script_list, &multisig_key_list);
+      ElementsAddressFactory factory(net_type);
+      desc_data = factory.ParseOutputDescriptor(
+          descriptor, derive_path, &script_list, &multisig_key_list);
 #else
       throw CfdException(
           CfdError::kCfdIllegalStateError, "Elements not supported.");
@@ -762,14 +765,14 @@ int CfdGetAddressesFromMultisig(
     std::vector<Pubkey> pubkey_list;
     std::vector<Address> addr_list;
     if (is_bitcoin) {
-      AddressApi api;
-      addr_list = api.GetAddressesFromMultisig(
-          net_type, addr_type, redeem_script_obj, &pubkey_list);
+      AddressFactory factory(net_type);
+      addr_list = factory.GetAddressesFromMultisig(
+          addr_type, redeem_script_obj, &pubkey_list);
     } else {
 #ifndef CFD_DISABLE_ELEMENTS
-      ElementsAddressApi e_api;
-      addr_list = e_api.GetAddressesFromMultisig(
-          net_type, addr_type, redeem_script_obj, &pubkey_list);
+      ElementsAddressFactory factory(net_type);
+      addr_list = factory.GetAddressesFromMultisig(
+          addr_type, redeem_script_obj, &pubkey_list);
 #else
       throw CfdException(
           CfdError::kCfdIllegalStateError, "Elements not supported.");

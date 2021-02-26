@@ -216,6 +216,84 @@ bool AddressFactory::CheckAddressNetType(
   return result;
 }
 
+Address AddressFactory::CreateAddress(
+    AddressType address_type, const Pubkey* pubkey, const Script* script,
+    Script* locking_script, Script* redeem_script) const {
+  if ((pubkey == nullptr) || (!pubkey->IsValid())) {
+    if (address_type == AddressType::kP2pkhAddress ||
+        address_type == AddressType::kP2wpkhAddress ||
+        address_type == AddressType::kP2shP2wpkhAddress ||
+        address_type == AddressType::kTaprootAddress) {
+      warn(
+          CFD_LOG_SOURCE,
+          "Failed to CreateAddress. Invalid pubkey hex: pubkey is empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "pubkey hex is empty.");
+    }
+  }
+  if ((script == nullptr) || (script->IsEmpty())) {
+    if (address_type == AddressType::kP2shAddress ||
+        address_type == AddressType::kP2wshAddress ||
+        address_type == AddressType::kP2shP2wshAddress) {
+      warn(
+          CFD_LOG_SOURCE,
+          "Failed to CreateAddress. Invalid script hex: script is empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "script hex is empty.");
+    }
+  }
+  Address addr;
+
+  Script temp_script;
+  switch (address_type) {
+    case AddressType::kP2pkhAddress:
+      addr = CreateP2pkhAddress(*pubkey);
+      break;
+    case AddressType::kP2shAddress:
+      addr = CreateP2shAddress(*script);
+      break;
+    case AddressType::kP2wpkhAddress:
+      addr = CreateP2wpkhAddress(*pubkey);
+      break;
+    case AddressType::kP2wshAddress:
+      addr = CreateP2wshAddress(*script);
+      break;
+    case AddressType::kP2shP2wpkhAddress:
+      temp_script = ScriptUtil::CreateP2wpkhLockingScript(*pubkey);
+      addr = CreateP2shAddress(temp_script);
+      if (redeem_script != nullptr) {
+        *redeem_script = temp_script;
+      }
+      break;
+    case AddressType::kP2shP2wshAddress:
+      temp_script = ScriptUtil::CreateP2wshLockingScript(*script);
+      addr = CreateP2shAddress(temp_script);
+      if (redeem_script != nullptr) {
+        *redeem_script = temp_script;
+      }
+      break;
+    case AddressType::kTaprootAddress:
+      addr = CreateTaprootAddress(SchnorrPubkey::FromPubkey(*pubkey));
+      break;
+    default:
+      warn(
+          CFD_LOG_SOURCE,
+          "Failed to CreateAddress. Invalid address type:  address_type={}",
+          address_type);
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Invalid address_type. address_type must be \"p2pkh\" or "
+          "\"p2sh\" or \"p2wpkh\" or \"p2wsh\" or \"p2sh-p2wpkh\" or "
+          "\"p2sh-p2wsh\".");  // NOLINT
+      break;
+  }
+  if (locking_script != nullptr) {
+    *locking_script = addr.GetLockingScript();
+  }
+
+  return addr;
+}
+
 std::vector<Address> AddressFactory::GetAddressesFromMultisig(
     AddressType address_type, const Script& redeem_script,
     std::vector<Pubkey>* pubkey_list) const {
@@ -232,7 +310,6 @@ std::vector<Address> AddressFactory::GetAddressesFromMultisig(
         "Invalid address_type. address_type must be \"p2pkh\" "
         "\"p2wpkh\" or \"p2sh-p2wpkh\".");  // NOLINT
   }
-  AddressFactory addr_factory(type_, prefix_list_);
 
   std::vector<Pubkey> pubkeys =
       ScriptUtil::ExtractPubkeysFromMultisigScript(redeem_script);
@@ -242,13 +319,13 @@ std::vector<Address> AddressFactory::GetAddressesFromMultisig(
   Script script;
   for (const auto& pubkey : pubkeys) {
     if (address_type == AddressType::kP2pkhAddress) {
-      addr = addr_factory.CreateP2pkhAddress(pubkey);
+      addr = CreateP2pkhAddress(pubkey);
     } else if (address_type == AddressType::kP2shP2wpkhAddress) {
       script = ScriptUtil::CreateP2wpkhLockingScript(pubkey);
-      addr = addr_factory.CreateP2shAddress(script);
+      addr = CreateP2shAddress(script);
     } else if (address_type == AddressType::kP2wpkhAddress) {
       // Currently we support only witness version 0.
-      addr = addr_factory.CreateP2wpkhAddress(pubkey);
+      addr = CreateP2wpkhAddress(pubkey);
     }
     addr_list.push_back(addr);
   }
