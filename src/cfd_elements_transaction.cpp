@@ -90,7 +90,8 @@ static ByteData256 CreateConfidentialTxSighash(
     const ConfidentialTransactionContext* transaction,
     const OutPoint& outpoint, const UtxoData& utxo,
     const SigHashType& sighash_type, const Pubkey& pubkey,
-    const Script& redeem_script, WitnessVersion version) {
+    const Script& redeem_script, WitnessVersion version, const ByteData*,
+    const TaprootScriptTree*) {
   ConfidentialValue value;
   if (utxo.value_commitment.IsEmpty()) {
     value = ConfidentialValue(utxo.amount);

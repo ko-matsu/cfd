@@ -16,6 +16,7 @@
 #include "cfd/cfd_transaction_common.h"
 #include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_amount.h"
+#include "cfdcore/cfdcore_bytedata.h"
 #include "cfdcore/cfdcore_coin.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_schnorrsig.h"
@@ -31,6 +32,7 @@ using cfd::core::Address;
 using cfd::core::AddressType;
 using cfd::core::Amount;
 using cfd::core::ByteData;
+using cfd::core::ByteData256;
 using cfd::core::OutPoint;
 using cfd::core::Privkey;
 using cfd::core::Pubkey;
@@ -232,10 +234,13 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @param[in] privkey       private key.
    * @param[in] sighash_type  sighash type.
    * @param[in] has_grind_r   calcurate signature glind-r flag. (default:true)
+   * @param[in] aux_rand      auxiliary random data used to create the nonce.
+   * @param[in] annex         annex byte data.
    */
   void SignWithKey(
       const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
-      SigHashType sighash_type = SigHashType(), bool has_grind_r = true);
+      SigHashType sighash_type = SigHashType(), bool has_grind_r = true,
+      const ByteData256* aux_rand = nullptr, const ByteData* annex = nullptr);
   /**
    * @brief set ignore verify target.
    * @param[in] outpoint    utxo target.
@@ -295,10 +300,10 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @param[in] annex           annex byte data.
    * @return Signature hash
    */
-  virtual ByteData CreateSignatureHashByTaproot(
-      const OutPoint& outpoint, SigHashType sighash_type,
+  ByteData256 CreateSignatureHashByTaproot(
+      const OutPoint& outpoint, const SigHashType& sighash_type,
       const ByteData256* tap_leaf_hash = nullptr,
-      uint32_t code_separator_position = 0,
+      const uint32_t* code_separator_position = nullptr,
       const ByteData* annex = nullptr) const;
 
   /**
@@ -323,15 +328,13 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @param[in] outpoint        outpoint
    * @param[in] privkey         private key for schnorr pubkey
    * @param[in] sighash_type    SigHashType
-   * @param[in] has_grind_r     Grind-R option for sign.
    * @param[in] aux_rand        auxiliary random data used to create the nonce.
    * @param[in] annex           annex byte data.
    */
   void SignWithSchnorrPrivkeySimple(
       const OutPoint& outpoint, const Privkey& privkey,
-      SigHashType sighash_type = SigHashType(), bool has_grind_r = true,
-      const ByteData256& aux_rand = ByteData256(),
-      const ByteData& annex = ByteData());
+      const SigHashType& sighash_type = SigHashType(),
+      const ByteData256* aux_rand = nullptr, const ByteData* annex = nullptr);
 
   /**
    * @brief add pubkey-hash sign data to target outpoint.
@@ -378,8 +381,11 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @brief add schnorr-taproot sign data to target outpoint.
    * @param[in] outpoint        TxIn outpoint
    * @param[in] signature       signature
+   * @param[in] annex           annex
    */
-  void AddSign(const OutPoint& outpoint, const SchnorrSignature& signature);
+  void AddSchnorrSign(
+      const OutPoint& outpoint, const SchnorrSignature& signature,
+      const ByteData* annex = nullptr);
 
   /**
    * @brief add schnorr-taproot sign data to target outpoint.
@@ -387,11 +393,13 @@ class CFD_EXPORT TransactionContext : public Transaction {
    * @param[in] tree                script tree
    * @param[in] internal_pubkey     internal schnorr pubkey
    * @param[in] sign_data_list      sign data list
+   * @param[in] annex               annex
    */
-  void AddTaprootSign(
+  void AddTapScriptSign(
       const OutPoint& outpoint, const TaprootScriptTree& tree,
       const SchnorrPubkey& internal_pubkey,
-      const std::vector<SignParameter>& sign_data_list);
+      const std::vector<SignParameter>& sign_data_list,
+      const ByteData* annex = nullptr);
 
   /**
    * @brief add sign data to target outpoint.
@@ -443,6 +451,20 @@ class CFD_EXPORT TransactionContext : public Transaction {
       const OutPoint& outpoint, const Script& script, SigHashType sighash_type,
       const Amount& value = Amount(),
       WitnessVersion version = WitnessVersion::kVersionNone) const;
+  /**
+   * @brief Verify signature which is specified (taproot) input data.
+   * @param[in] signature           signature to be verified.
+   * @param[in] outpoint            TxIn
+   * @param[in] utxo_list           utxo list for calculate sighash.
+   * @param[in] pubkey              internal schnorr public key.
+   * @param[in] annex               annex
+   * @retval true       correct signature.
+   * @retval false      incorrect signature.
+   */
+  bool VerifyInputSchnorrSignature(
+      const SchnorrSignature& signature, const OutPoint& outpoint,
+      const std::vector<UtxoData>& utxo_list, const SchnorrPubkey& pubkey,
+      const ByteData* annex = nullptr) const;
 
   /**
    * @brief Get the default sequence number from the lock time.
