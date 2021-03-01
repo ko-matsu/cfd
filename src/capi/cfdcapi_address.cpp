@@ -24,6 +24,7 @@
 #include "cfdcore/cfdcore_hdwallet.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_logger.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 
 using cfd::AddressFactory;
 using cfd::DescriptorKeyData;
@@ -39,6 +40,7 @@ using cfd::core::ExtPrivkey;
 using cfd::core::ExtPubkey;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrPubkey;
 using cfd::core::Script;
 using cfd::core::ScriptUtil;
 using cfd::core::WitnessVersion;
@@ -129,6 +131,7 @@ int CfdCreateAddress(
     void* handle, int hash_type, const char* pubkey, const char* redeem_script,
     int network_type, char** address, char** locking_script,
     char** p2sh_segwit_locking_script) {
+  int result = CfdErrorCode::kCfdUnknownError;
   char* work_address = nullptr;
   char* work_locking_script = nullptr;
   char* work_p2sh_segwit_locking_script = nullptr;
@@ -151,7 +154,12 @@ int CfdCreateAddress(
     Script unlocking_script;
 
     if ((pubkey != nullptr) && (*pubkey != '\0')) {
-      pubkey_obj = Pubkey(pubkey);
+      if (addr_type == AddressType::kTaprootAddress) {
+        pubkey_obj =
+            Pubkey(ByteData("02").Concat(SchnorrPubkey(pubkey).GetData()));
+      } else {
+        pubkey_obj = Pubkey(pubkey);
+      }
     }
     if ((redeem_script != nullptr) && (*redeem_script != '\0')) {
       script = Script(redeem_script);
@@ -191,20 +199,15 @@ int CfdCreateAddress(
       *p2sh_segwit_locking_script = work_p2sh_segwit_locking_script;
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
-    FreeBufferOnError(
-        &work_address, &work_locking_script, &work_p2sh_segwit_locking_script);
-    return SetLastError(handle, except);
+    result = SetLastError(handle, except);
   } catch (const std::exception& std_except) {
-    FreeBufferOnError(
-        &work_address, &work_locking_script, &work_p2sh_segwit_locking_script);
     SetLastFatalError(handle, std_except.what());
-    return CfdErrorCode::kCfdUnknownError;
   } catch (...) {
-    FreeBufferOnError(
-        &work_address, &work_locking_script, &work_p2sh_segwit_locking_script);
     SetLastFatalError(handle, "unknown error.");
-    return CfdErrorCode::kCfdUnknownError;
   }
+  FreeBufferOnError(
+      &work_address, &work_locking_script, &work_p2sh_segwit_locking_script);
+  return result;
 }
 
 int CfdInitializeMultisigScript(
@@ -512,8 +515,7 @@ int CfdGetDescriptorData(
     if ((locking_script != nullptr) && (!desc_data.locking_script.IsEmpty())) {
       work_locking_script = CreateString(desc_data.locking_script.GetHex());
     }
-    if ((address != nullptr) &&
-        (desc_data.type != DescriptorScriptType::kDescriptorScriptRaw)) {
+    if ((address != nullptr) && (!desc_data.address.GetAddress().empty())) {
       std::string addr = desc_data.address.GetAddress();
       if (!addr.empty()) work_address = CreateString(addr);
     }

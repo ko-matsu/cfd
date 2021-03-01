@@ -86,7 +86,7 @@ enum CfdWitnessVersion {
   kCfdWitnessVersionNone = -1,
   /** version 0 */
   kCfdWitnessVersion0 = 0,
-  /** version 1 (for future use) */
+  /** version 1 (taproot) */
   kCfdWitnessVersion1,
   /** version 2 (for future use) */
   kCfdWitnessVersion2,
@@ -124,6 +124,8 @@ enum CfdWitnessVersion {
  * @brief sighash type
  */
 enum CfdSighashType {
+  /** SIGHASH_DEFAULT */
+  kCfdSigHashDefault = 0,
   /** SIGHASH_ALL */
   kCfdSigHashAll = 0x01,
   /** SIGHASH_NONE */

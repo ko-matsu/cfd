@@ -690,6 +690,17 @@ void ConfidentialTransactionContext::CollectInputUtxo(
   }
 }
 
+UtxoData ConfidentialTransactionContext::GetTxInUtxoData(
+    const OutPoint& outpoint) const {
+  UtxoData utxo;
+  utxo.address_type = AddressType::kP2shAddress;
+  utxo.vout = 0;
+  utxo.block_height = 0;
+  utxo.binary_data = nullptr;
+  IsFindUtxoMap(outpoint, &utxo);
+  return utxo;
+}
+
 void ConfidentialTransactionContext::Blind(
     const std::vector<ElementsConfidentialAddress>* confidential_addresses,
     int64_t minimum_range_value, int exponent, int minimum_bits,

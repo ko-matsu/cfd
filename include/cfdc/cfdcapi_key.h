@@ -222,6 +222,33 @@ CFDC_API int CfdSignSchnorrWithNonce(
     char** signature);
 
 /**
+ * @brief Add a sighash type to a schnorr signature.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] signature the signature.
+ * @param[in] sighash_type the sighash type.
+ * @param[in] anyone_can_pay the anyone can pay flag.
+ * @param[out] added_signature the signature.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddSighashTypeInSchnorrSignature(
+    void* handle, const char* signature, int sighash_type, bool anyone_can_pay,
+    char** added_signature);
+
+/**
+ * @brief Get a sighash type from a schnorr signature.
+ *
+ * @param[in] handle cfd handle.
+ * @param[in] signature the signature.
+ * @param[out] sighash_type the sighash type.
+ * @param[out] anyone_can_pay the anyone can pay flag.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetSighashTypeFromSchnorrSignature(
+    void* handle, const char* signature, int* sighash_type,
+    bool* anyone_can_pay);
+
+/**
  * @brief Compute a signature point for a Schnorr signature.
  *
  * @param[in] handle cfd handle.

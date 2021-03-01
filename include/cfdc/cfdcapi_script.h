@@ -121,6 +121,182 @@ CFDC_API int CfdFinalizeMultisigScriptSig(
 CFDC_API int CfdFreeMultisigScriptSigHandle(
     void* handle, void* multisig_handle);
 
+/*---------*/
+/* taproot */
+/*---------*/
+/**
+ * @brief initialized for taproot script tree.
+ * 
+ * Next call is CfdSetInitialTapLeaf() or
+ * CfdSetTapScriptByWitnessStack().
+ * @param[in] handle            cfd handle.
+ * @param[out] tree_handle      taproot script tree handle.
+ *   Call 'CfdFreeTaprootScriptTreeHandle' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdInitializeTaprootScriptTree(void* handle, void** tree_handle);
+
+/**
+ * @brief Set a initial tapleaf.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] tapscript         taproot script.
+ * @param[in] leaf_version      taproot leaf version.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetInitialTapLeaf(
+    void* handle, void* tree_handle, const char* tapscript,
+    uint8_t leaf_version);
+
+/**
+ * @brief Set a tapscript tree from witness stack.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] control_stack     control data into witness stack.
+ * @param[in] script_stack      tapscript into witness stack.
+ * @param[in] internal_pubkey   internal schnorr public key from control stack.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetTapScriptByWitnessStack(
+    void* handle, void* tree_handle, const char* control_stack,
+    const char* script_stack, char** internal_pubkey);
+
+/**
+ * @brief append for taproot script tree branch hash.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] branch_hash       branch hash.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddTapBranchByHash(
+    void* handle, void* tree_handle, const char* branch_hash);
+
+/**
+ * @brief append for taproot script tree.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] branch_tree       tree handle by branch.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddTapBranchByScriptTree(
+    void* handle, void* tree_handle, void* branch_tree);
+
+/**
+ * @brief append for tapleaf.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] tapscript         taproot script.
+ * @param[in] leaf_version      taproot leaf version.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddTapBranchByTapLeaf(
+    void* handle, void* tree_handle, const char* tapscript,
+    uint8_t leaf_version);
+
+/**
+ * @brief Get root tapleaf data.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[out] leaf_version     taproot leaf version. Set to 0 if not tapleaf.
+ * @param[out] tapscript        taproot script.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] tap_leaf_hash    tapleaf hash.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetRootTapLeaf(
+    void* handle, void* tree_handle, uint8_t* leaf_version, char** tapscript,
+    char** tap_leaf_hash);
+
+/**
+ * @brief Get tapbranch count.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[out] branch_count     tapbranch count.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTapBranchCount(
+    void* handle, void* tree_handle, uint32_t* branch_count);
+
+/**
+ * @brief Get tapbranch data.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] index_from_leaf   index from root tapleaf.
+ * @param[in] is_root_data      true is getting combined hash.
+ * @param[out] branch_hash      tapbranch hash.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] leaf_version     taproot leaf version. Set to 0 if not tapleaf.
+ * @param[out] tapscript        taproot script.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] depth_by_leaf_or_end     target branch depth.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTapBranchData(
+    void* handle, void* tree_handle, uint8_t index_from_leaf,
+    bool is_root_data, char** branch_hash, uint8_t* leaf_version,
+    char** tapscript, uint8_t* depth_by_leaf_or_end);
+
+/**
+ * @brief Get tapbranch handle.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] index_from_leaf   index from root tapleaf.
+ * @param[out] branch_hash      tapbranch hash.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] branch_tree_handle   tapbranch handle.
+ *   Call 'CfdFreeTaprootScriptTreeHandle' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTapBranchHandle(
+    void* handle, void* tree_handle, uint8_t index_from_leaf,
+    char** branch_hash, void** branch_tree_handle);
+
+/**
+ * @brief Get tapscript hash.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] internal_pubkey   internal schnorr public key.
+ * @param[out] hash             tapscript hash. (witness program)
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] tap_leaf_hash    tapleaf hash.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] control_stack    taproot control data. (for witness stack)
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTaprootScriptTreeHash(
+    void* handle, void* tree_handle, const char* internal_pubkey, char** hash,
+    char** tap_leaf_hash, char** control_stack);
+
+/**
+ * @brief Get tapscript hash.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[out] tree_string      taproot string. (proposal)
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTaprootScriptTreeSrting(
+    void* handle, void* tree_handle, char** tree_string);
+
+/**
+ * @brief free taproot script tree handle.
+ * @param[in] handle            handle pointer.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdFreeTaprootScriptTreeHandle(void* handle, void* tree_handle);
+
 #ifdef __cplusplus
 #if 0
 {

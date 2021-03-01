@@ -142,13 +142,13 @@ void UtxoUtil::ConvertToUtxo(
 
     if (!locking_script_bytes.empty()) {
       // do nothing
-    } else if (!utxo_data.address.GetAddress().empty()) {
-      output.locking_script = utxo_data.address.GetLockingScript();
+    } else if (!output.address.GetAddress().empty()) {
+      output.locking_script = output.address.GetLockingScript();
       locking_script_bytes = output.locking_script.GetData().GetBytes();
-      AddressType addr_type = utxo_data.address.GetAddressType();
+      AddressType addr_type = output.address.GetAddressType();
       if ((addr_type == AddressType::kP2shAddress) &&
-          ((utxo_data.address_type == AddressType::kP2shP2wshAddress) ||
-           (utxo_data.address_type == AddressType::kP2shP2wpkhAddress))) {
+          ((output.address_type == AddressType::kP2shP2wshAddress) ||
+           (output.address_type == AddressType::kP2shP2wpkhAddress))) {
         // direct set. output.address_type;
       } else {
         output.address_type = addr_type;

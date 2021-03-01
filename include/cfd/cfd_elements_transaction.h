@@ -498,6 +498,13 @@ class CFD_EXPORT ConfidentialTransactionContext
   void CollectInputUtxo(const std::vector<UtxoData>& utxos);
 
   /**
+   * @brief Get UTXO by outpoint
+   * @param[in] outpoint  TxIn txid and vout
+   * @return UTXO
+   */
+  UtxoData GetTxInUtxoData(const OutPoint& outpoint) const;
+
+  /**
    * @brief Execute blinding txout using utxo data.
    * @param[in] confidential_addresses     txout confidential address list.
    *   (if set nullptr, confidential key collect from nonce.)
