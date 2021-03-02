@@ -247,7 +247,9 @@ Amount TransactionApi::EstimateFee(
       redeem_script = utxo.redeem_script;
     }
     const Script* scriptsig_template = nullptr;
-    if ((!redeem_script.IsEmpty()) && (!utxo.scriptsig_template.IsEmpty())) {
+    if (((!redeem_script.IsEmpty()) ||
+         (addr_type == AddressType::kTaprootAddress)) &&
+        (!utxo.scriptsig_template.IsEmpty())) {
       scriptsig_template = &utxo.scriptsig_template;
     }
 
