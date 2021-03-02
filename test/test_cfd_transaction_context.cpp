@@ -850,6 +850,7 @@ TEST(TransactionContext, TapScriptSign)
   };
   TaprootScriptTree tree(redeem_script);
   for (const auto& node : nodes) tree.AddBranch(node);
+  EXPECT_EQ("dfc43ba9fc5f8a9e1b6d6a50600c704bb9e41b741d9ed6de6559a53d2f38e513", tree.GetTapLeafHash().GetHex());
 
   AddressFactory addr_factory(NetType::kRegtest);
   auto txout1_addr = addr_factory.CreateTaprootAddress(tree, schnorr_pubkey);

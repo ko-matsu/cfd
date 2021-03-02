@@ -97,6 +97,309 @@ TEST(cfdcapi_transaction, CreateRawTransaction) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_transaction, SignTransactionTest) {
+  void* handle = nullptr;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  struct CfdSignTransactionTestData {
+    int network;
+    const char* txid;
+    uint32_t vout;
+    const char* descriptor;
+    int64_t utxo_amount;
+    const char* redeem_script;
+    const char* tapscript_control;
+    const char* tapleaf_hash;
+    const char* annex;
+    const char* aux_rand;
+    const char* pubkey;
+    const char* privkey;
+    int sighash_type;
+    const char* txout_address;
+    int64_t amount;
+    const char* signed_tx;
+    bool use_direct_sign;
+    int hash_type;
+  };
+  const struct CfdSignTransactionTestData exp_datas[] = {
+    {  // p2wpkh
+      kCfdNetworkRegtest,
+      "cd6adc252632eb0768ac6407e586cc74bfed739d6c8b9efa55305eb37cbd76dd", 0,
+      "wpkh(023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44)",
+      2500000000,
+      nullptr, nullptr, nullptr, nullptr, nullptr,
+      "023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44",
+      "28190dff04c40f130b7be4a597213338cb8860ff38bbab5236bd1b3ff8472554",
+      kCfdSigHashAll,
+      "bcrt1p8hh955u8526hjqhn5m5a5pmhymgecmxgerrmqj70tgvhk25mq8fq50z666",
+      2499999000,
+      "02000000000101dd76bd7cb35e3055fa9e8b6c9d73edbf74cc86e50764ac6807eb322625dc6acd0000000000ffffffff0118f50295000000002251203dee5a5387a2b57902f3a6e9da077726d19c6cc8c8c7b04bcf5a197b2a9b01d20247304402201db912bc61dab1c6117b0aec2965ea1b2d1caa42a1372adc16c8cf673f1187d7022062667d8a976b197f7ba33299365eeb68c1e45fa2a255411672d89f7afab12cb20121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c4400000000",
+      false, kCfdP2wpkh
+    },
+    {  // p2wpkh auto sign
+      kCfdNetworkRegtest,
+      "cd6adc252632eb0768ac6407e586cc74bfed739d6c8b9efa55305eb37cbd76dd", 0,
+      "wpkh(023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44)",
+      2500000000,
+      nullptr, nullptr, nullptr, nullptr, nullptr,
+      "023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44",
+      "28190dff04c40f130b7be4a597213338cb8860ff38bbab5236bd1b3ff8472554",
+      kCfdSigHashAll,
+      "bcrt1p8hh955u8526hjqhn5m5a5pmhymgecmxgerrmqj70tgvhk25mq8fq50z666",
+      2499999000,
+      "02000000000101dd76bd7cb35e3055fa9e8b6c9d73edbf74cc86e50764ac6807eb322625dc6acd0000000000ffffffff0118f50295000000002251203dee5a5387a2b57902f3a6e9da077726d19c6cc8c8c7b04bcf5a197b2a9b01d20247304402201db912bc61dab1c6117b0aec2965ea1b2d1caa42a1372adc16c8cf673f1187d7022062667d8a976b197f7ba33299365eeb68c1e45fa2a255411672d89f7afab12cb20121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c4400000000",
+      true, kCfdP2wpkh
+    },
+    {  // p2wsh-multisig
+      kCfdNetworkRegtest,
+      "cd6adc252632eb0768ac6407e586cc74bfed739d6c8b9efa55305eb37cbd76dd", 0,
+      "wsh(multi(1,023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44,03ebb70cf8b4adfff5559794d2e972d55c9429dbda25cd5911615dcab422d031ae))",
+      2500000000,
+      "5121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c442103ebb70cf8b4adfff5559794d2e972d55c9429dbda25cd5911615dcab422d031ae52ae",
+      nullptr, nullptr, nullptr, nullptr,
+      "023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44",
+      "28190dff04c40f130b7be4a597213338cb8860ff38bbab5236bd1b3ff8472554",
+      kCfdSigHashAll,
+      "bcrt1p8hh955u8526hjqhn5m5a5pmhymgecmxgerrmqj70tgvhk25mq8fq50z666",
+      2499999000,
+      "02000000000101dd76bd7cb35e3055fa9e8b6c9d73edbf74cc86e50764ac6807eb322625dc6acd0000000000ffffffff0118f50295000000002251203dee5a5387a2b57902f3a6e9da077726d19c6cc8c8c7b04bcf5a197b2a9b01d20300473044022050da44f8a8e8ac494b79840c4c7ef7d55a296ffa0b98a5b9d2150964ba6d555802207ae9ec8a4f060440279fa9129ef480132cab1fc638c534ef31af1feda6b5d6f401475121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c442103ebb70cf8b4adfff5559794d2e972d55c9429dbda25cd5911615dcab422d031ae52ae00000000",
+      false, kCfdP2wsh
+    },
+    {  // taproot schnorr
+      kCfdNetworkRegtest,
+      "2fea883042440d030ca5929814ead927075a8f52fef5f4720fa3cec2e475d916", 0,
+      "raw(51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb)",
+      2499999000,
+      nullptr, nullptr, nullptr, nullptr, nullptr,
+      "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
+      "305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27",
+      kCfdSigHashAll,
+      "bcrt1qze8fshg0eykfy7nxcr96778xagufv2w429wx40",
+      2499998000,
+      "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014161f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f208720100000000",
+      false, kCfdTaproot
+    },
+    {  // taproot schnorr auto sign
+      kCfdNetworkRegtest,
+      "2fea883042440d030ca5929814ead927075a8f52fef5f4720fa3cec2e475d916", 0,
+      "raw(51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb)",
+      2499999000,
+      nullptr, nullptr, nullptr, nullptr, nullptr,
+      "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
+      "305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27",
+      kCfdSigHashAll,
+      "bcrt1qze8fshg0eykfy7nxcr96778xagufv2w429wx40",
+      2499998000,
+      "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014161f75636003a870b7a1685abae84eedf8c9527227ac70183c376f7b3a35b07ebcbea14749e58ce1a87565b035b2f3963baa5ae3ede95e89fd607ab7849f208720100000000",
+      true, kCfdTaproot
+    },
+    {  // taproot schnorr rand
+      kCfdNetworkRegtest,
+      "2fea883042440d030ca5929814ead927075a8f52fef5f4720fa3cec2e475d916", 0,
+      "raw(51201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb)",
+      2499999000,
+      nullptr, nullptr, nullptr, nullptr,
+      "2fea883042440d030ca5929814ead927075a8f52fef5f4720fa3cec2e475d916",
+      "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
+      "305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27",
+      kCfdSigHashAll,
+      "bcrt1qze8fshg0eykfy7nxcr96778xagufv2w429wx40",
+      2499998000,
+      "0200000000010116d975e4c2cea30f72f4f5fe528f5a0727d9ea149892a50c030d44423088ea2f0000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d5014151df55894d1a024c244e20ecedc39cae39fa6d43653305b7f32605eea6359415a7ceef44c52a2f26be2e06d33d79c2e90b5dfaebcb4f79e242134121e0b9579e0100000000",
+      false, kCfdTaproot
+    },
+    {  // tapscript
+      kCfdNetworkRegtest,
+      "195d6c18afaa6c33dcc2da86c6c0cd3f93ec2b44e4c8e9be00c7000eafa1805b", 0,
+      "raw(51203dee5a5387a2b57902f3a6e9da077726d19c6cc8c8c7b04bcf5a197b2a9b01d2)",
+      2499999000,
+      "201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac",
+      "c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54",
+      "dfc43ba9fc5f8a9e1b6d6a50600c704bb9e41b741d9ed6de6559a53d2f38e513",
+      nullptr, nullptr,
+      "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
+      "305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27",
+      kCfdSigHashAll,
+      "bcrt1qze8fshg0eykfy7nxcr96778xagufv2w429wx40",
+      2499998000,
+      "020000000001015b80a1af0e00c700bee9c8e4442bec933fcdc0c686dac2dc336caaaf186c5d190000000000ffffffff0130f1029500000000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50341f5aa6b260f9df687786cd3813ba83b476e195041bccea800f2571212f4aae9848a538b6175a4f8ea291d38e351ea7f612a3d700dca63cd3aff05d315c5698ee90122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d5400000000",
+      false, kCfdTaproot
+    },
+  };
+  size_t list_size = sizeof(exp_datas) / sizeof(struct CfdSignTransactionTestData);
+
+  for (size_t idx = 0; idx < list_size; ++idx) {
+    void* create_handle = nullptr;
+    char* sighash = nullptr;
+    char* sig = nullptr;
+    char* tmp_sig = nullptr;
+    ret = CfdInitializeTransaction(
+        handle, exp_datas[idx].network, 2, 0, nullptr, &create_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_FALSE((NULL == create_handle));
+    if (ret == kCfdSuccess) {
+      ret = CfdSetTransactionUtxoData(handle, create_handle,
+          exp_datas[idx].txid, exp_datas[idx].vout, exp_datas[idx].utxo_amount,
+          nullptr, exp_datas[idx].descriptor, nullptr, nullptr, nullptr);
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      ret = CfdAddTransactionOutput(handle, create_handle,
+          exp_datas[idx].amount, exp_datas[idx].txout_address, nullptr, nullptr);
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      bool has_tapscript = false;
+      if (ret != kCfdSuccess) {
+        // do nothing
+      } else if (exp_datas[idx].use_direct_sign) {
+        ret = CfdAddSignWithPrivkeyByHandle(handle, create_handle,
+            exp_datas[idx].txid, exp_datas[idx].vout, exp_datas[idx].privkey,
+            exp_datas[idx].sighash_type, false, true, exp_datas[idx].aux_rand,
+            exp_datas[idx].annex);
+        EXPECT_EQ(kCfdSuccess, ret);
+      } else {
+        ret = CfdCreateSighashByHandle(handle, create_handle,
+            exp_datas[idx].txid, exp_datas[idx].vout,
+            exp_datas[idx].sighash_type, false,
+            (exp_datas[idx].redeem_script) ? nullptr : exp_datas[idx].pubkey,
+            exp_datas[idx].redeem_script,
+            exp_datas[idx].tapleaf_hash, 0xffffffff,
+            exp_datas[idx].annex, &sighash);
+        EXPECT_EQ(kCfdSuccess, ret);
+        if (ret != kCfdSuccess) {
+          // do nothing
+        } else if (strlen(exp_datas[idx].pubkey) == 64) {
+          // taproot/tapscript
+          ret = CfdSignSchnorr(handle, sighash,
+              exp_datas[idx].privkey, exp_datas[idx].aux_rand, &tmp_sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+          ret = CfdAddSighashTypeInSchnorrSignature(handle, tmp_sig,
+              exp_datas[idx].sighash_type, false, &sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          if (exp_datas[idx].redeem_script != nullptr) {
+            has_tapscript = true;
+            ret = CfdAddTxSignByHandle(handle, create_handle,
+                exp_datas[idx].txid, exp_datas[idx].vout,
+                exp_datas[idx].hash_type, sig, false,
+                exp_datas[idx].sighash_type, false, true);
+            EXPECT_EQ(kCfdSuccess, ret);
+
+            ret = CfdAddTaprootSignByHandle(handle, create_handle,
+                exp_datas[idx].txid, exp_datas[idx].vout,
+                nullptr, exp_datas[idx].redeem_script,
+                exp_datas[idx].tapscript_control, exp_datas[idx].annex);
+            EXPECT_EQ(kCfdSuccess, ret);
+          } else {
+            ret = CfdAddTaprootSignByHandle(handle, create_handle,
+                exp_datas[idx].txid, exp_datas[idx].vout,
+                sig, nullptr, nullptr, exp_datas[idx].annex);
+            EXPECT_EQ(kCfdSuccess, ret);
+          }
+        } else if (exp_datas[idx].redeem_script != nullptr) {
+          // script
+          ret = CfdCalculateEcSignature(handle, sighash,
+              exp_datas[idx].privkey, nullptr,
+              exp_datas[idx].network, true, &sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          // multisig first
+          ret = CfdAddTxSignByHandle(handle, create_handle,
+              exp_datas[idx].txid, exp_datas[idx].vout,
+              exp_datas[idx].hash_type, "", false,
+              exp_datas[idx].sighash_type, false, true);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          ret = CfdAddTxSignByHandle(handle, create_handle,
+              exp_datas[idx].txid, exp_datas[idx].vout,
+              exp_datas[idx].hash_type, sig, true,
+              exp_datas[idx].sighash_type, false, false);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          ret = CfdAddScriptHashLastSignByHandle(handle, create_handle,
+              exp_datas[idx].txid, exp_datas[idx].vout,
+              exp_datas[idx].hash_type, exp_datas[idx].redeem_script);
+          EXPECT_EQ(kCfdSuccess, ret);
+        } else {
+          ret = CfdCalculateEcSignature(handle, sighash,
+              exp_datas[idx].privkey, nullptr,
+              exp_datas[idx].network, true, &sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          ret = CfdAddPubkeyHashSignByHandle(handle, create_handle,
+            exp_datas[idx].txid, exp_datas[idx].vout,
+            exp_datas[idx].hash_type, exp_datas[idx].pubkey,
+            sig, true, exp_datas[idx].sighash_type, false);
+          EXPECT_EQ(kCfdSuccess, ret);
+        }
+
+        if (sighash != nullptr) {
+          CfdFreeStringBuffer(sighash);
+          sighash = nullptr;
+        }
+        if (sig != nullptr) {
+          CfdFreeStringBuffer(sig);
+          sig = nullptr;
+        }
+        if (tmp_sig != nullptr) {
+          CfdFreeStringBuffer(tmp_sig);
+          tmp_sig = nullptr;
+        }
+      }
+
+      if (ret == kCfdSuccess) {
+        char* tx_hex = nullptr;
+        ret = CfdFinalizeTransaction(handle, create_handle, &tx_hex);
+        EXPECT_EQ(kCfdSuccess, ret);
+        if (ret == kCfdSuccess) {
+          EXPECT_STREQ(exp_datas[idx].signed_tx, tx_hex);
+          CfdFreeStringBuffer(tx_hex);
+        }
+      }
+
+      if (ret == kCfdSuccess) {
+        ret = CfdVerifyTxSignByHandle(handle, create_handle,
+            exp_datas[idx].txid, exp_datas[idx].vout);
+        if ((ret != kCfdSuccess) && has_tapscript) {
+          char* err_msg = NULL;
+          CfdGetLastErrorMessage(handle, &err_msg);
+          const char* tapscript_err_msg = "The script analysis of tapscript is not supported.";
+          EXPECT_STREQ(tapscript_err_msg, err_msg);
+          if (strcmp(tapscript_err_msg, err_msg) == 0) {
+            ret = kCfdSuccess;
+          }
+          CfdFreeStringBuffer(err_msg);
+          err_msg = NULL;
+        }
+        EXPECT_EQ(kCfdSuccess, ret);
+        if (ret != kCfdSuccess) {
+          EXPECT_EQ(-1, idx);
+        }
+      }
+
+      int tmp_ret = CfdFreeTransactionHandle(handle, create_handle);
+      EXPECT_EQ(kCfdSuccess, tmp_ret);
+    }
+
+#if 0
+    ret = CfdGetLastErrorCode(handle);
+    if (ret != kCfdSuccess) {
+      char* str_buffer = NULL;
+      ret = CfdGetLastErrorMessage(handle, &str_buffer);
+      EXPECT_EQ(kCfdSuccess, ret);
+      EXPECT_STREQ("", str_buffer);
+      CfdFreeStringBuffer(str_buffer);
+      str_buffer = NULL;
+      break;
+    }
+#endif
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 TEST(cfdcapi_transaction, GetTransaction) {
   static const char* exp_tx = "0100000000010136641869ca081e70f394c6948e8af409e18b619df2ed74aa106c1ca29787b96e0100000023220020a16b5755f7f6f96dbd65f5f0d6ab9418b89af4b1f14a1bb8a09062c35f0dcb54ffffffff0200e9a435000000001976a914389ffce9cd9ae88dcc0631e88a821ffdbe9bfe2688acc0832f05000000001976a9147480a33f950689af511e6e84c138dbbd3c3ee41588ac080047304402206ac44d672dac41f9b00e28f4df20c52eeb087207e8d758d76d92c6fab3b73e2b0220367750dbbe19290069cba53d096f44530e4f98acaa594810388cf7409a1870ce01473044022068c7946a43232757cbdf9176f009a928e1cd9a1a8c212f15c1e11ac9f2925d9002205b75f937ff2f9f3c1246e547e54f62e027f64eefa2695578cc6432cdabce271502473044022059ebf56d98010a932cf8ecfec54c48e6139ed6adb0728c09cbe1e4fa0915302e022007cd986c8fa870ff5d2b3a89139c9fe7e499259875357e20fcbb15571c76795403483045022100fbefd94bd0a488d50b79102b5dad4ab6ced30c4069f1eaa69a4b5a763414067e02203156c6a5c9cf88f91265f5a942e96213afae16d83321c8b31bb342142a14d16381483045022100a5263ea0553ba89221984bd7f0b13613db16e7a70c549a86de0cc0444141a407022005c360ef0ae5a5d4f9f2f87a56c1546cc8268cab08c73501d6b3be2e1e1a8a08824730440220525406a1482936d5a21888260dc165497a90a15669636d8edca6b9fe490d309c022032af0c646a34a44d1f4576bf6a4a74b67940f8faa84c7df9abe12a01a11e2b4783cf56210307b8ae49ac90a048e9b53357a2354b3334e9c8bee813ecb98e99a7e07e8c3ba32103b28f0c28bfab54554ae8c658ac5c3e0ce6e79ad336331f78c428dd43eea8449b21034b8113d703413d57761b8b9781957b8c0ac1dfe69f492580ca4195f50376ba4a21033400f6afecb833092a9a21cfdf1ed1376e58c5d1f47de74683123987e967a8f42103a6d48b1131e94ba04d9737d61acdaa1322008af9602b3b14862c07a1789aac162102d8b661b0b3302ee2f162b09e07a55ad5dfbe673a9f01d9f0c19617681024306b56ae00000000";
 
