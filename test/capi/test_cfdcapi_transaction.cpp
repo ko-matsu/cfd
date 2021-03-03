@@ -12,6 +12,7 @@
 #include "cfdc/cfdcapi_transaction.h"
 #include "cfdcore/cfdcore_bytedata.h"
 #include "cfdcore/cfdcore_exception.h"
+#include "cfdcore/cfdcore_transaction.h"
 #include "cfdcore/cfdcore_script.h"
 
 using cfd::Utxo;
@@ -259,12 +260,13 @@ TEST(cfdcapi_transaction, SignTransactionTest) {
             exp_datas[idx].annex);
         EXPECT_EQ(kCfdSuccess, ret);
       } else {
+        uint32_t code_separator_pos = cfd::core::kDefaultCodeSeparatorPosition;
         ret = CfdCreateSighashByHandle(handle, create_handle,
             exp_datas[idx].txid, exp_datas[idx].vout,
             exp_datas[idx].sighash_type, false,
             (exp_datas[idx].redeem_script) ? nullptr : exp_datas[idx].pubkey,
             exp_datas[idx].redeem_script,
-            exp_datas[idx].tapleaf_hash, 0xffffffff,
+            exp_datas[idx].tapleaf_hash, code_separator_pos,
             exp_datas[idx].annex, &sighash);
         EXPECT_EQ(kCfdSuccess, ret);
         if (ret != kCfdSuccess) {

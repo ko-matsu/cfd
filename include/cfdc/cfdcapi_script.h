@@ -152,14 +152,14 @@ CFDC_API int CfdSetInitialTapLeaf(
  * @brief Set a tapscript tree from witness stack.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.
- * @param[in] control_stack     control data into witness stack.
- * @param[in] script_stack      tapscript into witness stack.
+ * @param[in] control_block     control data into witness stack.
+ * @param[in] tapscript         tapscript into witness stack.
  * @param[in] internal_pubkey   internal schnorr public key from control stack.
  * @return CfdErrorCode
  */
 CFDC_API int CfdSetTapScriptByWitnessStack(
-    void* handle, void* tree_handle, const char* control_stack,
-    const char* script_stack, char** internal_pubkey);
+    void* handle, void* tree_handle, const char* control_block,
+    const char* tapscript, char** internal_pubkey);
 
 /**
  * @brief append for taproot script tree branch hash.
@@ -268,14 +268,14 @@ CFDC_API int CfdGetTapBranchHandle(
  * @param[out] tap_leaf_hash    tapleaf hash.
  *   If 'CfdFreeStringBuffer' is implemented,
  *   Call 'CfdFreeStringBuffer' after you are finished using it.
- * @param[out] control_stack    taproot control data. (for witness stack)
+ * @param[out] control_block    taproot control data. (for witness stack)
  *   If 'CfdFreeStringBuffer' is implemented,
  *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetTaprootScriptTreeHash(
     void* handle, void* tree_handle, const char* internal_pubkey, char** hash,
-    char** tap_leaf_hash, char** control_stack);
+    char** tap_leaf_hash, char** control_block);
 
 /**
  * @brief Get tapscript hash.

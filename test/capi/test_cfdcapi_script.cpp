@@ -317,12 +317,12 @@ TEST(cfdcapi_script, TapscriptTree) {
 
     char* witness_program = nullptr;
     char* leaf_hash = nullptr;
-    char* control_stack = nullptr;
+    char* control_block = nullptr;
     ret = CfdGetTaprootScriptTreeHash(handle, tree_handle,
         "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
         &witness_program,
         &leaf_hash,
-        &control_stack);
+        &control_block);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
@@ -333,13 +333,13 @@ TEST(cfdcapi_script, TapscriptTree) {
         leaf_hash);
       EXPECT_STREQ(
         "c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54",
-        control_stack);
+        control_block);
       CfdFreeStringBuffer(witness_program);
       witness_program = nullptr;
       CfdFreeStringBuffer(leaf_hash);
       leaf_hash = nullptr;
-      CfdFreeStringBuffer(control_stack);
-      control_stack = nullptr;
+      CfdFreeStringBuffer(control_block);
+      control_block = nullptr;
     }
 
     char* tree_str = nullptr;
@@ -416,12 +416,12 @@ TEST(cfdcapi_script, TapscriptTreeFromWitness) {
     }
 
     char* witness_program = nullptr;
-    char* control_stack = nullptr;
+    char* control_block = nullptr;
     ret = CfdGetTaprootScriptTreeHash(handle, tree_handle,
         "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
         &witness_program,
         &leaf_hash,
-        &control_stack);
+        &control_block);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
@@ -432,13 +432,13 @@ TEST(cfdcapi_script, TapscriptTreeFromWitness) {
         leaf_hash);
       EXPECT_STREQ(
         "c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54",
-        control_stack);
+        control_block);
       CfdFreeStringBuffer(witness_program);
       witness_program = nullptr;
       CfdFreeStringBuffer(leaf_hash);
       leaf_hash = nullptr;
-      CfdFreeStringBuffer(control_stack);
-      control_stack = nullptr;
+      CfdFreeStringBuffer(control_block);
+      control_block = nullptr;
     }
 
     char* tree_str = nullptr;
@@ -554,12 +554,12 @@ TEST(cfdcapi_script, TapscriptTreeAddTree1) {
 
     char* witness_program = nullptr;
     char* leaf_hash = nullptr;
-    char* control_stack = nullptr;
+    char* control_block = nullptr;
     ret = CfdGetTaprootScriptTreeHash(handle, tree_handle,
         "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
         &witness_program,
         &leaf_hash,
-        &control_stack);
+        &control_block);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
@@ -570,13 +570,13 @@ TEST(cfdcapi_script, TapscriptTreeAddTree1) {
         leaf_hash);
       EXPECT_STREQ(
         "c11777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfba85b2107f791b26a84e7586c28cec7cb61202ed3d01944d832500f363782d675e47f58011f27e9046b8195d0ab6a2acbc68ce281437a8d5132dadf389b2a5ebb",
-        control_stack);
+        control_block);
       CfdFreeStringBuffer(witness_program);
       witness_program = nullptr;
       CfdFreeStringBuffer(leaf_hash);
       leaf_hash = nullptr;
-      CfdFreeStringBuffer(control_stack);
-      control_stack = nullptr;
+      CfdFreeStringBuffer(control_block);
+      control_block = nullptr;
     }
 
     char* tree_str = nullptr;

@@ -231,14 +231,14 @@ CFDC_API int CfdAddTxSignByHandle(
  *      It is assumed that sighashType is assigned \
  *      by CfdAddSighashTypeInSchnorrSignature().
  * @param[in] tapscript         tapscript hex.
- * @param[in] taproot_control   taproot control data.
+ * @param[in] control_block     taproot control block.
  *      see CfdGetTaprootScriptTreeHash().
  * @param[in] annex             annex bytes.
  * @return CfdErrorCode
  */
 CFDC_API int CfdAddTaprootSignByHandle(
     void* handle, void* create_handle, const char* txid, uint32_t vout,
-    const char* signature, const char* tapscript, const char* taproot_control,
+    const char* signature, const char* tapscript, const char* control_block,
     const char* annex);
 
 /**

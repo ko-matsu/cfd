@@ -922,7 +922,7 @@ int CfdAddTxSignByHandle(
 
 int CfdAddTaprootSignByHandle(
     void* handle, void* create_handle, const char* txid, uint32_t vout,
-    const char* signature, const char* tapscript, const char* taproot_control,
+    const char* signature, const char* tapscript, const char* control_block,
     const char* annex) {
   try {
     cfd::Initialize();
@@ -954,11 +954,11 @@ int CfdAddTaprootSignByHandle(
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. tapscript is null or empty.");
-    } else if (IsEmptyString(taproot_control)) {
-      warn(CFD_LOG_SOURCE, "taproot_control is null or empty.");
+    } else if (IsEmptyString(control_block)) {
+      warn(CFD_LOG_SOURCE, "control_block is null or empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. taproot_control is null or empty.");
+          "Failed to parameter. control_block is null or empty.");
     }
 
     if (is_bitcoin) {
@@ -969,7 +969,7 @@ int CfdAddTaprootSignByHandle(
         tx->AddSchnorrSign(outpoint, sig, (has_annex) ? &annex_data : nullptr);
       } else {
         Script tapscript_obj(tapscript);
-        ByteData control_obj(taproot_control);
+        ByteData control_obj(control_block);
         std::vector<SignParameter> sign_params;
         sign_params.emplace_back(tapscript_obj.GetData());
         sign_params.emplace_back(control_obj);
