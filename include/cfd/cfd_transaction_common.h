@@ -82,6 +82,13 @@ struct UtxoData {
 #endif                                               // CFD_DISABLE_ELEMENTS
   Script scriptsig_template;                         //!< scriptsig template
   // int32_t status;          //!< utxo status (reserved)
+
+  /**
+   * @brief copy constructor.
+   * @param[in] object    tree object
+   * @return object
+   */
+  UtxoData& operator=(const cfd::UtxoData& object);
 };
 
 /**

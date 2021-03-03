@@ -64,6 +64,32 @@ constexpr uint32_t kSequenceEnableLockTimeMax = 0xfffffffeU;
 constexpr uint32_t kSequenceDisableLockTime = 0xffffffffU;
 
 // -----------------------------------------------------------------------------
+// UtxoData
+// -----------------------------------------------------------------------------
+UtxoData& UtxoData::operator=(const cfd::UtxoData& object) {
+  block_height = object.block_height;
+  block_hash = object.block_hash;
+  txid = object.txid;
+  vout = object.vout;
+  locking_script = object.locking_script;
+  redeem_script = object.redeem_script;
+  address = object.address;
+  descriptor = object.descriptor;
+  amount = object.amount;
+  address_type = object.address_type;
+  binary_data = object.binary_data;
+#ifndef CFD_DISABLE_ELEMENTS
+  asset = object.asset;
+  confidential_address = object.confidential_address;
+  asset_blind_factor = object.asset_blind_factor;
+  amount_blind_factor = object.amount_blind_factor;
+  value_commitment = object.value_commitment;
+#endif  // CFD_DISABLE_ELEMENTS
+  scriptsig_template = object.scriptsig_template;
+  return *this;
+}
+
+// -----------------------------------------------------------------------------
 // UtxoUtil
 // -----------------------------------------------------------------------------
 std::vector<Utxo> UtxoUtil::ConvertToUtxo(const std::vector<UtxoData>& utxos) {
