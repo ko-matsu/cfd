@@ -60,7 +60,7 @@ enum SignDataType {
 /**
  * @brief UTXO structure
  */
-struct UtxoData {
+struct CFD_EXPORT UtxoData {
   uint64_t block_height;     //!< blick高
   BlockHash block_hash;      //!< block hash
   Txid txid;                 //!< txid
