@@ -30,11 +30,11 @@ class cfdcapi_psbt : public ::testing::Test {
 };
 
 struct CfdUtxo {
-  char* txid;
+  const char* txid;
   uint32_t vout;
   int64_t amount;
-  char* descriptor;
-  char* full_utxo_tx;
+  const char* descriptor;
+  const char* full_utxo_tx;
 };
 
 static void CfdcapiPsbtDumpLog(int result, void* handle) {

@@ -61,17 +61,20 @@ enum SignDataType {
  * @brief UTXO structure
  */
 struct CFD_EXPORT UtxoData {
-  uint64_t block_height;     //!< blick高
+ public:
+  uint64_t block_height = 0; //!< blick height
   BlockHash block_hash;      //!< block hash
   Txid txid;                 //!< txid
-  uint32_t vout;             //!< vout
+  uint32_t vout = 0;         //!< vout
   Script locking_script;     //!< locking script
   Script redeem_script;      //!< script
   Address address;           //!< address
   std::string descriptor;    //!< output descriptor
   Amount amount;             //!< amount
-  AddressType address_type;  //!< address type
-  void* binary_data;         //!< binary data option
+  //! address type
+  AddressType address_type = AddressType::kP2shAddress;
+  //! binary data option
+  void* binary_data = nullptr;
 #ifndef CFD_DISABLE_ELEMENTS
   ConfidentialAssetId asset;  //!< asset
   // elements
@@ -81,14 +84,92 @@ struct CFD_EXPORT UtxoData {
   ConfidentialValue value_commitment;                //!< value commitment
 #endif                                               // CFD_DISABLE_ELEMENTS
   Script scriptsig_template;                         //!< scriptsig template
-  // int32_t status;          //!< utxo status (reserved)
 
+ public:
+  /**
+   * @brief constructor.
+   */
+  UtxoData();
+#ifndef CFD_DISABLE_ELEMENTS
+  /**
+   * @brief constructor.
+   * @param[in] block_height    block_height
+   * @param[in] block_hash    block_hash
+   * @param[in] txid    txid
+   * @param[in] vout    vout
+   * @param[in] locking_script    locking_script
+   * @param[in] redeem_script    redeem_script
+   * @param[in] address    address
+   * @param[in] descriptor    descriptor
+   * @param[in] amount    amount
+   * @param[in] address_type    address_type
+   * @param[in] binary_data    binary_data
+   * @param[in] asset    asset
+   * @param[in] confidential_address    confidential_address
+   * @param[in] asset_blind_factor    asset_blind_factor
+   * @param[in] amount_blind_factor    amount_blind_factor
+   * @param[in] value_commitment    value_commitment
+   * @param[in] scriptsig_template    scriptsig_template
+   */
+  explicit UtxoData(
+      uint64_t block_height,
+      const BlockHash& block_hash,
+      const Txid& txid,
+      uint32_t vout,
+      const Script& locking_script,
+      const Script& redeem_script,
+      const Address& address,
+      const std::string& descriptor,
+      const Amount& amount,
+      AddressType address_type,
+      void* binary_data,
+      const ConfidentialAssetId& asset,
+      const ElementsConfidentialAddress& confidential_address,
+      const BlindFactor& asset_blind_factor,
+      const BlindFactor& amount_blind_factor,
+      const ConfidentialValue& value_commitment,
+      const Script& scriptsig_template);
+#else
+  /**
+   * @brief constructor.
+   * @param[in] block_height    block_height
+   * @param[in] block_hash    block_hash
+   * @param[in] txid    txid
+   * @param[in] vout    vout
+   * @param[in] locking_script    locking_script
+   * @param[in] redeem_script    redeem_script
+   * @param[in] address    address
+   * @param[in] descriptor    descriptor
+   * @param[in] amount    amount
+   * @param[in] address_type    address_type
+   * @param[in] binary_data    binary_data
+   * @param[in] scriptsig_template    scriptsig_template
+   */
+  explicit UtxoData(
+      uint64_t block_height,
+      const BlockHash& block_hash,
+      const Txid& txid,
+      uint32_t vout,
+      const Script& locking_script,
+      const Script& redeem_script,
+      const Address& address,
+      const std::string& descriptor,
+      const Amount& amount,
+      AddressType address_type,
+      void* binary_data,
+      const Script& scriptsig_template);
+#endif   // CFD_DISABLE_ELEMENTS
   /**
    * @brief copy constructor.
-   * @param[in] object    tree object
+   * @param[in] object    object
+   */
+  UtxoData(const UtxoData& object);
+  /**
+   * @brief copy constructor.
+   * @param[in] object    object
    * @return object
    */
-  UtxoData& operator=(const cfd::UtxoData& object);
+  UtxoData& operator=(const UtxoData& object) &;
 };
 
 /**

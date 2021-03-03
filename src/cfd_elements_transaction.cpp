@@ -146,11 +146,13 @@ ConfidentialTransactionContext::ConfidentialTransactionContext(
 
 ConfidentialTransactionContext& ConfidentialTransactionContext::operator=(
     const ConfidentialTransactionContext& context) & {
-  SetFromHex(context.GetHex());
-  utxo_map_ = context.utxo_map_;
-  signed_map_ = context.signed_map_;
-  verify_map_ = context.verify_map_;
-  verify_ignore_map_ = context.verify_ignore_map_;
+  if (this != &context) {
+    SetFromHex(context.GetHex());
+    utxo_map_ = context.utxo_map_;
+    signed_map_ = context.signed_map_;
+    verify_map_ = context.verify_map_;
+    verify_ignore_map_ = context.verify_ignore_map_;
+  }
   return *this;
 }
 
@@ -977,7 +979,9 @@ ConfidentialTransactionController::ConfidentialTransactionController(
 ConfidentialTransactionController&
 ConfidentialTransactionController::operator=(
     const ConfidentialTransactionController& transaction) & {
-  transaction_ = transaction.transaction_;
+  if (this != &transaction) {
+    transaction_ = transaction.transaction_;
+  }
   return *this;
 }
 

@@ -66,7 +66,84 @@ constexpr uint32_t kSequenceDisableLockTime = 0xffffffffU;
 // -----------------------------------------------------------------------------
 // UtxoData
 // -----------------------------------------------------------------------------
-UtxoData& UtxoData::operator=(const cfd::UtxoData& object) {
+UtxoData::UtxoData() {
+  // do nothing
+}
+
+#ifndef CFD_DISABLE_ELEMENTS
+UtxoData::UtxoData(
+    uint64_t block_height,
+    const BlockHash& block_hash,
+    const Txid& txid,
+    uint32_t vout,
+    const Script& locking_script,
+    const Script& redeem_script,
+    const Address& address,
+    const std::string& descriptor,
+    const Amount& amount,
+    AddressType address_type,
+    void* binary_data,
+    const ConfidentialAssetId& asset,
+    const ElementsConfidentialAddress& confidential_address,
+    const BlindFactor& asset_blind_factor,
+    const BlindFactor& amount_blind_factor,
+    const ConfidentialValue& value_commitment,
+    const Script& scriptsig_template)
+    : block_height(block_height),
+      block_hash(block_hash),
+      txid(txid),
+      vout(vout),
+      locking_script(locking_script),
+      redeem_script(redeem_script),
+      address(address),
+      descriptor(descriptor),
+      amount(amount),
+      address_type(address_type),
+      binary_data(binary_data),
+      asset(asset),
+      confidential_address(confidential_address),
+      asset_blind_factor(asset_blind_factor),
+      amount_blind_factor(amount_blind_factor),
+      value_commitment(value_commitment),
+      scriptsig_template(scriptsig_template) {
+  // do nothing
+}
+#else
+UtxoData::UtxoData(
+    uint64_t block_height,
+    const BlockHash& block_hash,
+    const Txid& txid,
+    uint32_t vout,
+    const Script& locking_script,
+    const Script& redeem_script,
+    const Address& address,
+    const std::string& descriptor,
+    const Amount& amount,
+    AddressType address_type,
+    void* binary_data,
+    const ConfidentialAssetId& asset,
+    const ElementsConfidentialAddress& confidential_address,
+    const BlindFactor& asset_blind_factor,
+    const BlindFactor& amount_blind_factor,
+    const ConfidentialValue& value_commitment,
+    const Script& scriptsig_template)
+    : block_height(block_height),
+      block_hash(block_hash),
+      txid(txid),
+      vout(vout),
+      locking_script(locking_script),
+      redeem_script(redeem_script),
+      address(address),
+      descriptor(descriptor),
+      amount(amount),
+      address_type(address_type),
+      binary_data(binary_data),
+      scriptsig_template(scriptsig_template) {
+  // do nothing
+}
+#endif   // CFD_DISABLE_ELEMENTS
+
+UtxoData::UtxoData(const UtxoData& object) {
   block_height = object.block_height;
   block_hash = object.block_hash;
   txid = object.txid;
@@ -86,6 +163,30 @@ UtxoData& UtxoData::operator=(const cfd::UtxoData& object) {
   value_commitment = object.value_commitment;
 #endif  // CFD_DISABLE_ELEMENTS
   scriptsig_template = object.scriptsig_template;
+}
+
+UtxoData& UtxoData::operator=(const UtxoData& object) & {
+  if (this != &object) {
+    block_height = object.block_height;
+    block_hash = object.block_hash;
+    txid = object.txid;
+    vout = object.vout;
+    locking_script = object.locking_script;
+    redeem_script = object.redeem_script;
+    address = object.address;
+    descriptor = object.descriptor;
+    amount = object.amount;
+    address_type = object.address_type;
+    binary_data = object.binary_data;
+#ifndef CFD_DISABLE_ELEMENTS
+    asset = object.asset;
+    confidential_address = object.confidential_address;
+    asset_blind_factor = object.asset_blind_factor;
+    amount_blind_factor = object.amount_blind_factor;
+    value_commitment = object.value_commitment;
+#endif  // CFD_DISABLE_ELEMENTS
+    scriptsig_template = object.scriptsig_template;
+  }
   return *this;
 }
 
@@ -106,7 +207,7 @@ std::vector<Utxo> UtxoUtil::ConvertToUtxo(const std::vector<UtxoData>& utxos) {
 void UtxoUtil::ConvertToUtxo(
     const UtxoData& utxo_data, Utxo* utxo, UtxoData* dest) {
   if (utxo != nullptr) {
-    UtxoData output = utxo_data;
+    UtxoData output(utxo_data);
     memset(utxo, 0, sizeof(Utxo));
     utxo->block_height = utxo_data.block_height;
     utxo->vout = utxo_data.vout;
@@ -348,12 +449,14 @@ SignParameter::SignParameter(const SignParameter& sign_parameter) {
 }
 
 SignParameter& SignParameter::operator=(const SignParameter& sign_parameter) {
-  data_ = sign_parameter.GetData();
-  data_type_ = sign_parameter.GetDataType();
-  related_pubkey_ = sign_parameter.GetRelatedPubkey();
-  der_encode_ = sign_parameter.IsDerEncode();
-  sighash_type_ = sign_parameter.GetSigHashType();
-  op_code_ = sign_parameter.GetOpCode();
+  if (this != &sign_parameter) {
+    data_ = sign_parameter.GetData();
+    data_type_ = sign_parameter.GetDataType();
+    related_pubkey_ = sign_parameter.GetRelatedPubkey();
+    der_encode_ = sign_parameter.IsDerEncode();
+    sighash_type_ = sign_parameter.GetSigHashType();
+    op_code_ = sign_parameter.GetOpCode();
+  }
   return *this;
 }
 
