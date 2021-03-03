@@ -233,6 +233,8 @@ ExtractScriptData TransactionJsonApi::ExtractLockingScript(
   if (locking_script.IsWitnessProgram()) {
     uint8_t witness_version = static_cast<uint8_t>(elems[0].GetNumber());
     ByteData program = elems[1].GetBinaryData();
+    extract_data.witness_version = static_cast<WitnessVersion>(
+        witness_version);
     if (locking_script.IsP2wpkhScript()) {
       // tx witness keyhash
       extract_data.script_type = LockingScriptType::kWitnessV0KeyHash;
@@ -241,19 +243,17 @@ ExtractScriptData TransactionJsonApi::ExtractLockingScript(
       // tx witness scripthash
       extract_data.script_type = LockingScriptType::kWitnessV0ScriptHash;
       extract_data.pushed_datas.push_back(program);
+    } else if (locking_script.IsTaprootScript()) {
+      extract_data.script_type = LockingScriptType::kWitnessV1Taproot;
+      extract_data.pushed_datas.push_back(program);
     } else if (witness_version != 0) {
       // tx witness unknown
       extract_data.script_type = LockingScriptType::kWitnessUnknown;
-      std::vector<uint8_t> data;
-      data.reserve(program.GetDataSize() + 1);
-      data.push_back(witness_version);
-      std::copy(
-          program.GetBytes().begin(), program.GetBytes().end(),
-          std::back_inserter(data));
-      extract_data.pushed_datas.push_back(ByteData(data));
+      extract_data.pushed_datas.push_back(program);
     } else {
       // non standard
       extract_data.script_type = LockingScriptType::kNonStandard;
+      extract_data.witness_version = WitnessVersion::kVersionNone;
     }
     return extract_data;
   }
@@ -312,6 +312,8 @@ std::string TransactionJsonApi::ConvertLockingScriptTypeString(
       return "witness_v0_scripthash";
     case LockingScriptType::kWitnessV0KeyHash:
       return "witness_v0_keyhash";
+    case LockingScriptType::kWitnessV1Taproot:
+      return "witness_v1_taproot";
     case LockingScriptType::kWitnessUnknown:
       return "witness_unknown";
     case LockingScriptType::kTrue:
@@ -392,14 +394,20 @@ std::vector<Address> TransactionJsonApi::ConvertFromLockingScript(
     address = factory.GetAddressByHash(
         AddressType::kP2shAddress, hash);
     addr_list.push_back(address);
-  } else if (type == LockingScriptType::kWitnessV0KeyHash) {
-    address =
-        factory.GetSegwitAddressByHash(extract_data.pushed_datas[0]);
+  } else if ((type == LockingScriptType::kWitnessV0KeyHash) ||
+      (type == LockingScriptType::kWitnessV0ScriptHash) ||
+      (type == LockingScriptType::kWitnessV1Taproot)) {
+    address = factory.GetSegwitAddressByHash(
+          extract_data.pushed_datas[0], extract_data.witness_version);
     addr_list.push_back(address);
-  } else if (type == LockingScriptType::kWitnessV0ScriptHash) {
-    address =
-        factory.GetSegwitAddressByHash(extract_data.pushed_datas[0]);
-    addr_list.push_back(address);
+  } else if (type == LockingScriptType::kWitnessUnknown) {
+    try {
+      address = factory.GetSegwitAddressByHash(
+            extract_data.pushed_datas[0], extract_data.witness_version);
+      addr_list.push_back(address);
+    } catch (const CfdException& except) {
+      // If the data is invalid, it will not be output.
+    }
   } else {
     // do nothing
   }

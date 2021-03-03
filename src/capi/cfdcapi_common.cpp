@@ -168,6 +168,9 @@ cfd::core::AddressType ConvertHashToAddressType(int hash_type) {
     case kCfdP2shP2wpkh:
       addr_type = AddressType::kP2shP2wpkhAddress;
       break;
+    case kCfdTaproot:
+      addr_type = AddressType::kTaprootAddress;
+      break;
     default:
       warn(CFD_LOG_SOURCE, "Illegal hash type.({})", hash_type);
       throw CfdException(
@@ -197,6 +200,12 @@ cfd::core::AddressType ConvertAddressType(int address_type) {
     case kCfdP2shP2wpkhAddress:
       addr_type = AddressType::kP2shP2wpkhAddress;
       break;
+    case kCfdTaprootAddress:
+      addr_type = AddressType::kTaprootAddress;
+      break;
+    case kCfdWitnessUnknownAddress:
+      addr_type = AddressType::kWitnessUnknown;
+      break;
     default:
       warn(CFD_LOG_SOURCE, "Illegal address type.({})", address_type);
       throw CfdException(
@@ -217,6 +226,9 @@ cfd::core::WitnessVersion GetWitnessVersion(int hash_type) {
     case kCfdP2shP2wsh:
     case kCfdP2shP2wpkh:
       version = cfd::core::WitnessVersion::kVersion0;
+      break;
+    case kCfdTaproot:
+      version = cfd::core::WitnessVersion::kVersion1;
       break;
     default:
       warn(CFD_LOG_SOURCE, "Illegal hash type.({})", hash_type);

@@ -23,21 +23,28 @@
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_logger.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 #include "cfdcore/cfdcore_script.h"
+#include "cfdcore/cfdcore_taproot.h"
 #include "cfdcore/cfdcore_util.h"
 
 using cfd::SignParameter;
 using cfd::api::TransactionApi;
 using cfd::core::ByteData;
+using cfd::core::ByteData256;
 using cfd::core::CfdError;
 using cfd::core::CfdException;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrPubkey;
 using cfd::core::Script;
 using cfd::core::ScriptBuilder;
 using cfd::core::ScriptElement;
 using cfd::core::ScriptElementType;
 using cfd::core::SigHashAlgorithm;
 using cfd::core::SigHashType;
+using cfd::core::TapBranch;
+using cfd::core::TaprootScriptTree;
+using cfd::core::TaprootUtil;
 using cfd::core::logger::info;
 using cfd::core::logger::warn;
 
@@ -51,6 +58,8 @@ namespace capi {
 constexpr const char* const kPrefixScriptItem = "ScriptItem";
 //! prefix: MultisigScriptSig
 constexpr const char* const kPrefixMultisigScriptSig = "MultiScriptSig";
+//! prefix: TapscriptTree
+constexpr const char* const kPrefixTapscriptTree = "TapscriptTree";
 //! delimiter of script asm
 constexpr const char kScriptAsmDelimiter = ' ';
 //! MultisigScriptSig struct
@@ -66,6 +75,17 @@ struct CfdCapiScriptItemHandleData {
   std::vector<std::string>* script_items;
 };
 
+/**
+ * @brief cfd-capi TapscriptTree handle data.
+ */
+struct CfdCapiTapscriptTree {
+  char prefix[kPrefixLength];  //!< buffer prefix
+  //! tree container
+  std::vector<TaprootScriptTree>* tree_buffer;
+  //! branch container
+  std::vector<TapBranch>* branch_buffer;
+};
+
 }  // namespace capi
 }  // namespace cfd
 
@@ -75,6 +95,7 @@ struct CfdCapiScriptItemHandleData {
 using cfd::capi::AllocBuffer;
 using cfd::capi::CfdCapiMultisigScriptSigData;
 using cfd::capi::CfdCapiScriptItemHandleData;
+using cfd::capi::CfdCapiTapscriptTree;
 using cfd::capi::CheckBuffer;
 using cfd::capi::ConvertHashToAddressType;
 using cfd::capi::CreateString;
@@ -84,6 +105,7 @@ using cfd::capi::IsEmptyString;
 using cfd::capi::kMultisigMaxKeyNum;
 using cfd::capi::kPrefixMultisigScriptSig;
 using cfd::capi::kPrefixScriptItem;
+using cfd::capi::kPrefixTapscriptTree;
 using cfd::capi::kPubkeyHexSize;
 using cfd::capi::kScriptAsmDelimiter;
 using cfd::capi::kSignatureHexSize;
@@ -423,6 +445,546 @@ int CfdFreeMultisigScriptSigHandle(void* handle, void* multisig_handle) {
     FreeBuffer(
         multisig_handle, kPrefixMultisigScriptSig,
         sizeof(CfdCapiMultisigScriptSigData));
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdInitializeTaprootScriptTree(void* handle, void** tree_handle) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  CfdCapiTapscriptTree* buffer = nullptr;
+  try {
+    cfd::Initialize();
+    if (tree_handle == nullptr) {
+      warn(CFD_LOG_SOURCE, "tree_handle is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tree_handle is null.");
+    }
+
+    buffer = static_cast<CfdCapiTapscriptTree*>(
+        AllocBuffer(kPrefixTapscriptTree, sizeof(CfdCapiTapscriptTree)));
+    buffer->tree_buffer = new std::vector<TaprootScriptTree>(1);
+    buffer->branch_buffer = new std::vector<TapBranch>();
+    *tree_handle = buffer;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  CfdFreeTaprootScriptTreeHandle(handle, buffer);
+  return result;
+}
+
+int CfdSetInitialTapLeaf(
+    void* handle, void* tree_handle, const char* tapscript,
+    uint8_t leaf_version) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(tapscript)) {
+      warn(CFD_LOG_SOURCE, "tapscript is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tapscript is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    auto& tree = buffer->tree_buffer->at(0);
+
+    TaprootScriptTree leaf(leaf_version, Script(tapscript));
+    tree = leaf;
+    buffer->branch_buffer->clear();
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdSetTapScriptByWitnessStack(
+    void* handle, void* tree_handle, const char* control_block,
+    const char* tapscript, char** internal_pubkey) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_internal_pubkey = nullptr;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(control_block)) {
+      warn(CFD_LOG_SOURCE, "control_block is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. control_block is null or empty.");
+    }
+    if (IsEmptyString(tapscript)) {
+      warn(CFD_LOG_SOURCE, "tapscript is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tapscript is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    auto& tree = buffer->tree_buffer->at(0);
+
+    uint8_t leaf_version = 0;
+    SchnorrPubkey internal_pubkey_obj;
+    std::vector<ByteData256> nodes;
+    Script tapscript_obj;
+    std::vector<ByteData> witness_stack;
+    witness_stack.emplace_back(std::string(tapscript));
+    witness_stack.emplace_back(std::string(control_block));
+    TaprootUtil::ParseTaprootSignData(
+        witness_stack, nullptr, nullptr, &leaf_version, &internal_pubkey_obj,
+        &nodes, &tapscript_obj);
+    TaprootScriptTree new_tree(leaf_version, tapscript_obj);
+    for (const auto& node : nodes) new_tree.AddBranch(node);
+
+    if (internal_pubkey != nullptr) {
+      work_internal_pubkey = CreateString(internal_pubkey_obj.GetHex());
+    }
+
+    tree = new_tree;
+    buffer->branch_buffer->clear();
+    if (internal_pubkey != nullptr) *internal_pubkey = work_internal_pubkey;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_internal_pubkey);
+  return result;
+}
+
+int CfdAddTapBranchByHash(
+    void* handle, void* tree_handle, const char* branch_hash) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(branch_hash)) {
+      warn(CFD_LOG_SOURCE, "branch_hash is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. branch_hash is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    ByteData256 hash(branch_hash);
+    if (!buffer->branch_buffer->empty()) {
+      auto& branch = buffer->branch_buffer->at(0);
+      branch.AddBranch(hash);
+    } else {
+      auto& tree = buffer->tree_buffer->at(0);
+      tree.AddBranch(hash);
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdAddTapBranchByScriptTree(
+    void* handle, void* tree_handle, void* branch_tree) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    CheckBuffer(branch_tree, kPrefixTapscriptTree);
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    CfdCapiTapscriptTree* branch_buffer =
+        static_cast<CfdCapiTapscriptTree*>(branch_tree);
+
+    TapBranch* src_tree;
+    if (!branch_buffer->branch_buffer->empty()) {
+      src_tree = &branch_buffer->branch_buffer->at(0);
+    } else {
+      src_tree = &branch_buffer->tree_buffer->at(0);
+    }
+
+    if (!buffer->branch_buffer->empty()) {
+      auto& branch = buffer->branch_buffer->at(0);
+      branch.AddBranch(*src_tree);
+    } else {
+      auto& dest_tree = buffer->tree_buffer->at(0);
+      dest_tree.AddBranch(*src_tree);
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdAddTapBranchByTapLeaf(
+    void* handle, void* tree_handle, const char* tapscript,
+    uint8_t leaf_version) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(tapscript)) {
+      warn(CFD_LOG_SOURCE, "tapscript is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tapscript is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    TaprootScriptTree leaf(leaf_version, Script(tapscript));
+    if (!buffer->branch_buffer->empty()) {
+      auto& branch = buffer->branch_buffer->at(0);
+      branch.AddBranch(leaf);
+    } else {
+      auto& tree = buffer->tree_buffer->at(0);
+      tree.AddBranch(leaf);
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetRootTapLeaf(
+    void* handle, void* tree_handle, uint8_t* leaf_version, char** tapscript,
+    char** tap_leaf_hash) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_tapscript = nullptr;
+  char* work_tap_leaf_hash = nullptr;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    if (!buffer->branch_buffer->empty()) {
+      if (leaf_version != nullptr) *leaf_version = 0;
+    } else {
+      auto& tree = buffer->tree_buffer->at(0);
+      if (tapscript != nullptr) {
+        work_tapscript = CreateString(tree.GetScript().GetHex());
+      }
+      if (tap_leaf_hash != nullptr) {
+        work_tap_leaf_hash = CreateString(tree.GetTapLeafHash().GetHex());
+      }
+      if (leaf_version != nullptr) *leaf_version = tree.GetLeafVersion();
+    }
+
+    if (tapscript != nullptr) *tapscript = work_tapscript;
+    if (tap_leaf_hash != nullptr) *tap_leaf_hash = work_tap_leaf_hash;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_tapscript, &work_tap_leaf_hash);
+  return result;
+}
+
+int CfdGetTapBranchCount(
+    void* handle, void* tree_handle, uint32_t* branch_count) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    uint32_t count;
+    if (!buffer->branch_buffer->empty()) {
+      count = static_cast<uint32_t>(
+          buffer->branch_buffer->at(0).GetBranchList().size());
+    } else {
+      count = static_cast<uint32_t>(
+          buffer->tree_buffer->at(0).GetBranchList().size());
+    }
+
+    if (branch_count != nullptr) *branch_count = count;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetTapBranchData(
+    void* handle, void* tree_handle, uint8_t index_from_leaf,
+    bool is_root_data, char** branch_hash, uint8_t* leaf_version,
+    char** tapscript, uint8_t* depth_by_leaf_or_end) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_tapscript = nullptr;
+  char* work_branch_hash = nullptr;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    TapBranch* branch;
+    if (!buffer->branch_buffer->empty()) {
+      branch = &buffer->branch_buffer->at(0);
+    } else {
+      branch = &buffer->tree_buffer->at(0);
+    }
+
+    ByteData256 hash_obj;
+    TapBranch branch_data;
+    bool has_leaf = false;
+    uint8_t branch_count = 0;
+    if (is_root_data) {
+      auto nodes = branch->GetNodeList();
+      uint32_t max = static_cast<uint32_t>(nodes.size());
+      if (max <= index_from_leaf) {
+        warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
+        throw CfdException(
+            CfdError::kCfdOutOfRangeError,
+            "Failed to parameter. index_from_leaf is out of range.");
+      }
+      hash_obj = nodes.at(index_from_leaf);
+    } else {
+      auto branches = branch->GetBranchList();
+      uint32_t max = static_cast<uint32_t>(branches.size());
+      if (max <= index_from_leaf) {
+        warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
+        throw CfdException(
+            CfdError::kCfdOutOfRangeError,
+            "Failed to parameter. index_from_leaf is out of range.");
+      }
+      branch_data = branches.at(index_from_leaf);
+      hash_obj = branch_data.GetCurrentBranchHash();
+      has_leaf = branch_data.HasTapLeaf();
+      branch_count = static_cast<uint8_t>(branch_data.GetBranchList().size());
+    }
+
+    if (has_leaf && (tapscript != nullptr)) {
+      work_tapscript = CreateString(branch_data.GetScript().GetHex());
+    }
+    if (branch_hash != nullptr) {
+      work_branch_hash = CreateString(hash_obj.GetHex());
+    }
+
+    if (leaf_version != nullptr) {
+      *leaf_version = (has_leaf) ? branch_data.GetLeafVersion() : 0;
+    }
+    if (depth_by_leaf_or_end != nullptr) *depth_by_leaf_or_end = branch_count;
+    if (tapscript != nullptr) *tapscript = work_tapscript;
+    if (branch_hash != nullptr) *branch_hash = work_branch_hash;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_tapscript, &work_branch_hash);
+  return result;
+}
+
+int CfdGetTapBranchHandle(
+    void* handle, void* tree_handle, uint8_t index_from_leaf,
+    char** branch_hash, void** branch_tree_handle) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_branch_hash = nullptr;
+  CfdCapiTapscriptTree* work_branch_buffer = nullptr;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (branch_tree_handle == nullptr) {
+      warn(CFD_LOG_SOURCE, "branch_tree_handle is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. branch_tree_handle is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    TapBranch* branch;
+    if (!buffer->branch_buffer->empty()) {
+      branch = &buffer->branch_buffer->at(0);
+    } else {
+      branch = &buffer->tree_buffer->at(0);
+    }
+
+    auto branches = branch->GetBranchList();
+    uint32_t max = static_cast<uint32_t>(branches.size());
+    if (max <= index_from_leaf) {
+      warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError,
+          "Failed to parameter. index_from_leaf is out of range.");
+    }
+    TapBranch branch_data = branches.at(index_from_leaf);
+    ByteData256 hash_obj = branch_data.GetCurrentBranchHash();
+    if (branch_hash != nullptr) {
+      work_branch_hash = CreateString(hash_obj.GetHex());
+    }
+
+    work_branch_buffer = static_cast<CfdCapiTapscriptTree*>(
+        AllocBuffer(kPrefixTapscriptTree, sizeof(CfdCapiTapscriptTree)));
+    work_branch_buffer->tree_buffer = new std::vector<TaprootScriptTree>(1);
+    work_branch_buffer->branch_buffer = new std::vector<TapBranch>();
+    if (branch_data.HasTapLeaf()) {
+      TaprootScriptTree tree(branch_data);
+      auto& dest_tree = work_branch_buffer->tree_buffer->at(0);
+      dest_tree = tree;
+    } else {
+      work_branch_buffer->branch_buffer->emplace_back(branch_data);
+    }
+
+    *branch_tree_handle = work_branch_buffer;
+    if (branch_hash != nullptr) *branch_hash = work_branch_hash;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_branch_hash);
+  CfdFreeTaprootScriptTreeHandle(handle, work_branch_buffer);
+  return result;
+}
+
+int CfdGetTaprootScriptTreeHash(
+    void* handle, void* tree_handle, const char* internal_pubkey, char** hash,
+    char** tap_leaf_hash, char** control_block) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_hash = nullptr;
+  char* work_tap_leaf_hash = nullptr;
+  char* work_control_block = nullptr;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    if (IsEmptyString(internal_pubkey)) {
+      warn(CFD_LOG_SOURCE, "internal_pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. internal_pubkey is null or empty.");
+    }
+    if (!buffer->branch_buffer->empty()) {
+      warn(
+          CFD_LOG_SOURCE,
+          "This tree root is a tapbranch only. Please set tapleaf.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "This tree root is a tapbranch only. Please set tapleaf.");
+    }
+    auto& tree = buffer->tree_buffer->at(0);
+    SchnorrPubkey tapscript_hash;
+    auto control = TaprootUtil::CreateTapScriptControl(
+        SchnorrPubkey(internal_pubkey), tree, &tapscript_hash);
+
+    if (hash != nullptr) {
+      work_hash = CreateString(tapscript_hash.GetHex());
+    }
+    if (tap_leaf_hash != nullptr) {
+      work_tap_leaf_hash = CreateString(tree.GetTapLeafHash().GetHex());
+    }
+    if (control_block != nullptr) {
+      work_control_block = CreateString(control.GetHex());
+    }
+
+    if (hash != nullptr) *hash = work_hash;
+    if (tap_leaf_hash != nullptr) *tap_leaf_hash = work_tap_leaf_hash;
+    if (control_block != nullptr) *control_block = work_control_block;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_hash, &work_tap_leaf_hash, &work_control_block);
+  return result;
+}
+
+int CfdGetTaprootScriptTreeSrting(
+    void* handle, void* tree_handle, char** tree_string) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    std::string tree_str;
+    if (!buffer->branch_buffer->empty()) {
+      tree_str = buffer->branch_buffer->at(0).ToString();
+    } else {
+      tree_str = buffer->tree_buffer->at(0).ToString();
+    }
+
+    if (tree_string != nullptr) {
+      *tree_string = CreateString(tree_str);
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdFreeTaprootScriptTreeHandle(void* handle, void* tree_handle) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    if (tree_handle != nullptr) {
+      CheckBuffer(tree_handle, kPrefixTapscriptTree);
+      CfdCapiTapscriptTree* data =
+          static_cast<CfdCapiTapscriptTree*>(tree_handle);
+      if (data->tree_buffer != nullptr) {
+        delete data->tree_buffer;
+        data->tree_buffer = nullptr;
+      }
+      if (data->branch_buffer != nullptr) {
+        delete data->branch_buffer;
+        data->branch_buffer = nullptr;
+      }
+      FreeBuffer(
+          tree_handle, kPrefixTapscriptTree, sizeof(CfdCapiTapscriptTree));
+    }
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);

@@ -90,7 +90,8 @@ static ByteData256 CreateConfidentialTxSighash(
     const ConfidentialTransactionContext* transaction,
     const OutPoint& outpoint, const UtxoData& utxo,
     const SigHashType& sighash_type, const Pubkey& pubkey,
-    const Script& redeem_script, WitnessVersion version) {
+    const Script& redeem_script, WitnessVersion version, const ByteData*,
+    const TaprootScriptTree*) {
   ConfidentialValue value;
   if (utxo.value_commitment.IsEmpty()) {
     value = ConfidentialValue(utxo.amount);
@@ -689,6 +690,17 @@ void ConfidentialTransactionContext::CollectInputUtxo(
   }
 }
 
+UtxoData ConfidentialTransactionContext::GetTxInUtxoData(
+    const OutPoint& outpoint) const {
+  UtxoData utxo;
+  utxo.address_type = AddressType::kP2shAddress;
+  utxo.vout = 0;
+  utxo.block_height = 0;
+  utxo.binary_data = nullptr;
+  IsFindUtxoMap(outpoint, &utxo);
+  return utxo;
+}
+
 void ConfidentialTransactionContext::Blind(
     const std::vector<ElementsConfidentialAddress>* confidential_addresses,
     int64_t minimum_range_value, int exponent, int minimum_bits,
@@ -786,16 +798,6 @@ ByteData ConfidentialTransactionContext::Finalize() {
   Verify();
   return AbstractTransaction::GetData();
 }
-
-#if 0
-// priority: low
-void ConfidentialTransactionContext::ClearSign() { return; }
-
-// priority: low
-void ConfidentialTransactionContext::ClearSign(const OutPoint& outpoint) {
-  return;
-}
-#endif
 
 ByteData ConfidentialTransactionContext::CreateSignatureHash(
     const OutPoint& outpoint, const Pubkey& pubkey, SigHashType sighash_type,
