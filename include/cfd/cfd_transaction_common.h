@@ -62,15 +62,15 @@ enum SignDataType {
  */
 struct CFD_EXPORT UtxoData {
  public:
-  uint64_t block_height = 0; //!< blick height
-  BlockHash block_hash;      //!< block hash
-  Txid txid;                 //!< txid
-  uint32_t vout = 0;         //!< vout
-  Script locking_script;     //!< locking script
-  Script redeem_script;      //!< script
-  Address address;           //!< address
-  std::string descriptor;    //!< output descriptor
-  Amount amount;             //!< amount
+  uint64_t block_height = 0;  //!< blick height
+  BlockHash block_hash;       //!< block hash
+  Txid txid;                  //!< txid
+  uint32_t vout = 0;          //!< vout
+  Script locking_script;      //!< locking script
+  Script redeem_script;       //!< script
+  Address address;            //!< address
+  std::string descriptor;     //!< output descriptor
+  Amount amount;              //!< amount
   //! address type
   AddressType address_type = AddressType::kP2shAddress;
   //! binary data option
