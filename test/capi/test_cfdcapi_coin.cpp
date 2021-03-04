@@ -63,25 +63,23 @@ TEST(cfdcapi_coin, EstimateFeeTest) {
   AddressFactory factory;
   std::vector<UtxoData> utxos = {
     UtxoData{
-      12,
+      static_cast<uint32_t>(12),
       BlockHash("590ba2283fbe5fb9363c74417bc1cb3f76d4df9d31890f9124b9e1706136b4f4"),
       Txid("ffe2f9aa4e2c2adb1676008aa07aec5f64149470abb5d89d91b26dfba14e9318"),
-      0,
+      static_cast<uint32_t>(0),
       Script("a914155801788fcd51f57e097a0b6c30f1b69057290d87"),
       Script("001477567d12cf82a3ef6e9bb0ab3a1aba7f65410cbd"),
       factory.GetAddress("33dsYKS5E5Vp3LhAw3krvhzNaWtqmrH29k"),
       "sh(wpkh([ef735203/0\'/0\'/5\']03948c01f159b4204b682668d6e850440564b6610c0e5bf30da684b2131f77c449))#2u75feqc",
       Amount::CreateBySatoshiAmount(600000000),
       static_cast<AddressType>(0),
-#ifndef CFD_DISABLE_ELEMENTS
       nullptr,
+#ifndef CFD_DISABLE_ELEMENTS
       ConfidentialAssetId(),
       ElementsConfidentialAddress(),
       BlindFactor(),
       BlindFactor(),
       ConfidentialValue(),
-#else
-      nullptr,
 #endif  // CFD_DISABLE_ELEMENTS
       Script()
     },

@@ -848,7 +848,7 @@ int CfdGetTapBranchHandle(
           CfdError::kCfdOutOfRangeError,
           "Failed to parameter. index_from_leaf is out of range.");
     }
-    TapBranch branch_data = branches.at(index_from_leaf);
+    TapBranch& branch_data = branches.at(index_from_leaf);
     ByteData256 hash_obj = branch_data.GetCurrentBranchHash();
     if (branch_hash != nullptr) {
       work_branch_hash = CreateString(hash_obj.GetHex());
