@@ -264,6 +264,12 @@ class CFD_EXPORT AddressFactory {
       std::vector<DescriptorKeyData>* multisig_key_list = nullptr,
       std::vector<KeyData>* key_list = nullptr) const;
 
+  /**
+   * @brief Get current address prefix list.
+   * @return address prefix list.
+   */
+  std::vector<AddressFormatData> GetPrefixList() const;
+
  protected:
   NetType type_;                                //!< network type
   WitnessVersion wit_ver_;                      //!< witness version

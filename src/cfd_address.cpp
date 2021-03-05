@@ -518,4 +518,8 @@ DescriptorScriptData AddressFactory::ParseOutputDescriptor(
   return result;
 }
 
+std::vector<AddressFormatData> AddressFactory::GetPrefixList() const {
+  return prefix_list_;
+}
+
 }  // namespace cfd
