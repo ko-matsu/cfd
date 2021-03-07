@@ -210,8 +210,8 @@ Psbt& Psbt::operator=(const Psbt& psbt) & {
   if (this != &psbt) {
     struct wally_psbt* psbt_pointer = nullptr;
     struct wally_psbt* psbt_src_pointer = nullptr;
-    psbt_src_pointer = static_cast<struct wally_psbt*>(
-        psbt.wally_psbt_pointer_);
+    psbt_src_pointer =
+        static_cast<struct wally_psbt*>(psbt.wally_psbt_pointer_);
     int ret = wally_psbt_clone_alloc(psbt_src_pointer, 0, &psbt_pointer);
     if (ret != WALLY_OK) {
       warn(CFD_LOG_SOURCE, "wally_psbt_clone_alloc NG[{}]", ret);
