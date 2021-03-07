@@ -278,6 +278,20 @@ CFDC_API int CfdGetTaprootScriptTreeHash(
     char** tap_leaf_hash, char** control_block);
 
 /**
+ * @brief Get tapscript tweaked privkey.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] internal_privkey  internal private key.
+ * @param[out] tweaked_privkey  tweaked privkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTaprootTweakedPrivkey(
+    void* handle, void* tree_handle, const char* internal_privkey,
+    char** tweaked_privkey);
+
+/**
  * @brief Get tapscript hash.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.
