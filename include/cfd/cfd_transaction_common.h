@@ -112,17 +112,10 @@ struct CFD_EXPORT UtxoData {
    * @param[in] scriptsig_template    scriptsig_template
    */
   explicit UtxoData(
-      uint64_t block_height,
-      const BlockHash& block_hash,
-      const Txid& txid,
-      uint32_t vout,
-      const Script& locking_script,
-      const Script& redeem_script,
-      const Address& address,
-      const std::string& descriptor,
-      const Amount& amount,
-      AddressType address_type,
-      void* binary_data,
+      uint64_t block_height, const BlockHash& block_hash, const Txid& txid,
+      uint32_t vout, const Script& locking_script, const Script& redeem_script,
+      const Address& address, const std::string& descriptor,
+      const Amount& amount, AddressType address_type, void* binary_data,
       const ConfidentialAssetId& asset,
       const ElementsConfidentialAddress& confidential_address,
       const BlindFactor& asset_blind_factor,
@@ -146,19 +139,12 @@ struct CFD_EXPORT UtxoData {
    * @param[in] scriptsig_template    scriptsig_template
    */
   explicit UtxoData(
-      uint64_t block_height,
-      const BlockHash& block_hash,
-      const Txid& txid,
-      uint32_t vout,
-      const Script& locking_script,
-      const Script& redeem_script,
-      const Address& address,
-      const std::string& descriptor,
-      const Amount& amount,
-      AddressType address_type,
-      void* binary_data,
+      uint64_t block_height, const BlockHash& block_hash, const Txid& txid,
+      uint32_t vout, const Script& locking_script, const Script& redeem_script,
+      const Address& address, const std::string& descriptor,
+      const Amount& amount, AddressType address_type, void* binary_data,
       const Script& scriptsig_template);
-#endif   // CFD_DISABLE_ELEMENTS
+#endif  // CFD_DISABLE_ELEMENTS
   /**
    * @brief copy constructor.
    * @param[in] object    object

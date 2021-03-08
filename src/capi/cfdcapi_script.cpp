@@ -2,9 +2,7 @@
 /**
  * @file cfdcapi_script.h
  *
- * @brief cfd-capiで利用するTransaction作成のAPI定義
- *
- * C言語のAPIを提供する.
+ * @brief API implements file of Script function for used in cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #include "cfdc/cfdcapi_script.h"
@@ -34,6 +32,7 @@ using cfd::core::ByteData;
 using cfd::core::ByteData256;
 using cfd::core::CfdError;
 using cfd::core::CfdException;
+using cfd::core::Privkey;
 using cfd::core::Pubkey;
 using cfd::core::SchnorrPubkey;
 using cfd::core::Script;
@@ -934,6 +933,55 @@ int CfdGetTaprootScriptTreeHash(
     SetLastFatalError(handle, "unknown error.");
   }
   FreeBufferOnError(&work_hash, &work_tap_leaf_hash, &work_control_block);
+  return result;
+}
+
+int CfdGetTaprootTweakedPrivkey(
+    void* handle, void* tree_handle, const char* internal_privkey,
+    char** tweaked_privkey) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    if (IsEmptyString(internal_privkey)) {
+      warn(CFD_LOG_SOURCE, "internal_privkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. internal_privkey is null or empty.");
+    }
+    if (tweaked_privkey == nullptr) {
+      warn(CFD_LOG_SOURCE, "tweaked_privkey is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tweaked_privkey is null.");
+    }
+    if (!buffer->branch_buffer->empty()) {
+      warn(
+          CFD_LOG_SOURCE,
+          "This tree root is a tapbranch only. Please set tapleaf.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "This tree root is a tapbranch only. Please set tapleaf.");
+    }
+    auto& tree = buffer->tree_buffer->at(0);
+    Privkey privkey;
+    if (Privkey::HasWif(internal_privkey)) {
+      privkey = Privkey::FromWif(internal_privkey);
+    } else {
+      privkey = Privkey(internal_privkey);
+    }
+    auto taproot_privkey = tree.GetTweakedPrivkey(privkey);
+    *tweaked_privkey = CreateString(taproot_privkey.GetHex());
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
   return result;
 }
 

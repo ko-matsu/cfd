@@ -342,6 +342,19 @@ TEST(cfdcapi_script, TapscriptTree) {
       control_block = nullptr;
     }
 
+    char* tweaked_privkey = nullptr;
+    ret = CfdGetTaprootTweakedPrivkey(handle, tree_handle,
+        "305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27",
+        &tweaked_privkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(
+          "a7d17bee0b6313cf864a1ac6f203aafd74a40703ffc050f66517e4f83ff41a03",
+          tweaked_privkey);
+      CfdFreeStringBuffer(tweaked_privkey);
+      tweaked_privkey = nullptr;
+    }
+
     char* tree_str = nullptr;
     ret = CfdGetTaprootScriptTreeSrting(handle, tree_handle, &tree_str);
     EXPECT_EQ(kCfdSuccess, ret);
