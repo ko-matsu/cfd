@@ -329,8 +329,9 @@ int CfdFinalizeMultisigScript(
     for (uint32_t index = 0; index < data->current_index; ++index) {
       pubkeys.emplace_back(std::string(data->pubkeys[index]));
     }
-    Script multisig_script =
-        ScriptUtil::CreateMultisigRedeemScript(require_num, pubkeys);
+    bool has_witness = (addr_type != AddressType::kP2shAddress);
+    Script multisig_script = ScriptUtil::CreateMultisigRedeemScript(
+        require_num, pubkeys, has_witness);
 
     if (is_bitcoin) {
       AddressFactory factory(net_type);
@@ -346,8 +347,7 @@ int CfdFinalizeMultisigScript(
           CfdError::kCfdIllegalStateError, "Elements not supported.");
 #endif  // CFD_DISABLE_ELEMENTS
     }
-    if ((addr_type == AddressType::kP2pkhAddress) ||
-        (addr_type == AddressType::kP2shAddress)) {
+    if (!has_witness) {
       redeem_script_obj = multisig_script;
     } else {
       witness_script_obj = multisig_script;
