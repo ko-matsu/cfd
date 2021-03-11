@@ -360,7 +360,7 @@ TEST(cfdcapi_script, TapscriptTree) {
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
-        "tap_br(tap_br(4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,tapleaf(192,tapscript(201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac))),dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54)",
+        "{{4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,{192:201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac}},dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54}",
         tree_str);
       CfdFreeStringBuffer(tree_str);
       tree_str = nullptr;
@@ -459,7 +459,7 @@ TEST(cfdcapi_script, TapscriptTreeFromWitness) {
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
-        "tap_br(tap_br(4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,tapleaf(192,tapscript(201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac))),dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54)",
+        "{{4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,{192:201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac}},dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54}",
         tree_str);
       CfdFreeStringBuffer(tree_str);
       tree_str = nullptr;
@@ -597,7 +597,7 @@ TEST(cfdcapi_script, TapscriptTreeAddTree1) {
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
-        "tap_br(tap_br(tapleaf(192,tapscript(20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac)),tapleaf(192,tapscript(51))),tapleaf(192,tapscript(2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac)))",
+        "{{{192:20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{192:51}},{192:2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
         tree_str);
       CfdFreeStringBuffer(tree_str);
       tree_str = nullptr;
@@ -667,7 +667,7 @@ TEST(cfdcapi_script, TapscriptTreeAddTree2) {
       EXPECT_EQ(kCfdSuccess, ret);
       if (ret == kCfdSuccess) {
         EXPECT_STREQ(
-          "tap_br(tap_br(tapleaf(192,tapscript(20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac)),tapleaf(192,tapscript(51))),tapleaf(192,tapscript(2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac)))",
+          "{{{192:20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{192:51}},{192:2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
           tree_str);
         CfdFreeStringBuffer(tree_str);
         tree_str = nullptr;
