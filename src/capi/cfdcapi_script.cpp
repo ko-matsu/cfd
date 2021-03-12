@@ -516,6 +516,38 @@ int CfdSetInitialTapLeaf(
   return result;
 }
 
+int CfdSetInitialTapBranchByHash(
+    void* handle, void* tree_handle, const char* hash) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(hash)) {
+      warn(CFD_LOG_SOURCE, "tapscript is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tapscript is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    auto& tree = buffer->tree_buffer->at(0);
+    buffer->branch_buffer->clear();
+
+    TapBranch branch = TapBranch(ByteData256(hash));
+    buffer->branch_buffer->emplace_back(branch);
+
+    tree = TaprootScriptTree();  // clear
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
 int CfdSetScriptTreeFromString(
     void* handle, void* tree_handle, const char* tree_string,
     const char* tapscript, uint8_t leaf_version, const char* control_nodes) {
