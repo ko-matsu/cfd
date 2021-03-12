@@ -41,6 +41,7 @@ using cfd::core::ScriptElement;
 using cfd::core::ScriptElementType;
 using cfd::core::SigHashAlgorithm;
 using cfd::core::SigHashType;
+using cfd::core::StringUtil;
 using cfd::core::TapBranch;
 using cfd::core::TaprootScriptTree;
 using cfd::core::TaprootUtil;
@@ -515,6 +516,70 @@ int CfdSetInitialTapLeaf(
   return result;
 }
 
+int CfdSetScriptTreeFromString(
+    void* handle, void* tree_handle, const char* tree_string,
+    const char* tapscript, uint8_t leaf_version, const char* control_nodes) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(tree_string)) {
+      warn(CFD_LOG_SOURCE, "tree_string is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tree_string is null or empty.");
+    }
+    if (IsEmptyString(tapscript)) {
+      warn(CFD_LOG_SOURCE, "tapscript is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tapscript is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    auto& tree = buffer->tree_buffer->at(0);
+
+    if (leaf_version != TaprootScriptTree::kTapScriptLeafVersion) {
+      // TODO(k-matsuzawa): Support in the future.
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. leaf_version is not support.");
+    }
+
+    Script tapscript_obj(tapscript);
+    std::vector<ByteData256> target_nodes;
+    if (!IsEmptyString(control_nodes)) {
+      std::string control_str(control_nodes);
+      if ((control_str.size() % (cfd::core::kByteData256Length * 2)) == 0) {
+        size_t split_size = cfd::core::kByteData256Length * 2;
+        size_t max = control_str.size() / split_size;
+        for (size_t index = 0; index < max; ++index) {
+          size_t offset = index * split_size;
+          ByteData256 node(control_str.substr(offset, split_size));
+          target_nodes.emplace_back(node);
+        }
+      } else {  // control block
+        std::vector<ByteData> stack;
+        stack.emplace_back(tapscript_obj.GetData());
+        stack.emplace_back(ByteData(control_str));
+        TaprootUtil::ParseTaprootSignData(
+            stack, nullptr, nullptr, nullptr, nullptr, &target_nodes, nullptr);
+      }
+    }
+    tree = TaprootScriptTree::FromString(
+        tree_string, tapscript_obj, target_nodes);
+    buffer->branch_buffer->clear();
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
 int CfdSetTapScriptByWitnessStack(
     void* handle, void* tree_handle, const char* control_block,
     const char* tapscript, char** internal_pubkey) {
@@ -629,6 +694,40 @@ int CfdAddTapBranchByScriptTree(
     } else {
       auto& dest_tree = buffer->tree_buffer->at(0);
       dest_tree.AddBranch(*src_tree);
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdAddTapBranchByScriptTreeString(
+    void* handle, void* tree_handle, const char* tree_string) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(tree_string)) {
+      warn(CFD_LOG_SOURCE, "tree_string is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tree_string is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+
+    TapBranch add_branch = TapBranch::FromString(tree_string);
+    if (!buffer->branch_buffer->empty()) {
+      auto& branch = buffer->branch_buffer->at(0);
+      branch.AddBranch(add_branch);
+    } else {
+      auto& dest_tree = buffer->tree_buffer->at(0);
+      dest_tree.AddBranch(add_branch);
     }
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {

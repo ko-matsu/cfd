@@ -360,7 +360,7 @@ TEST(cfdcapi_script, TapscriptTree) {
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
-        "{{4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,{192:201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac}},dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54}",
+        "{{4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,{201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac}},dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54}",
         tree_str);
       CfdFreeStringBuffer(tree_str);
       tree_str = nullptr;
@@ -459,7 +459,7 @@ TEST(cfdcapi_script, TapscriptTreeFromWitness) {
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
-        "{{4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,{192:201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac}},dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54}",
+        "{{4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,{201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac}},dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54}",
         tree_str);
       CfdFreeStringBuffer(tree_str);
       tree_str = nullptr;
@@ -597,7 +597,7 @@ TEST(cfdcapi_script, TapscriptTreeAddTree1) {
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ(
-        "{{{192:20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{192:51}},{192:2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
+        "{{{20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{51}},{2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
         tree_str);
       CfdFreeStringBuffer(tree_str);
       tree_str = nullptr;
@@ -606,9 +606,6 @@ TEST(cfdcapi_script, TapscriptTreeAddTree1) {
     int tmp_ret = CfdFreeTaprootScriptTreeHandle(handle, tree_handle);
     EXPECT_EQ(kCfdSuccess, tmp_ret);
   }
-
-  // CfdAddTapBranchByScriptTree
-  // CfdGetTapBranchHandle
 
   ret = CfdGetLastErrorCode(handle);
   if (ret != kCfdSuccess) {
@@ -667,7 +664,7 @@ TEST(cfdcapi_script, TapscriptTreeAddTree2) {
       EXPECT_EQ(kCfdSuccess, ret);
       if (ret == kCfdSuccess) {
         EXPECT_STREQ(
-          "{{{192:20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{192:51}},{192:2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
+          "{{{20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{51}},{2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
           tree_str);
         CfdFreeStringBuffer(tree_str);
         tree_str = nullptr;
@@ -681,8 +678,129 @@ TEST(cfdcapi_script, TapscriptTreeAddTree2) {
     EXPECT_EQ(kCfdSuccess, tmp_ret);
   }
 
-  // CfdAddTapBranchByScriptTree
-  // CfdGetTapBranchHandle
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_script, TapscriptTreeAddTreeString) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  int tmp_ret = 0;
+  void* tree_handle1 = nullptr;
+  ret = CfdInitializeTaprootScriptTree(handle, &tree_handle1);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    ret = CfdSetInitialTapLeaf(handle, tree_handle1,
+        "2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac",
+        0xc0);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTapBranchByScriptTreeString(handle, tree_handle1,
+        "{{20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{51}}");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    uint32_t branch_count = 0;
+    ret = CfdGetTapBranchCount(handle, tree_handle1, &branch_count);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(1, branch_count);
+
+    char* tree_str = nullptr;
+    ret = CfdGetTaprootScriptTreeSrting(handle, tree_handle1, &tree_str);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(
+        "{{{20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{51}},{2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
+        tree_str);
+      CfdFreeStringBuffer(tree_str);
+      tree_str = nullptr;
+    }
+
+    tmp_ret = CfdFreeTaprootScriptTreeHandle(handle, tree_handle1);
+    EXPECT_EQ(kCfdSuccess, tmp_ret);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_script, TapscriptTreeRestoreFromString) {
+  const char* exp_tree_str = "{{{20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{51}},{2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}";
+  const char* tapscript_str = "20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac";
+
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  int tmp_ret = 0;
+  void* tree_handle1 = nullptr;
+  ret = CfdInitializeTaprootScriptTree(handle, &tree_handle1);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    ret = CfdSetScriptTreeFromString(handle, tree_handle1,
+        exp_tree_str, tapscript_str, 0xc0, "");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    uint32_t branch_count = 0;
+    ret = CfdGetTapBranchCount(handle, tree_handle1, &branch_count);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(2, branch_count);
+
+    char* tree_str = nullptr;
+    ret = CfdGetTaprootScriptTreeSrting(handle, tree_handle1, &tree_str);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(
+        "{{{20ac52f50b28cdd4d3bcb7f0d5cb533f232e4c4ef12fbf3e718420b84d4e3c3440ac},{51}},{2057bf643684f6c5c75e1cdf45990036502a0d897394013210858cdabcbb95a05aad205bec1a08fa3443176edd0a08e2a64642f45e57543b62bffe43ec350edc33dc22ac}}",
+        tree_str);
+      CfdFreeStringBuffer(tree_str);
+      tree_str = nullptr;
+    }
+
+    uint8_t leaf_version = 0;
+    char* tapscript = nullptr;
+    char* leaf_hash = nullptr;
+    ret = CfdGetRootTapLeaf(handle, tree_handle1,
+        &leaf_version, &tapscript, &leaf_hash);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_EQ(0xc0, leaf_version);
+      EXPECT_STREQ(tapscript_str, tapscript);
+      EXPECT_STREQ(
+        "4691fbb1196f4675241c8958a7ab6378a63aa0cc008ed03d216fd038357f52fd",
+        leaf_hash);
+      CfdFreeStringBuffer(tapscript);
+      tapscript = nullptr;
+      CfdFreeStringBuffer(leaf_hash);
+      leaf_hash = nullptr;
+    }
+
+    tmp_ret = CfdFreeTaprootScriptTreeHandle(handle, tree_handle1);
+    EXPECT_EQ(kCfdSuccess, tmp_ret);
+  }
 
   ret = CfdGetLastErrorCode(handle);
   if (ret != kCfdSuccess) {
