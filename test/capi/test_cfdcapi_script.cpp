@@ -559,7 +559,7 @@ TEST(cfdcapi_script, TapscriptTreeAddTree1) {
     if (ret == kCfdSuccess) {
       EXPECT_EQ(0, depth);
       EXPECT_STREQ(
-        "e47f58011f27e9046b8195d0ab6a2acbc68ce281437a8d5132dadf389b2a5ebb",
+        "a625d1251a1100263fa9a77b81e9e6f46c2eb8d44b9f27b629875cc102efb0ec",
         branch_hash);
       CfdFreeStringBuffer(branch_hash);
       branch_hash = nullptr;

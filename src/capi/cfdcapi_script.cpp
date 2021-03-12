@@ -786,7 +786,11 @@ int CfdGetRootTapLeaf(
     CfdCapiTapscriptTree* buffer =
         static_cast<CfdCapiTapscriptTree*>(tree_handle);
     if (!buffer->branch_buffer->empty()) {
+      auto& branch = buffer->branch_buffer->at(0);
       if (leaf_version != nullptr) *leaf_version = 0;
+      if (tap_leaf_hash != nullptr) {
+        work_tap_leaf_hash = CreateString(branch.GetRootHash().GetHex());
+      }
     } else {
       auto& tree = buffer->tree_buffer->at(0);
       if (tapscript != nullptr) {
@@ -864,25 +868,17 @@ int CfdGetTapBranchData(
     TapBranch branch_data;
     bool has_leaf = false;
     uint8_t branch_count = 0;
+    auto branches = branch->GetBranchList();
+    uint32_t max = static_cast<uint32_t>(branches.size());
+    if (max <= index_from_leaf) {
+      warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError,
+          "Failed to parameter. index_from_leaf is out of range.");
+    }
     if (is_root_data) {
-      auto nodes = branch->GetNodeList();
-      uint32_t max = static_cast<uint32_t>(nodes.size());
-      if (max <= index_from_leaf) {
-        warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
-        throw CfdException(
-            CfdError::kCfdOutOfRangeError,
-            "Failed to parameter. index_from_leaf is out of range.");
-      }
-      hash_obj = nodes.at(index_from_leaf);
+      hash_obj = branch->GetBranchHash(index_from_leaf);
     } else {
-      auto branches = branch->GetBranchList();
-      uint32_t max = static_cast<uint32_t>(branches.size());
-      if (max <= index_from_leaf) {
-        warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
-        throw CfdException(
-            CfdError::kCfdOutOfRangeError,
-            "Failed to parameter. index_from_leaf is out of range.");
-      }
       branch_data = branches.at(index_from_leaf);
       hash_obj = branch_data.GetCurrentBranchHash();
       has_leaf = branch_data.HasTapLeaf();
