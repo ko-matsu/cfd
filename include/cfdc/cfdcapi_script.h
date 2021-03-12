@@ -149,6 +149,20 @@ CFDC_API int CfdSetInitialTapLeaf(
     uint8_t leaf_version);
 
 /**
+ * @brief Set a script tree from string.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] tree_string       tree string.
+ * @param[in] tapscript         taproot script.
+ * @param[in] leaf_version      taproot leaf version.
+ * @param[in] control_nodes     control node list.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetScriptTreeFromString(
+    void* handle, void* tree_handle, const char* tree_string,
+    const char* tapscript, uint8_t leaf_version, const char* control_nodes);
+
+/**
  * @brief Set a tapscript tree from witness stack.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.
@@ -180,6 +194,16 @@ CFDC_API int CfdAddTapBranchByHash(
  */
 CFDC_API int CfdAddTapBranchByScriptTree(
     void* handle, void* tree_handle, void* branch_tree);
+
+/**
+ * @brief append for taproot script tree.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] tree_string       tree string.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddTapBranchByScriptTreeString(
+    void* handle, void* tree_handle, const char* tree_string);
 
 /**
  * @brief append for tapleaf.
