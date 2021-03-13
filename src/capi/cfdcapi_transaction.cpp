@@ -492,7 +492,8 @@ int CfdUpdateTxInScriptSig(
 int CfdSetTransactionUtxoData(
     void* handle, void* create_handle, const char* txid, uint32_t vout,
     int64_t amount, const char* commitment, const char* descriptor,
-    const char* address, const char* asset, const char* scriptsig_template) {
+    const char* address, const char* asset, const char* scriptsig_template,
+    bool can_insert) {
   try {
     cfd::Initialize();
     CheckBuffer(create_handle, kPrefixTransactionData);
@@ -536,6 +537,9 @@ int CfdSetTransactionUtxoData(
           static_cast<TransactionContext*>(tx_data->tx_obj);
       if (tx->IsFindTxIn(outpoint)) {
         tx->CollectInputUtxo({utxo});
+      } else if (!can_insert) {
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError, "Txid is not found.");
       } else {
         tx->AddInput(utxo);
       }
