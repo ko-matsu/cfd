@@ -598,8 +598,14 @@ int CfdSetScriptTreeFromString(
               nullptr);
         }
       }
-      tree = TaprootScriptTree::FromString(
-          tree_string, tapscript_obj, target_nodes);
+      std::string temp_script = "{" + tapscript_obj.GetHex() + "}";
+      if (target_nodes.empty() && (std::string(tree_string) == temp_script)) {
+        // Temporarily guard due to a defect in the analysis process.
+        tree = TaprootScriptTree(tapscript_obj);
+      } else {
+        tree = TaprootScriptTree::FromString(
+            tree_string, tapscript_obj, target_nodes);
+      }
       buffer->branch_buffer->clear();
     }
     return CfdErrorCode::kCfdSuccess;
