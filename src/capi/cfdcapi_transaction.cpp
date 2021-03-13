@@ -638,8 +638,7 @@ int CfdCreateSighashByHandle(
         if (!IsEmptyString(pubkey)) pubkey_obj = Pubkey(pubkey);
         if (!IsEmptyString(redeem_script)) script = Script(redeem_script);
         if (pubkey_obj.IsValid()) {
-          if ((utxo.address_type == AddressType::kP2wpkhAddress) ||
-              (utxo.address_type == AddressType::kP2shAddress)) {
+          if (utxo.address_type != AddressType::kP2pkhAddress) {
             version = WitnessVersion::kVersion0;
             amount = utxo.amount;
           }
@@ -676,8 +675,7 @@ int CfdCreateSighashByHandle(
         if (!IsEmptyString(pubkey)) pubkey_obj = Pubkey(pubkey);
         if (!IsEmptyString(redeem_script)) script = Script(redeem_script);
         if (pubkey_obj.IsValid()) {
-          if ((utxo.address_type == AddressType::kP2wpkhAddress) ||
-              (utxo.address_type == AddressType::kP2shAddress)) {
+          if (utxo.address_type != AddressType::kP2pkhAddress) {
             version = WitnessVersion::kVersion0;
             value = utxo_value;
           }
