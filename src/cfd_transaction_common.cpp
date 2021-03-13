@@ -241,7 +241,7 @@ void UtxoUtil::ConvertToUtxo(
         locking_script_bytes = output.locking_script.GetData().GetBytes();
         if ((script_ref.GetScriptType() !=
              DescriptorScriptType::kDescriptorScriptRaw) ||
-            (output.locking_script.IsTaprootScript())) {
+            script_ref.HasAddress()) {
           output.address_type = script_ref.GetAddressType();
           output.address = script_ref.GenerateAddress(net_type);
           if (ref_list[ref_list.size() - 1].HasRedeemScript()) {
