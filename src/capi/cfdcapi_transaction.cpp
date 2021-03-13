@@ -636,12 +636,10 @@ int CfdCreateSighashByHandle(
                 .GetData();
       } else {
         WitnessVersion version = WitnessVersion::kVersionNone;
-        Pubkey pubkey_obj;
         Script script;
         Amount amount;
-        if (!IsEmptyString(pubkey)) pubkey_obj = Pubkey(pubkey);
-        if (!IsEmptyString(redeem_script)) script = Script(redeem_script);
-        if (pubkey_obj.IsValid()) {
+        if (IsEmptyString(redeem_script)) {
+          Pubkey pubkey_obj(pubkey);
           if (utxo.address_type != AddressType::kP2pkhAddress) {
             version = WitnessVersion::kVersion0;
             amount = utxo.amount;
@@ -649,6 +647,7 @@ int CfdCreateSighashByHandle(
           sighash_bytes = tx->CreateSignatureHash(
               outpoint, pubkey_obj, sighashtype, amount, version);
         } else {
+          script = Script(redeem_script);
           auto wsh_script = ScriptUtil::CreateP2wshLockingScript(script);
           auto segwit_script = ScriptUtil::CreateP2shLockingScript(wsh_script);
           if (utxo.locking_script.Equals(wsh_script) ||
