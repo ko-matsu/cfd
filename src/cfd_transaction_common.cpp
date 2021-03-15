@@ -107,11 +107,6 @@ UtxoData::UtxoData(
     uint32_t vout, const Script& locking_script, const Script& redeem_script,
     const Address& address, const std::string& descriptor,
     const Amount& amount, AddressType address_type, void* binary_data,
-    const ConfidentialAssetId& asset,
-    const ElementsConfidentialAddress& confidential_address,
-    const BlindFactor& asset_blind_factor,
-    const BlindFactor& amount_blind_factor,
-    const ConfidentialValue& value_commitment,
     const Script& scriptsig_template)
     : block_height(block_height),
       block_hash(block_hash),
