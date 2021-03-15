@@ -243,7 +243,7 @@ TEST(cfdcapi_transaction, SignTransactionTest) {
     if (ret == kCfdSuccess) {
       ret = CfdSetTransactionUtxoData(handle, create_handle,
           exp_datas[idx].txid, exp_datas[idx].vout, exp_datas[idx].utxo_amount,
-          nullptr, exp_datas[idx].descriptor, nullptr, nullptr, nullptr);
+          nullptr, exp_datas[idx].descriptor, nullptr, nullptr, nullptr, true);
       EXPECT_EQ(kCfdSuccess, ret);
 
       ret = CfdAddTransactionOutput(handle, create_handle,

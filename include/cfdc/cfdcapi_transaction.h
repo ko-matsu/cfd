@@ -137,12 +137,14 @@ CFDC_API int CfdUpdateTxInScriptSig(
  * @param[in] address           utxo address
  * @param[in] asset             utxo asset
  * @param[in] scriptsig_template    utxo scriptsig template
+ * @param[in] can_insert        insert mode
  * @return CfdErrorCode
  */
 CFDC_API int CfdSetTransactionUtxoData(
     void* handle, void* create_handle, const char* txid, uint32_t vout,
     int64_t amount, const char* commitment, const char* descriptor,
-    const char* address, const char* asset, const char* scriptsig_template);
+    const char* address, const char* asset, const char* scriptsig_template,
+    bool can_insert);
 
 /**
  * @brief Create sighash on transaction input.

@@ -149,6 +149,16 @@ CFDC_API int CfdSetInitialTapLeaf(
     uint8_t leaf_version);
 
 /**
+ * @brief Set a initial tapbranch by hash.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[in] hash              taproot script.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetInitialTapBranchByHash(
+    void* handle, void* tree_handle, const char* hash);
+
+/**
  * @brief Set a script tree from string.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.

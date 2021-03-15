@@ -516,6 +516,38 @@ int CfdSetInitialTapLeaf(
   return result;
 }
 
+int CfdSetInitialTapBranchByHash(
+    void* handle, void* tree_handle, const char* hash) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tree_handle, kPrefixTapscriptTree);
+    if (IsEmptyString(hash)) {
+      warn(CFD_LOG_SOURCE, "tapscript is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tapscript is null or empty.");
+    }
+    CfdCapiTapscriptTree* buffer =
+        static_cast<CfdCapiTapscriptTree*>(tree_handle);
+    auto& tree = buffer->tree_buffer->at(0);
+    buffer->branch_buffer->clear();
+
+    TapBranch branch = TapBranch(ByteData256(hash));
+    buffer->branch_buffer->emplace_back(branch);
+
+    tree = TaprootScriptTree();  // clear
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
 int CfdSetScriptTreeFromString(
     void* handle, void* tree_handle, const char* tree_string,
     const char* tapscript, uint8_t leaf_version, const char* control_nodes) {
@@ -529,46 +561,48 @@ int CfdSetScriptTreeFromString(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. tree_string is null or empty.");
     }
-    if (IsEmptyString(tapscript)) {
-      warn(CFD_LOG_SOURCE, "tapscript is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. tapscript is null or empty.");
-    }
     CfdCapiTapscriptTree* buffer =
         static_cast<CfdCapiTapscriptTree*>(tree_handle);
     auto& tree = buffer->tree_buffer->at(0);
 
-    if (leaf_version != TaprootScriptTree::kTapScriptLeafVersion) {
-      // TODO(k-matsuzawa): Support in the future.
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. leaf_version is not support.");
-    }
-
-    Script tapscript_obj(tapscript);
-    std::vector<ByteData256> target_nodes;
-    if (!IsEmptyString(control_nodes)) {
-      std::string control_str(control_nodes);
-      if ((control_str.size() % (cfd::core::kByteData256Length * 2)) == 0) {
-        size_t split_size = cfd::core::kByteData256Length * 2;
-        size_t max = control_str.size() / split_size;
-        for (size_t index = 0; index < max; ++index) {
-          size_t offset = index * split_size;
-          ByteData256 node(control_str.substr(offset, split_size));
-          target_nodes.emplace_back(node);
-        }
-      } else {  // control block
-        std::vector<ByteData> stack;
-        stack.emplace_back(tapscript_obj.GetData());
-        stack.emplace_back(ByteData(control_str));
-        TaprootUtil::ParseTaprootSignData(
-            stack, nullptr, nullptr, nullptr, nullptr, &target_nodes, nullptr);
+    if (IsEmptyString(tapscript)) {
+      auto branch = TapBranch::FromString(tree_string);
+      buffer->branch_buffer->clear();
+      buffer->branch_buffer->emplace_back(branch);
+      tree = TaprootScriptTree();
+    } else {
+      if (leaf_version != TaprootScriptTree::kTapScriptLeafVersion) {
+        // TODO(k-matsuzawa): Support in the future.
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. leaf_version is not support.");
       }
+      Script tapscript_obj(tapscript);
+      std::vector<ByteData256> target_nodes;
+      if (!IsEmptyString(control_nodes)) {
+        std::string control_str(control_nodes);
+        if ((control_str.size() % (cfd::core::kByteData256Length * 2)) == 0) {
+          size_t split_size = cfd::core::kByteData256Length * 2;
+          size_t max = control_str.size() / split_size;
+          for (size_t index = 0; index < max; ++index) {
+            size_t offset = index * split_size;
+            ByteData256 node(control_str.substr(offset, split_size));
+            target_nodes.emplace_back(node);
+          }
+        } else {  // control block
+          std::vector<ByteData> stack;
+          stack.emplace_back(tapscript_obj.GetData());
+          stack.emplace_back(ByteData(control_str));
+          TaprootUtil::ParseTaprootSignData(
+              stack, nullptr, nullptr, nullptr, nullptr, &target_nodes,
+              nullptr);
+        }
+      }
+
+      tree = TaprootScriptTree::FromString(
+          tree_string, tapscript_obj, target_nodes);
+      buffer->branch_buffer->clear();
     }
-    tree = TaprootScriptTree::FromString(
-        tree_string, tapscript_obj, target_nodes);
-    buffer->branch_buffer->clear();
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -786,7 +820,11 @@ int CfdGetRootTapLeaf(
     CfdCapiTapscriptTree* buffer =
         static_cast<CfdCapiTapscriptTree*>(tree_handle);
     if (!buffer->branch_buffer->empty()) {
+      auto& branch = buffer->branch_buffer->at(0);
       if (leaf_version != nullptr) *leaf_version = 0;
+      if (tap_leaf_hash != nullptr) {
+        work_tap_leaf_hash = CreateString(branch.GetRootHash().GetHex());
+      }
     } else {
       auto& tree = buffer->tree_buffer->at(0);
       if (tapscript != nullptr) {
@@ -864,25 +902,17 @@ int CfdGetTapBranchData(
     TapBranch branch_data;
     bool has_leaf = false;
     uint8_t branch_count = 0;
+    auto branches = branch->GetBranchList();
+    uint32_t max = static_cast<uint32_t>(branches.size());
+    if (max <= index_from_leaf) {
+      warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError,
+          "Failed to parameter. index_from_leaf is out of range.");
+    }
     if (is_root_data) {
-      auto nodes = branch->GetNodeList();
-      uint32_t max = static_cast<uint32_t>(nodes.size());
-      if (max <= index_from_leaf) {
-        warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
-        throw CfdException(
-            CfdError::kCfdOutOfRangeError,
-            "Failed to parameter. index_from_leaf is out of range.");
-      }
-      hash_obj = nodes.at(index_from_leaf);
+      hash_obj = branch->GetBranchHash(index_from_leaf);
     } else {
-      auto branches = branch->GetBranchList();
-      uint32_t max = static_cast<uint32_t>(branches.size());
-      if (max <= index_from_leaf) {
-        warn(CFD_LOG_SOURCE, "index_from_leaf is out of range.");
-        throw CfdException(
-            CfdError::kCfdOutOfRangeError,
-            "Failed to parameter. index_from_leaf is out of range.");
-      }
       branch_data = branches.at(index_from_leaf);
       hash_obj = branch_data.GetCurrentBranchHash();
       has_leaf = branch_data.HasTapLeaf();

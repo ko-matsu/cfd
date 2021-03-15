@@ -492,7 +492,8 @@ int CfdUpdateTxInScriptSig(
 int CfdSetTransactionUtxoData(
     void* handle, void* create_handle, const char* txid, uint32_t vout,
     int64_t amount, const char* commitment, const char* descriptor,
-    const char* address, const char* asset, const char* scriptsig_template) {
+    const char* address, const char* asset, const char* scriptsig_template,
+    bool can_insert) {
   try {
     cfd::Initialize();
     CheckBuffer(create_handle, kPrefixTransactionData);
@@ -536,6 +537,9 @@ int CfdSetTransactionUtxoData(
           static_cast<TransactionContext*>(tx_data->tx_obj);
       if (tx->IsFindTxIn(outpoint)) {
         tx->CollectInputUtxo({utxo});
+      } else if (!can_insert) {
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError, "Txid is not found.");
       } else {
         tx->AddInput(utxo);
       }
@@ -632,26 +636,27 @@ int CfdCreateSighashByHandle(
                 .GetData();
       } else {
         WitnessVersion version = WitnessVersion::kVersionNone;
-        Pubkey pubkey_obj;
         Script script;
-        if (!IsEmptyString(pubkey)) pubkey_obj = Pubkey(pubkey);
-        if (!IsEmptyString(redeem_script)) script = Script(redeem_script);
-        if (pubkey_obj.IsValid()) {
-          if ((utxo.address_type == AddressType::kP2wpkhAddress) ||
-              (utxo.address_type == AddressType::kP2shAddress)) {
+        Amount amount;
+        if (IsEmptyString(redeem_script)) {
+          Pubkey pubkey_obj(pubkey);
+          if (utxo.address_type != AddressType::kP2pkhAddress) {
             version = WitnessVersion::kVersion0;
+            amount = utxo.amount;
           }
           sighash_bytes = tx->CreateSignatureHash(
-              outpoint, pubkey_obj, sighashtype, utxo.amount, version);
+              outpoint, pubkey_obj, sighashtype, amount, version);
         } else {
+          script = Script(redeem_script);
           auto wsh_script = ScriptUtil::CreateP2wshLockingScript(script);
           auto segwit_script = ScriptUtil::CreateP2shLockingScript(wsh_script);
           if (utxo.locking_script.Equals(wsh_script) ||
               utxo.locking_script.Equals(segwit_script)) {
             version = WitnessVersion::kVersion0;
+            amount = utxo.amount;
           }
           sighash_bytes = tx->CreateSignatureHash(
-              outpoint, script, sighashtype, utxo.amount, version);
+              outpoint, script, sighashtype, amount, version);
         }
       }
     } else {
@@ -659,8 +664,9 @@ int CfdCreateSighashByHandle(
       ConfidentialTransactionContext* tx =
           static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
       auto utxo = tx->GetTxInUtxoData(outpoint);
-      auto value = utxo.value_commitment;
-      if (!value.HasBlinding()) value = ConfidentialValue(utxo.amount);
+      ConfidentialValue value;
+      auto utxo_value = utxo.value_commitment;
+      if (!value.HasBlinding()) utxo_value = ConfidentialValue(utxo.amount);
       if (utxo.address_type == AddressType::kTaprootAddress) {
         throw CfdException(
             CfdError::kCfdIllegalStateError,
@@ -672,9 +678,9 @@ int CfdCreateSighashByHandle(
         if (!IsEmptyString(pubkey)) pubkey_obj = Pubkey(pubkey);
         if (!IsEmptyString(redeem_script)) script = Script(redeem_script);
         if (pubkey_obj.IsValid()) {
-          if ((utxo.address_type == AddressType::kP2wpkhAddress) ||
-              (utxo.address_type == AddressType::kP2shAddress)) {
+          if (utxo.address_type != AddressType::kP2pkhAddress) {
             version = WitnessVersion::kVersion0;
+            value = utxo_value;
           }
           sighash_bytes = tx->CreateSignatureHash(
               outpoint, pubkey_obj, sighashtype, value, version);
@@ -684,6 +690,7 @@ int CfdCreateSighashByHandle(
           if (utxo.locking_script.Equals(wsh_script) ||
               utxo.locking_script.Equals(segwit_script)) {
             version = WitnessVersion::kVersion0;
+            value = utxo_value;
           }
           sighash_bytes = tx->CreateSignatureHash(
               outpoint, script, sighashtype, value, version);
