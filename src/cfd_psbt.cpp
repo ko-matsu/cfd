@@ -18,6 +18,7 @@
 #include "cfdcore/cfdcore_amount.h"
 #include "cfdcore/cfdcore_psbt.h"
 #include "cfdcore/cfdcore_script.h"
+#include "cfdcore/cfdcore_taproot.h"
 #include "cfdcore/cfdcore_transaction.h"
 #include "cfdcore/cfdcore_transaction_common.h"
 #include "wally_psbt.h"  // NOLINT
@@ -30,6 +31,7 @@ using cfd::core::CfdError;
 using cfd::core::CfdException;
 using cfd::core::Script;
 using cfd::core::ScriptUtil;
+using cfd::core::TaprootScriptTree;
 using cfd::core::TxIn;
 using cfd::core::logger::warn;
 
@@ -51,7 +53,8 @@ static ByteData256 CollectSighashByTx(
     const Transaction* transaction, const OutPoint& outpoint,
     const UtxoData& utxo, const SigHashType& sighash_type,
     const Pubkey& pubkey, const Script& redeem_script,
-    WitnessVersion witness_version) {
+    WitnessVersion witness_version, const ByteData*,
+    const TaprootScriptTree*) {
   uint32_t index =
       transaction->GetTxInIndex(outpoint.GetTxid(), outpoint.GetVout());
   Script script_data = redeem_script;
@@ -71,21 +74,20 @@ static ByteData256 CollectSighashByTx(
  * @param[in] net_type        network type
  * @return descriptor script data
  */
-cfd::api::DescriptorScriptData ParseDescriptor(
+cfd::DescriptorScriptData ParseDescriptor(
     const std::string& descriptor, std::vector<KeyData>* key_list,
     NetType* net_type = nullptr) {
   std::vector<KeyData> temp_key_list;
-  cfd::api::AddressApi addr_api;
-  cfd::api::DescriptorScriptData script_data;
+  cfd::DescriptorScriptData script_data;
   if (net_type == nullptr) {
     NetType target_list[] = {
         NetType::kMainnet, NetType::kTestnet, NetType::kRegtest};
     size_t max = (sizeof(target_list) / sizeof(NetType)) - 1;
     for (size_t index = 0; index <= max; ++index) {
       try {
-        script_data = addr_api.ParseOutputDescriptor(
-            descriptor, target_list[index], "", nullptr, nullptr, nullptr,
-            &temp_key_list);
+        cfd::AddressFactory addr_factory(target_list[index]);
+        script_data = addr_factory.ParseOutputDescriptor(
+            descriptor, "", nullptr, nullptr, &temp_key_list);
         break;
       } catch (const CfdException& except) {
         if (index == max) {
@@ -94,8 +96,9 @@ cfd::api::DescriptorScriptData ParseDescriptor(
       }
     }
   } else {
-    script_data = addr_api.ParseOutputDescriptor(
-        descriptor, *net_type, "", nullptr, nullptr, nullptr, &temp_key_list);
+    cfd::AddressFactory addr_factory(*net_type);
+    script_data = addr_factory.ParseOutputDescriptor(
+        descriptor, "", nullptr, nullptr, &temp_key_list);
   }
   if (key_list != nullptr) {
     for (const auto& key : temp_key_list) {
@@ -132,7 +135,7 @@ bool ConvertFromUtxoData(
   if (outpoint != nullptr) *outpoint = OutPoint(utxo.txid, utxo.vout);
 
   std::vector<KeyData> work_key_list;
-  cfd::api::DescriptorScriptData script_data =
+  cfd::DescriptorScriptData script_data =
       ParseDescriptor(utxo.descriptor, &work_key_list, net_type);
 
   if (key_list != nullptr) {
@@ -204,18 +207,21 @@ Psbt::Psbt(const Psbt& psbt) : cfd::core::Psbt(psbt.GetData()) {
 }
 
 Psbt& Psbt::operator=(const Psbt& psbt) & {
-  struct wally_psbt* psbt_pointer = nullptr;
-  struct wally_psbt* psbt_src_pointer = nullptr;
-  psbt_src_pointer = static_cast<struct wally_psbt*>(psbt.wally_psbt_pointer_);
-  int ret = wally_psbt_clone_alloc(psbt_src_pointer, 0, &psbt_pointer);
-  if (ret != WALLY_OK) {
-    warn(CFD_LOG_SOURCE, "wally_psbt_clone_alloc NG[{}]", ret);
-    throw CfdException(CfdError::kCfdInternalError, "psbt clone error.");
+  if (this != &psbt) {
+    struct wally_psbt* psbt_pointer = nullptr;
+    struct wally_psbt* psbt_src_pointer = nullptr;
+    psbt_src_pointer =
+        static_cast<struct wally_psbt*>(psbt.wally_psbt_pointer_);
+    int ret = wally_psbt_clone_alloc(psbt_src_pointer, 0, &psbt_pointer);
+    if (ret != WALLY_OK) {
+      warn(CFD_LOG_SOURCE, "wally_psbt_clone_alloc NG[{}]", ret);
+      throw CfdException(CfdError::kCfdInternalError, "psbt clone error.");
+    }
+    cfd::core::Psbt::FreeWallyPsbtAddress(wally_psbt_pointer_);  // free
+    wally_psbt_pointer_ = psbt_pointer;
+    base_tx_ = cfd::core::Psbt::RebuildTransaction(wally_psbt_pointer_);
+    verify_ignore_map_ = psbt.verify_ignore_map_;
   }
-  cfd::core::Psbt::FreeWallyPsbtAddress(wally_psbt_pointer_);  // free
-  wally_psbt_pointer_ = psbt_pointer;
-  base_tx_ = cfd::core::Psbt::RebuildTransaction(wally_psbt_pointer_);
-  verify_ignore_map_ = psbt.verify_ignore_map_;
   return *this;
 }
 
@@ -684,7 +690,7 @@ std::vector<UtxoData> Psbt::FundTransaction(
     }
     if (change_address != nullptr) {
       std::vector<KeyData> key_list;
-      cfd::api::DescriptorScriptData script_data =
+      cfd::DescriptorScriptData script_data =
           ParseDescriptor(change_address->ToString(), &key_list, &net_type);
       auto txout = fund_basetx.GetTxOut(base_tx_.GetTxOutCount());
       if (!script_data.locking_script.Equals(txout.GetLockingScript())) {

@@ -44,18 +44,21 @@ enum LockingScriptType {
   kNullData,             //!< null data of locking script
   kWitnessV0ScriptHash,  //!< p2wsh locking script
   kWitnessV0KeyHash,     //!< p2wpkh locking script
+  kWitnessV1Taproot,     //!< taproot locking script
   kWitnessUnknown,       //!< invalid witness ver locking script
   kTrue,                 //!< can spend anyone script
   kFee,                  //!< type fee (elements only)
 };
 
 /**
- * @brief LockingScriptの解析情報
+ * @brief LockingScript extract data
  */
 struct ExtractScriptData {
-  LockingScriptType script_type;  //!< LockingScript種別
-  std::vector<ByteData> pushed_datas;  //!< LockingScriptに含まれるhashデータ
-  int64_t req_sigs;                    //!< Unlockingに必要なSignature数
+  LockingScriptType script_type;  //!< LockingScript type
+  std::vector<ByteData> pushed_datas;  //!< hashed data by locking script
+  int64_t req_sigs;                    //!< multisig unlocking signature num
+  //! Witness version
+  WitnessVersion witness_version = WitnessVersion::kVersionNone;
 };
 
 /**

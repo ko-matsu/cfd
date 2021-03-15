@@ -138,7 +138,8 @@ void PsbtJsonApi::DecodePsbt(
 
   Amount total_input;
   bool is_unset_utxo = false;
-  for (size_t index=0; index<tx.GetTxInCount(); ++index) {
+  uint32_t max = static_cast<uint32_t>(tx.GetTxInCount());
+  for (uint32_t index=0; index<max; ++index) {
     DecodePsbtInput input;
     auto tx_input = tx.GetTxIn(index);
     bool has_amount = false;
@@ -295,7 +296,8 @@ void PsbtJsonApi::DecodePsbt(
   }
 
   Amount total_output;
-  for (size_t index=0; index<tx.GetTxOutCount(); ++index) {
+  max = static_cast<uint32_t>(tx.GetTxOutCount());
+  for (uint32_t index=0; index<tx.GetTxOutCount(); ++index) {
     DecodePsbtOutput output;
     const auto& txout = tx.GetTxOut(index);
     total_output += txout.GetValue();

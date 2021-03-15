@@ -121,7 +121,8 @@ class TransactionContextUtil {
       const AbstractTxIn* txin,
       std::function<ByteData256(
           const Tx*, const OutPoint&, const UtxoData&, const SigHashType&,
-          const Pubkey&, const Script&, WitnessVersion)>
+          const Pubkey&, const Script&, WitnessVersion, const ByteData*,
+          const TaprootScriptTree*)>
           create_sighash_func);
 
   /**
