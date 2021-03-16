@@ -613,8 +613,8 @@ int CfdCreateSighashByHandle(
     OutPoint outpoint(Txid(txid), vout);
 
     ByteData sighash_bytes;
-    SigHashType sighashtype(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType sighashtype = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
     if (is_bitcoin) {
       TransactionContext* tx =
           static_cast<TransactionContext*>(tx_data->tx_obj);
@@ -746,8 +746,8 @@ int CfdAddSignWithPrivkeyByHandle(
     OutPoint outpoint(Txid(txid), vout);
 
     ByteData sighash_bytes;
-    SigHashType sighashtype(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType sighashtype = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
 
     Privkey privkey_obj;
     std::string privkey_str(privkey);
@@ -891,8 +891,8 @@ int CfdAddTxSignByHandle(
     SignParameter param;
     if (use_der_encode) {
       // encode to der
-      SigHashType sighashtype(
-          static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+      SigHashType sighashtype = SigHashType::Create(
+          static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
       ByteData signature_bytes = ByteData(std::string(sign_data_hex));
       param = SignParameter(signature_bytes, true, sighashtype);
     } else {
@@ -1045,8 +1045,8 @@ int CfdAddPubkeyHashSignByHandle(
     SignParameter param;
     if (use_der_encode) {
       // encode to der
-      SigHashType sighashtype(
-          static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+      SigHashType sighashtype = SigHashType::Create(
+          static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
       ByteData signature_bytes = ByteData(std::string(signature));
       param = SignParameter(signature_bytes, true, sighashtype);
     } else {
@@ -1238,8 +1238,8 @@ int CfdAddTxSign(
     SignParameter param;
     if (use_der_encode) {
       // encode to der
-      SigHashType sighashtype(
-          static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+      SigHashType sighashtype = SigHashType::Create(
+          static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
       ByteData signature_bytes = ByteData(std::string(sign_data_hex));
       param = SignParameter(signature_bytes, true, sighashtype);
     } else {
@@ -1320,8 +1320,8 @@ int CfdAddPubkeyHashSign(
     SignParameter param;
     if (use_der_encode) {
       // encode to der
-      SigHashType sighashtype(
-          static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+      SigHashType sighashtype = SigHashType::Create(
+          static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
       ByteData signature_bytes = ByteData(std::string(signature));
       param = SignParameter(signature_bytes, true, sighashtype);
     } else {
@@ -1495,8 +1495,8 @@ int CfdAddSignWithPrivkeySimple(
     }
 
     OutPoint outpoint(Txid(txid), vout);
-    SigHashType sighashtype(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType sighashtype = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
 
     bool is_bitcoin = false;
     ConvertNetType(net_type, &is_bitcoin);
@@ -1618,8 +1618,8 @@ int CfdAddMultisigSignDataToDer(
     }
 
     // encode to der
-    SigHashType sighashtype(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType sighashtype = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
     ByteData signature_bytes = ByteData(std::string(signature));
     SignParameter param(signature_bytes, true, sighashtype);
     ByteData signature_der = param.ConvertToSignature();
@@ -1796,8 +1796,8 @@ int CfdVerifySignature(
     WitnessVersion version = GetWitnessVersion(hash_type);
     Amount amount = Amount(value_satoshi);
     OutPoint outpoint(Txid(txid), vout);
-    SigHashType sighashtype(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType sighashtype = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
     ByteData signature_obj(signature);
 
     bool is_verify = false;
@@ -2011,8 +2011,8 @@ int CfdCreateSighash(
     ConvertNetType(net_type, &is_bitcoin);
     Amount value(value_satoshi);
     ByteData sighash_bytes;
-    SigHashType sighashtype(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType sighashtype = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
     if ((core_hash_type == HashType::kP2sh) ||
         (core_hash_type == HashType::kP2wsh)) {
       if (IsEmptyString(redeem_script)) {

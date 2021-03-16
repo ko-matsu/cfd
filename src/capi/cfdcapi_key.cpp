@@ -712,8 +712,8 @@ int CfdAddSighashTypeInSchnorrSignature(
           "Failed to parameter. added_signature is null or empty.");
     }
     SchnorrSignature sig(signature);
-    SigHashType sighash_type_obj(
-        static_cast<SigHashAlgorithm>(sighash_type), anyone_can_pay);
+    SigHashType sighash_type_obj = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), anyone_can_pay);
     sig.SetSigHashType(sighash_type_obj);
     *added_signature = CreateString(sig.GetData(true).GetHex());
     return CfdErrorCode::kCfdSuccess;
@@ -906,8 +906,8 @@ int CfdEncodeSignatureByDer(
           "Failed to parameter. der_signature is null.");
     }
 
-    SigHashType type = SigHashType(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType type = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
     ByteData der_sig = CryptoUtil::ConvertSignatureToDer(signature, type);
     *der_signature = CreateString(der_sig.GetHex());
 

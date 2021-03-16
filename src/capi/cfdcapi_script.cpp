@@ -355,8 +355,8 @@ int CfdAddMultisigScriptSigDataToDer(
     }
 
     // encode to der
-    SigHashType sighashtype(
-        static_cast<SigHashAlgorithm>(sighash_type), sighash_anyone_can_pay);
+    SigHashType sighashtype = SigHashType::Create(
+        static_cast<uint8_t>(sighash_type), sighash_anyone_can_pay);
     ByteData signature_bytes = ByteData(std::string(signature));
     SignParameter param(signature_bytes, true, sighashtype);
     ByteData signature_der = param.ConvertToSignature();
