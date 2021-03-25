@@ -764,11 +764,12 @@ UtxoData Psbt::GetUtxoData(uint32_t index, NetType net_type) const {
     if (witness_only &&
         (psbt_pointer->inputs[index].final_witness != nullptr)) {
       auto witness_stack = psbt_pointer->inputs[index].final_witness;
-      uint32_t last_index = witness_stack->num_items;
+      uint32_t last_index = static_cast<uint32_t>(witness_stack->num_items);
       if (last_index > 0) {
         ByteData last_data(
             witness_stack->items[last_index - 1].witness,
-            witness_stack->items[last_index - 1].witness_len);
+            static_cast<uint32_t>(
+                witness_stack->items[last_index - 1].witness_len));
         if (Pubkey::IsValid(last_data)) {
           key_list.emplace_back(KeyData(Pubkey(last_data), "", ByteData()));
           if (utxo.address_type == AddressType::kP2shAddress) {
@@ -789,9 +790,10 @@ UtxoData Psbt::GetUtxoData(uint32_t index, NetType net_type) const {
     } else if (psbt_pointer->inputs[index].final_scriptsig != nullptr) {
       Script scriptsig(ByteData(
           psbt_pointer->inputs[index].final_scriptsig,
-          psbt_pointer->inputs[index].final_scriptsig_len));
+          static_cast<uint32_t>(
+              psbt_pointer->inputs[index].final_scriptsig_len)));
       auto items = scriptsig.GetElementList();
-      uint32_t last_index = items.size();
+      uint32_t last_index = static_cast<uint32_t>(items.size());
       if (last_index > 0) {
         ByteData last_data = items[last_index - 1].GetBinaryData();
         if (Pubkey::IsValid(last_data)) {

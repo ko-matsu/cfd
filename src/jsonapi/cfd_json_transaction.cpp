@@ -405,7 +405,7 @@ std::vector<Address> TransactionJsonApi::ConvertFromLockingScript(
       address = factory.GetSegwitAddressByHash(
             extract_data.pushed_datas[0], extract_data.witness_version);
       addr_list.push_back(address);
-    } catch (const CfdException& except) {
+    } catch (const CfdException&) {
       // If the data is invalid, it will not be output.
     }
   } else {
