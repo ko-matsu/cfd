@@ -228,7 +228,7 @@ CFDC_API int CfdAddTapBranchByTapLeaf(
     uint8_t leaf_version);
 
 /**
- * @brief Get root tapleaf data.
+ * @brief Get base tapleaf data.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.
  * @param[out] leaf_version     taproot leaf version. Set to 0 if not tapleaf.
@@ -240,7 +240,7 @@ CFDC_API int CfdAddTapBranchByTapLeaf(
  *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
  */
-CFDC_API int CfdGetRootTapLeaf(
+CFDC_API int CfdGetBaseTapLeaf(
     void* handle, void* tree_handle, uint8_t* leaf_version, char** tapscript,
     char** tap_leaf_hash);
 
@@ -258,7 +258,7 @@ CFDC_API int CfdGetTapBranchCount(
  * @brief Get tapbranch data.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.
- * @param[in] index_from_leaf   index from root tapleaf.
+ * @param[in] index_from_leaf   index from base tapleaf.
  * @param[in] is_root_data      true is getting combined hash.
  * @param[out] branch_hash      tapbranch hash.
  *   If 'CfdFreeStringBuffer' is implemented,
@@ -279,7 +279,7 @@ CFDC_API int CfdGetTapBranchData(
  * @brief Get tapbranch handle.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.
- * @param[in] index_from_leaf   index from root tapleaf.
+ * @param[in] index_from_leaf   index from base tapleaf.
  * @param[out] branch_hash      tapbranch hash.
  *   If 'CfdFreeStringBuffer' is implemented,
  *   Call 'CfdFreeStringBuffer' after you are finished using it.

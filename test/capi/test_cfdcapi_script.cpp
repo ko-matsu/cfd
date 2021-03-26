@@ -411,7 +411,7 @@ TEST(cfdcapi_script, TapscriptTreeFromWitness) {
     uint8_t leaf_version = 0;
     char* tapscript = nullptr;
     char* leaf_hash = nullptr;
-    ret = CfdGetRootTapLeaf(handle, tree_handle,
+    ret = CfdGetBaseTapLeaf(handle, tree_handle,
         &leaf_version, &tapscript, &leaf_hash);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
@@ -783,7 +783,7 @@ TEST(cfdcapi_script, TapscriptTreeRestoreFromString) {
     uint8_t leaf_version = 0;
     char* tapscript = nullptr;
     char* leaf_hash = nullptr;
-    ret = CfdGetRootTapLeaf(handle, tree_handle1,
+    ret = CfdGetBaseTapLeaf(handle, tree_handle1,
         &leaf_version, &tapscript, &leaf_hash);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
