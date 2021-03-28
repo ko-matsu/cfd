@@ -175,7 +175,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        alpine: [3.10, 3.12, 3.13]
+        alpine: ['3.10', '3.12', '3.13']
 
     steps:
     - name: checkout
