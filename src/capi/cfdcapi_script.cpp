@@ -808,7 +808,7 @@ int CfdAddTapBranchByTapLeaf(
   return result;
 }
 
-int CfdGetRootTapLeaf(
+int CfdGetBaseTapLeaf(
     void* handle, void* tree_handle, uint8_t* leaf_version, char** tapscript,
     char** tap_leaf_hash) {
   int result = CfdErrorCode::kCfdUnknownError;
@@ -823,7 +823,7 @@ int CfdGetRootTapLeaf(
       auto& branch = buffer->branch_buffer->at(0);
       if (leaf_version != nullptr) *leaf_version = 0;
       if (tap_leaf_hash != nullptr) {
-        work_tap_leaf_hash = CreateString(branch.GetRootHash().GetHex());
+        work_tap_leaf_hash = CreateString(branch.GetBaseHash().GetHex());
       }
     } else {
       auto& tree = buffer->tree_buffer->at(0);
