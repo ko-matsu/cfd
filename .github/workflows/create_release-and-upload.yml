@@ -185,8 +185,19 @@ jobs:
       run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
     - name: list
       run: ls -a $GITHUB_WORKSPACE
-    - name: docker setup
-      uses: docker://alpine:${{ matrix.alpine }}
+    - name: docker setup 3.10
+      if: matrix.alpine == '3.10'
+      uses: docker://alpine:3.10
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: docker setup 3.12
+      if: matrix.alpine == '3.12'
+      uses: docker://alpine:3.12
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: docker setup 3.13
+      if: matrix.alpine == '3.13'
+      uses: docker://alpine:3.13
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
     - name: create archive file
