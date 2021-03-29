@@ -821,7 +821,14 @@ int CfdGetBaseTapLeaf(
         static_cast<CfdCapiTapscriptTree*>(tree_handle);
     if (!buffer->branch_buffer->empty()) {
       auto& branch = buffer->branch_buffer->at(0);
-      if (leaf_version != nullptr) *leaf_version = 0;
+      if (branch.HasTapLeaf()) {
+        if (tapscript != nullptr) {
+          work_tapscript = CreateString(branch.GetScript().GetHex());
+        }
+        if (leaf_version != nullptr) *leaf_version = branch.GetLeafVersion();
+      } else {
+        if (leaf_version != nullptr) *leaf_version = 0;
+      }
       if (tap_leaf_hash != nullptr) {
         work_tap_leaf_hash = CreateString(branch.GetBaseHash().GetHex());
       }
