@@ -1696,7 +1696,7 @@ int CfdGetPsbtBip32Data(
     KeyData key;
     bool has_extpubkey = pk_obj.HasExtPubkey();
     Pubkey target_pubkey = pk_obj.GetPubkey();
-    for (const auto temp_key : key_list) {
+    for (const auto& temp_key : key_list) {
       if (temp_key.GetPubkey().Equals(target_pubkey)) {
         if (has_extpubkey) {
           if (temp_key.GetExtPubkey().GetData().Equals(
