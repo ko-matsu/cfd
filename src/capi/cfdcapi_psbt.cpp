@@ -1012,7 +1012,7 @@ int CfdSetPsbtFinalizeScript(
     if (is_witness) {
       Script scriptsig_obj(scriptsig);
       bool is_multi_first = script.IsMultisigScript();
-      for (const auto item : scriptsig_obj.GetElementList()) {
+      for (const auto& item : scriptsig_obj.GetElementList()) {
         if (is_multi_first) {
           if (item.GetOpCode() == ScriptOperator::OP_0) {
             script_stack.emplace_back(ByteData());
@@ -1793,7 +1793,7 @@ int CfdGetPsbtPubkeyList(
       ByteData empty_fingerprint;
       std::string empty_path;
       key_list.reserve(pk_list.size());
-      for (const auto pubkey : pk_list) {
+      for (const auto& pubkey : pk_list) {
         key_list.emplace_back(pubkey, empty_path, empty_fingerprint);
       }
     }
