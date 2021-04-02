@@ -131,7 +131,19 @@ enum CfdSighashType {
   /** SIGHASH_NONE */
   kCfdSigHashNone = 0x02,
   /** SIGHASH_SINGLE */
-  kCfdSigHashSingle = 0x03
+  kCfdSigHashSingle = 0x03,
+  /** SIGHASH_ALL|ANYONECANPAY */
+  kCfdSigHashAllPlusAnyoneCanPay = 0x81,
+  /** SIGHASH_NONE|ANYONECANPAY */
+  kCfdSigHashNonePlusAnyoneCanPay = 0x82,
+  /** SIGHASH_SINGLE|ANYONECANPAY */
+  kCfdSigHashSinglePlusAnyoneCanPay = 0x83,
+  /** SIGHASH_ALL|RANGEPROOF */
+  kCfdSigHashAllPlusRangeproof = 0x41,
+  /** SIGHASH_NONE|RANGEPROOF */
+  kCfdSigHashNonePlusRangeproof = 0x42,
+  /** SIGHASH_SINGLE|RANGEPROOF */
+  kCfdSigHashSinglePlusRangeproof = 0x43
 };
 
 /**
