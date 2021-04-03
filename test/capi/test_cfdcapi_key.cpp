@@ -238,6 +238,26 @@ TEST(cfdcapi_key, PrivkeyAndPubkeyTest) {
       CfdFreeStringBuffer(wif2);
     }
 
+    void* handle2 = NULL;
+    ret = CfdCreateHandle(&handle2);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_FALSE((NULL == handle2));
+
+    ret = CfdGetPrivkeyWif(handle2, privkey, kCfdNetworkElementsRegtest,
+        false, &wif2);
+    EXPECT_EQ(kCfdIllegalArgumentError, ret);
+    if (ret == kCfdIllegalArgumentError) {
+      char* err_msg = NULL;
+      ret = CfdGetLastErrorMessage(handle2, &err_msg);
+      EXPECT_EQ(kCfdSuccess, ret);
+      EXPECT_STREQ("Failed to parameter. privkey's network_type is invalid.",
+          err_msg);
+      CfdFreeStringBuffer(err_msg);
+      err_msg = NULL;
+    }
+    ret = CfdFreeHandle(handle2);
+    EXPECT_EQ(kCfdSuccess, ret);
+
     ret = CfdGetPubkeyFromPrivkey(handle, privkey, nullptr, false, &pubkey2);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
