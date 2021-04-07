@@ -1110,8 +1110,7 @@ int CfdGetPsbtSighashType(
       *sighash_type = 0;
     } else {
       auto sighash_type_obj = psbt_obj->psbt->GetTxInSighashType(outpoint);
-      *sighash_type =
-          static_cast<uint32_t>(sighash_type_obj.GetSigHashAlgorithm());
+      *sighash_type = sighash_type_obj.GetSigHashFlag();
     }
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
