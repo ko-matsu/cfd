@@ -1087,7 +1087,7 @@ TEST(cfdcapi_key, SchnorrSignatureTest) {
           handle, exp_datas[idx].sighash_signature, &sighash_type, &anyone_can_pay);
       EXPECT_EQ(kCfdSuccess, ret);
       if (ret == kCfdSuccess) {
-        EXPECT_EQ(exp_datas[idx].sighash_type, sighash_type);
+        EXPECT_EQ(exp_datas[idx].sighash_type, sighash_type & 0x1f);
         EXPECT_EQ(exp_datas[idx].anyone_can_pay, anyone_can_pay);
       }
     }

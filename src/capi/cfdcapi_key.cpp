@@ -749,7 +749,7 @@ int CfdGetSighashTypeFromSchnorrSignature(
     SchnorrSignature sig(signature);
     auto sighash_type_obj = sig.GetSigHashType();
     if (sighash_type != nullptr) {
-      *sighash_type = static_cast<int>(sighash_type_obj.GetSigHashAlgorithm());
+      *sighash_type = static_cast<int>(sighash_type_obj.GetSigHashFlag());
     }
     if (anyone_can_pay != nullptr) {
       *anyone_can_pay = sighash_type_obj.IsAnyoneCanPay();
@@ -952,7 +952,7 @@ int CfdDecodeSignatureFromDer(
     ByteData sig =
         CryptoUtil::ConvertSignatureFromDer(ByteData(der_signature), &type);
     *signature = CreateString(sig.GetHex());
-    if (sighash_type) *sighash_type = int{type.GetSigHashAlgorithm()};
+    if (sighash_type) *sighash_type = static_cast<int>(type.GetSigHashFlag());
     if (sighash_anyone_can_pay)
       *sighash_anyone_can_pay = type.IsAnyoneCanPay();
 
