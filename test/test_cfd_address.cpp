@@ -721,6 +721,20 @@ TEST(AddressFactory, ParseOutputDescriptor) {
       1
     },
     {
+      "sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))",
+      NetType::kMainnet,
+      DescriptorScriptType::kDescriptorScriptSh,
+      "a91455e8d5e8ee4f3604aba23c71c2684fa0a56a3a1287",
+      0,
+      "39XGHYpYmJV9sGFoGHZeU2rLkY6r1MJ6C1",
+      AddressType::kP2shP2wshAddress,
+      "76a914c42e7ef92fdb603af844d064faad95db9bcdfd3d88ac",
+      DescriptorKeyType::kDescriptorKeyPublic,
+      "02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13",
+      "",
+      0
+    },
+    {
       "addr(bc1qc7slrfxkknqcq2jevvvkdgvrt8080852dfjewde450xdlk4ugp7szw5tk9)",
       NetType::kMainnet,
       DescriptorScriptType::kDescriptorScriptAddr,
