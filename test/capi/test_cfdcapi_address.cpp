@@ -348,13 +348,13 @@ TEST(cfdcapi_address, CfdParseDescriptorTest) {
   
     if (ret == kCfdSuccess) {
       assert_desc_root_data(handle, descriptor_handle,
-          kDescriptorScriptTaproot, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt",
+          kCfdDescriptorScriptTaproot, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt",
           kCfdTaproot, "",
           kCfdDescriptorKeyBip32, "038c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "xpub6EKMC2gSMfKgSwn7V9VZn7x1MvoeeVzSmmtSJ4z2L2d6R4WxvdQMouokypZHVp4fgKycrrQnGr6WJ5ED5jG9Q9FiA1q5gKYUc8u6JHJhdo8",
           "", "8c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "",
           false, 0, 0);
       assert_desc_data(handle, descriptor_handle, 0, max_index, 0,
-          kDescriptorScriptTaproot, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt",
+          kCfdDescriptorScriptTaproot, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt",
           kCfdTaproot, "",
           kCfdDescriptorKeyBip32,
           "038c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816",
@@ -390,14 +390,14 @@ TEST(cfdcapi_address, CfdParseDescriptorTest) {
   
     if (ret == kCfdSuccess) {
       assert_desc_root_data(handle, descriptor_handle,
-          kDescriptorScriptTaproot, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv",
+          kCfdDescriptorScriptTaproot, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv",
           kCfdTaproot, "",
           kCfdDescriptorKeySchnorr, "", "",
           "", "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a",
           "{tl(208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816ac),{tl(208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816ac),tl(205cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bcac7c82012088a820e38990d0c7fc009880a9c07c23842e886c6bbdc964ce6bdd5817ad357335ee6f87936b82012088a914dd69735817e0e3f6f826a9238dc2e291184f0131876c935287)}}",
           false, 0, 0);
       assert_desc_data(handle, descriptor_handle, 0, max_index, 0,
-          kDescriptorScriptTaproot, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv",
+          kCfdDescriptorScriptTaproot, "51204f009acbd8c905be4470df1b92c70be16a71d354ba55cc0e6517853f77d79651", "bcrt1pfuqf4j7ceyzmu3rsmude93ctu948r565hf2ucrn9z7zn7a7hjegskj3rsv",
           kCfdTaproot, "",
           kCfdDescriptorKeySchnorr,
           "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a",

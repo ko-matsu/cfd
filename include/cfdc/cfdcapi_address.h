@@ -173,9 +173,9 @@ enum CfdDescriptorScriptType {
   /** raw script */
   kCfdDescriptorScriptRaw,
   /** miniscript (internal) */
-  kDescriptorScriptMiniscript,
+  kCfdDescriptorScriptMiniscript,
   /** taproot */
-  kDescriptorScriptTaproot,
+  kCfdDescriptorScriptTaproot,
 };
 
 /**
