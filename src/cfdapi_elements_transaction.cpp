@@ -9,6 +9,7 @@
 #include "cfd/cfdapi_elements_transaction.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <map>
 #include <set>

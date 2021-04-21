@@ -250,8 +250,12 @@ TEST(cfdcapi_key, PrivkeyAndPubkeyTest) {
       char* err_msg = NULL;
       ret = CfdGetLastErrorMessage(handle2, &err_msg);
       EXPECT_EQ(kCfdSuccess, ret);
+#ifndef CFD_DISABLE_ELEMENTS
       EXPECT_STREQ("Failed to parameter. privkey's network_type is invalid.",
           err_msg);
+#else  // CFD_DISABLE_ELEMENTS
+      EXPECT_STREQ("Illegal network type.", err_msg);
+#endif  // CFD_DISABLE_ELEMENTS
       CfdFreeStringBuffer(err_msg);
       err_msg = NULL;
     }
