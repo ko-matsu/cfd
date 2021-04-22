@@ -1084,15 +1084,13 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           "Input address and network is unmatch.");
     }
 
-    int64_t txin_amount, tx_amount, target_value, utxo_value, max_utxo_value;
+    int64_t txin_amount = 0, tx_amount = 0, target_value = 0, max_utxo_value = 0;  // NOLINT
     if (txin_amount_map.find(fee_asset_str) != txin_amount_map.end())
       txin_amount = txin_amount_map[fee_asset_str];
     if (tx_amount_map.find(fee_asset_str) != tx_amount_map.end())
       tx_amount = tx_amount_map[fee_asset_str];
     if (target_values.find(fee_asset_str) != target_values.end())
       target_value = target_values[fee_asset_str];
-    if (input_amount_map.find(fee_asset_str) != input_amount_map.end())
-      utxo_value = input_amount_map[fee_asset_str];
     if (input_max_map.find(fee_asset_str) != input_max_map.end())
       max_utxo_value = input_max_map[fee_asset_str];
 
