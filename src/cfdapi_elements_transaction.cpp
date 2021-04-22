@@ -1084,15 +1084,13 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           "Input address and network is unmatch.");
     }
 
-    int64_t txin_amount, tx_amount, target_value, utxo_value, max_utxo_value;
+    int64_t txin_amount = 0, tx_amount = 0, target_value = 0, max_utxo_value = 0;  // NOLINT
     if (txin_amount_map.find(fee_asset_str) != txin_amount_map.end())
       txin_amount = txin_amount_map[fee_asset_str];
     if (tx_amount_map.find(fee_asset_str) != tx_amount_map.end())
       tx_amount = tx_amount_map[fee_asset_str];
     if (target_values.find(fee_asset_str) != target_values.end())
       target_value = target_values[fee_asset_str];
-    if (input_amount_map.find(fee_asset_str) != input_amount_map.end())
-      utxo_value = input_amount_map[fee_asset_str];
     if (input_max_map.find(fee_asset_str) != input_max_map.end())
       max_utxo_value = input_max_map[fee_asset_str];
 
@@ -1161,8 +1159,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     std::vector<Utxo> fee_selected_coins;
     // re-select coin (fee asset only). collect amount is using large-fee.
     std::map<std::string, int64_t> new_amount_map;
-    int64_t fee_selected_value;
-    int64_t append_fee_asset_txout_value;
+    int64_t fee_selected_value = 0;
+    int64_t append_fee_asset_txout_value = 0;
     if (fee_asset_target_value != 0) {
       std::map<std::string, int64_t> new_target_values;
       new_target_values.emplace(fee_asset_str, fee_asset_target_value);
@@ -1170,12 +1168,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
           new_target_values, utxo_list, utxo_filter, option, fee,
           &new_amount_map, &utxo_fee, nullptr);
       // append txout for fee asset
-      for (auto itr = new_amount_map.begin(); itr != new_amount_map.end();
-           ++itr) {
-        if (itr->first == fee_asset_str) {
-          fee_selected_value = itr->second;
-          break;
-        }
+      if (new_amount_map.find(fee_asset_str) != new_amount_map.end()) {
+        fee_selected_value = new_amount_map[fee_asset_str];
       }
       // estimate fee after coinselection (new fee < old fee)
       int64_t dummy_amount =
