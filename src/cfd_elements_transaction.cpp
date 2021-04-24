@@ -428,6 +428,10 @@ void ConfidentialTransactionContext::SplitTxOut(
   try {
     SetTxOutValue(index, update_amount);
     for (size_t txout_idx = 0; txout_idx < amount_list.size(); ++txout_idx) {
+      if (locking_script_list[txout_idx].IsEmpty()) {
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError, "Locking script is empty.");
+      }
       AddTxOut(
           amount_list[txout_idx], asset, locking_script_list[txout_idx],
           nonce_list[txout_idx]);

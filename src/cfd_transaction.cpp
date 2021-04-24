@@ -361,9 +361,19 @@ Amount TransactionContext::GetFeeAmount() const {
 void TransactionContext::SplitTxOut(
     uint32_t index, const std::vector<Amount>& amount_list,
     const std::vector<Address>& address_list) {
+  std::vector<Script> locking_script_list;
+  for (const auto& addr : address_list) {
+    locking_script_list.emplace_back(addr.GetLockingScript());
+  }
+  SplitTxOut(index, amount_list, locking_script_list);
+}
+
+void TransactionContext::SplitTxOut(
+    uint32_t index, const std::vector<Amount>& amount_list,
+    const std::vector<Script>& locking_script_list) {
   static const Amount kMinimumAmount(int64_t{100});
 
-  if (amount_list.size() != address_list.size()) {
+  if (amount_list.size() != locking_script_list.size()) {
     throw CfdException(
         CfdError::kCfdIllegalArgumentError, "Unmatch list count.");
   }
@@ -382,7 +392,11 @@ void TransactionContext::SplitTxOut(
   try {
     SetTxOutValue(index, update_amount);
     for (size_t txout_idx = 0; txout_idx < amount_list.size(); ++txout_idx) {
-      AddTxOut(address_list[txout_idx], amount_list[txout_idx]);
+      if (locking_script_list[txout_idx].IsEmpty()) {
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError, "Locking script is empty.");
+      }
+      AddTxOut(amount_list[txout_idx], locking_script_list[txout_idx]);
     }
   } catch (const CfdException& except) {
     SetFromHex(prev_tx.GetHex());  // rollback

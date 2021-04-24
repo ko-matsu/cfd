@@ -239,6 +239,16 @@ class CFD_EXPORT TransactionContext : public Transaction {
       const std::vector<Address>& address_list);
 
   /**
+   * @brief Split output amount.
+   * @param[in] index                   txout index
+   * @param[in] amount_list             amount list
+   * @param[in] locking_script_list     locking script list
+   */
+  void SplitTxOut(
+      uint32_t index, const std::vector<Amount>& amount_list,
+      const std::vector<Script>& locking_script_list);
+
+  /**
    * @brief sign with privkey.
    * @param[in] outpoint      utxo target.
    * @param[in] pubkey        public key.
