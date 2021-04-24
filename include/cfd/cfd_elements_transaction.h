@@ -292,6 +292,36 @@ class CFD_EXPORT ConfidentialTransactionContext
       const Amount& value, const ConfidentialAssetId& asset);
 
   /**
+   * @brief Split output amount.
+   * @param[in] index           txout index
+   * @param[in] amount_list     amount list
+   * @param[in] address_list    address list
+   */
+  void SplitTxOut(
+      uint32_t index, const std::vector<Amount>& amount_list,
+      const std::vector<Address>& address_list);
+  /**
+   * @brief Split output amount.
+   * @param[in] index           txout index
+   * @param[in] amount_list     amount list
+   * @param[in] address_list    address list
+   */
+  void SplitTxOut(
+      uint32_t index, const std::vector<Amount>& amount_list,
+      const std::vector<ElementsConfidentialAddress>& address_list);
+  /**
+   * @brief Split output amount.
+   * @param[in] index                   txout index
+   * @param[in] amount_list             amount list
+   * @param[in] locking_script_list     locking script list
+   * @param[in] nonce_list              nonce list
+   */
+  void SplitTxOut(
+      uint32_t index, const std::vector<Amount>& amount_list,
+      const std::vector<Script>& locking_script_list,
+      const std::vector<ConfidentialNonce>& nonce_list);
+
+  /**
    * @brief Perform a simple Fee calculation.
    * @param[in] append_feature_signed_size  size addition flag for sign
    * @param[in] append_signed_witness       Whether to treat the addition of sign as witness

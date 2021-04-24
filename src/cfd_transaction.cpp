@@ -358,6 +358,38 @@ Amount TransactionContext::GetFeeAmount() const {
   return result;
 }
 
+void TransactionContext::SplitTxOut(
+    uint32_t index, const std::vector<Amount>& amount_list,
+    const std::vector<Address>& address_list) {
+  static const Amount kMinimumAmount(int64_t{100});
+
+  if (amount_list.size() != address_list.size()) {
+    throw CfdException(
+        CfdError::kCfdIllegalArgumentError, "Unmatch list count.");
+  }
+
+  auto ref = GetTxOut(index);
+  Amount total_amount = kMinimumAmount;
+  for (const auto& amount : amount_list) total_amount += amount;
+
+  if (ref.GetValue() < total_amount) {
+    throw CfdException(
+        CfdError::kCfdIllegalArgumentError, "The Amount is too large.");
+  }
+  Amount update_amount = ref.GetValue() - (total_amount - kMinimumAmount);
+
+  ByteData prev_tx = GetData();
+  try {
+    SetTxOutValue(index, update_amount);
+    for (size_t txout_idx = 0; txout_idx < amount_list.size(); ++txout_idx) {
+      AddTxOut(address_list[txout_idx], amount_list[txout_idx]);
+    }
+  } catch (const CfdException& except) {
+    SetFromHex(prev_tx.GetHex());  // rollback
+    throw except;
+  }
+}
+
 void TransactionContext::SignWithKey(
     const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
     SigHashType sighash_type, bool has_grind_r, const ByteData256* aux_rand,

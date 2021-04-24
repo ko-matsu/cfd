@@ -914,3 +914,20 @@ TEST(TransactionContext, TapScriptSign)
     EXPECT_STREQ("Unmatch locking script.", except.what());
   }
 }
+
+TEST(TransactionContext, SplitTxOut)
+{
+  std::string tx_hex = "0200000001ffa8db90b81db256874ff7a98fb7202cdc0b91b5b02d7c3427c4190adc66981f0000000000ffffffff0118f50295000000002251201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb00000000";
+  // 2499999000
+  std::vector<Amount> amounts = {
+    Amount(int64_t{99999000}), Amount(int64_t{400000000})};
+  std::vector<Address> addresses = {
+    Address("bc1qz33wef9ehrvd7c64p27jf5xtvn50946xfzpxx4"),
+    Address("3LhVshd9QVVN4wvijTFtff89dM71VoP5kV")};
+
+  TransactionContext tx(tx_hex);
+  tx.SplitTxOut(0, amounts, addresses);
+  EXPECT_EQ(
+    "0200000001ffa8db90b81db256874ff7a98fb7202cdc0b91b5b02d7c3427c4190adc66981f0000000000ffffffff0300943577000000002251201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb18ddf505000000001600141462eca4b9b8d8df63550abd24d0cb64e8f2d7460084d7170000000017a914d081b8e259b744aa903e1831cfce8956941273ce8700000000",
+    tx.GetHex());
+}

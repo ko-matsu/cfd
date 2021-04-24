@@ -880,6 +880,47 @@ TEST(ConfidentialTransactionContext, ConvertSignatureFromDer)
   EXPECT_EQ(64, sigm.GetDataSize());
 }
 
+TEST(TransactionContext, SplitTxOutByAddress)
+{
+  std::string tx_hex = "02000000000109c4149d4e59119f2b11b3e160b02694bc4ecbf56f6de4ab587128f86bf4e7d30000000000ffffffff0201f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f010000000005ee3fe00374eb131b54a7b528e5449b3827bcaa5069c259346810f20cf9079bd17b32fe481976a914d753351535a2a55f33ab39bbd6c70a55d46904e788ac01f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a120000000000000";
+  // 99500000
+  std::vector<Amount> amounts = {
+    Amount(int64_t{9000000}), Amount(int64_t{500000})};
+  auto el_list = cfd::core::GetElementsAddressFormatList();
+  std::vector<Address> addresses = {
+    Address("ert1qz33wef9ehrvd7c64p27jf5xtvn50946xeekx50", el_list),
+    Address("XWMioJVK77vhKHgnSpaCcSBDgf93LFHzYg", el_list)};
+
+  ConfidentialTransactionContext tx(tx_hex);
+  tx.SplitTxOut(0, amounts, addresses);
+  EXPECT_EQ(
+    "02000000000109c4149d4e59119f2b11b3e160b02694bc4ecbf56f6de4ab587128f86bf4e7d30000000000ffffffff0401f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f0100000000055d4a800374eb131b54a7b528e5449b3827bcaa5069c259346810f20cf9079bd17b32fe481976a914d753351535a2a55f33ab39bbd6c70a55d46904e788ac01f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a120000001f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f010000000000895440001600141462eca4b9b8d8df63550abd24d0cb64e8f2d74601f38611eb688e6fcd06f25e2faf52b9f98364dc14c379ab085f1b57d56b4b1a6f01000000000007a1200017a914d081b8e259b744aa903e1831cfce8956941273ce8700000000",
+    tx.GetHex());
+}
+
+TEST(TransactionContext, SplitTxOutByCA)
+{
+  std::string tx_hex = "020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000befe33cc397c03f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac00000000";
+  // 209998999992700
+  std::vector<Amount> amounts = {
+    Amount(int64_t{9997999992700}), Amount(int64_t{1000000000})};
+  auto el_list = cfd::core::GetElementsAddressFormatList();
+  std::vector<ElementsConfidentialAddress> addresses = {
+    ElementsConfidentialAddress(
+      "lq1qqf6e92446smp3hdp87a8rcue8nt4z7n39576f9nycphwr0farac2laprx8zp3m69z7axgjkka87fj6q66sunwxxytxeqzrd9w",
+      el_list),
+    ElementsConfidentialAddress(
+      "Azpn9vbC1Sjvwc2evnjaZjEHPdQxvdr4sTew6psnwxoomvdDBfpfDJNXU4Zthvhy1TkUgX4USjTZpjSL",
+      el_list),
+  };
+
+  ConfidentialTransactionContext tx(tx_hex);
+  tx.SplitTxOut(1, amounts, addresses);
+  EXPECT_EQ(
+    "020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0200000000ffffffff040125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000001c8400000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000b5e620f4800003f234757d0e00e6a7a7a3b4b2b31fb0328d7b9f755cd1093d9f61892fef3116871976a91435ef6d4b59f26089dfe2abca21408e15fee42a3388ac0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000917d73cef7c027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af160014f42331c418ef4517ba644ad6e9fc99681ad439370125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000003b9aca00027592aab5d43618dda13fba71e3993cd7517a712d3da49664c06ee1bd3d1f70af17a9149ec42b6cfa1b0bc3f55f07af29867057cb0b8a2e8700000000",
+    tx.GetHex());
+}
+
 /*
 cfd::ConfidentialTransactionContext::CallbackStateChange(unsigned int)	0
 */

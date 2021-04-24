@@ -223,10 +223,21 @@ class CFD_EXPORT TransactionContext : public Transaction {
    */
   UtxoData GetTxInUtxoData(const OutPoint& outpoint) const;
   /**
-   * @brief TxOutのFee額を取得する.
-   * @return Fee額
+   * @brief Get the fee amount of TxOut.
+   * @return the fee amount
    */
   Amount GetFeeAmount() const;
+
+  /**
+   * @brief Split output amount.
+   * @param[in] index           txout index
+   * @param[in] amount_list     amount list
+   * @param[in] address_list    address list
+   */
+  void SplitTxOut(
+      uint32_t index, const std::vector<Amount>& amount_list,
+      const std::vector<Address>& address_list);
+
   /**
    * @brief sign with privkey.
    * @param[in] outpoint      utxo target.
