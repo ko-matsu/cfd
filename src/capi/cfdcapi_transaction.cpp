@@ -152,10 +152,10 @@ struct CfdCapiFundRawTxData {
  * @brief cfd-capi SplitTxOutData struct.
  */
 struct CfdCapiSplitTxOutData {
-  NetType net_type;                           //!< network type
-  std::vector<Amount>* amount_list;           //!< amount list
-  std::vector<Script>* locking_script_list;   //!< locking script list
-  std::vector<std::string>* nonce_list;       //!< nonce list
+  NetType net_type;                          //!< network type
+  std::vector<Amount>* amount_list;          //!< amount list
+  std::vector<Script>* locking_script_list;  //!< locking script list
+  std::vector<std::string>* nonce_list;      //!< nonce list
 };
 
 /**
@@ -498,6 +498,7 @@ int CfdAddSplitTxOutData(
                 address, prefix_list)) {
           ElementsConfidentialAddress confidential_addr(address, prefix_list);
           addr = confidential_addr.GetUnblindedAddress();
+          nonce = confidential_addr.GetConfidentialKey().GetHex();
         } else {
           addr = Address(address, prefix_list);
         }
