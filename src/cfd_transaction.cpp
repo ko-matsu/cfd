@@ -208,7 +208,17 @@ bool TransactionContext::IsFindTxIn(
 }
 
 bool TransactionContext::IsFindTxOut(
-    const Script& locking_script, uint32_t* index) const {
+    const Script& locking_script, uint32_t* index,
+    std::vector<uint32_t>* indexes) const {
+  if (indexes != nullptr) {
+    for (uint32_t idx = 0; idx < static_cast<uint32_t>(vout_.size()); ++idx) {
+      if (locking_script.Equals(vout_[idx].GetLockingScript())) {
+        indexes->emplace_back(idx);
+      }
+    }
+    if ((index != nullptr) && (!indexes->empty())) *index = (*indexes)[0];
+    return !indexes->empty();
+  }
   try {
     uint32_t temp_index = GetTxOutIndex(locking_script);
     if (index != nullptr) *index = temp_index;
@@ -223,7 +233,11 @@ bool TransactionContext::IsFindTxOut(
 }
 
 bool TransactionContext::IsFindTxOut(
-    const Address& address, uint32_t* index) const {
+    const Address& address, uint32_t* index,
+    std::vector<uint32_t>* indexes) const {
+  if (indexes != nullptr) {
+    return IsFindTxOut(address.GetLockingScript(), index, indexes);
+  }
   try {
     uint32_t temp_index = GetTxOutIndex(address);
     if (index != nullptr) *index = temp_index;

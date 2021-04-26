@@ -163,19 +163,24 @@ class CFD_EXPORT ConfidentialTransactionContext
    * @brief Check if TxOut exists.
    * @param[in] locking_script  locking script
    * @param[out] index  txout index.
+   * @param[out] indexes  txout index list.
    * @retval true   exist
    * @retval false  not exist
    */
   bool IsFindTxOut(
-      const Script& locking_script, uint32_t* index = nullptr) const;
+      const Script& locking_script, uint32_t* index = nullptr,
+      std::vector<uint32_t>* indexes = nullptr) const;
   /**
    * @brief Check if TxOut exists.
    * @param[in] address  address
    * @param[out] index  txout index.
+   * @param[out] indexes  txout index list.
    * @retval true   exist
    * @retval false  not exist
    */
-  bool IsFindTxOut(const Address& address, uint32_t* index = nullptr) const;
+  bool IsFindTxOut(
+      const Address& address, uint32_t* index = nullptr,
+      std::vector<uint32_t>* indexes = nullptr) const;
   /**
    * @brief ConfidentialTransaction's GetTxIn.
    */
