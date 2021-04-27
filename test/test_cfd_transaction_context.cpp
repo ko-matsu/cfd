@@ -100,6 +100,19 @@ TEST(TransactionContext, AddTxInOut)
   EXPECT_TRUE(txc.IsFindTxOut(script_addr.GetLockingScript(), &index));
   EXPECT_EQ(index, 0);
   EXPECT_EQ(txc.GetTxOutIndex(addr), 1);
+
+  txc.AddTxOut(script_addr, Amount(int64_t{100000000000000}));
+  txc.AddTxOut(addr, Amount(int64_t{109998999992700}));
+  txc.AddTxOut(script_addr, Amount(int64_t{100000000000000}));
+  std::vector<uint32_t> indexes;
+  EXPECT_TRUE(txc.IsFindTxOut(script_addr, &index, &indexes));
+  EXPECT_EQ(index, 0);
+  EXPECT_EQ(indexes.size(), 3);
+  if (indexes.size() == 3) {
+    EXPECT_EQ(indexes[0], 0);
+    EXPECT_EQ(indexes[1], 2);
+    EXPECT_EQ(indexes[2], 4);
+  }
 }
 
 TEST(TransactionContext, CreateP2wpkhSignatureHash_Test) {

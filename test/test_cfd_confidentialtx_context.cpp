@@ -111,6 +111,19 @@ TEST(ConfidentialTransactionContext, AddTxInOut)
   ConfidentialAssetId asset;
   EXPECT_EQ(txc.GetFeeAmount(&asset).GetSatoshiValue(), 7300);
   EXPECT_STREQ(asset.GetHex().c_str(), "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225");
+
+  txc.AddTxOut(
+      ct_addr,
+      Amount::CreateBySatoshiAmount(int64_t{209998999992700}),
+      ConfidentialAssetId("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225"));
+  std::vector<uint32_t> indexes;
+  EXPECT_TRUE(txc.IsFindTxOut(addr, &index, &indexes));
+  EXPECT_EQ(index, 1);
+  EXPECT_EQ(indexes.size(), 2);
+  if (indexes.size() == 2) {
+    EXPECT_EQ(indexes[0], 1);
+    EXPECT_EQ(indexes[1], 2);
+  }
 }
 
 TEST(ConfidentialTransactionContext, CalculateSimpleFeeTest)
