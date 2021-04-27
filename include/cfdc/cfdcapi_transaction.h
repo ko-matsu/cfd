@@ -893,6 +893,20 @@ CFDC_API int CfdGetTxOutIndexByHandle(
     const char* direct_locking_script, uint32_t* index);
 
 /**
+ * @brief get tx-output index with offset.
+ * @param[in] handle                 cfd handle.
+ * @param[in] tx_data_handle         transaction data handle.
+ * @param[in] offset                 search start offset.
+ * @param[in] address                txout address.
+ * @param[in] direct_locking_script  txout locking script. (not use address)
+ * @param[out] index                 txout index.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTxOutIndexWithOffsetByHandle(
+    void* handle, void* tx_data_handle, uint32_t offset, const char* address,
+    const char* direct_locking_script, uint32_t* index);
+
+/**
  * @brief Initialize handle for fundrawtransaction.
  * @param[in] handle              cfd handle.
  * @param[in] network_type        network type.

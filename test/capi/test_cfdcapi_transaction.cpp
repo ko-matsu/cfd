@@ -526,6 +526,11 @@ TEST(cfdcapi_transaction, GetTransactionByHandle) {
   EXPECT_EQ(kCfdSuccess, ret);
   EXPECT_FALSE((NULL == handle));
 
+  void* err_handle = NULL;
+  ret = CfdCreateHandle(&err_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == err_handle));
+
   void* tx_handle = NULL;
   ret = CfdInitializeTxDataHandle(handle, kCfdNetworkMainnet, exp_tx, &tx_handle);
   EXPECT_EQ(kCfdSuccess, ret);
@@ -619,8 +624,18 @@ TEST(cfdcapi_transaction, GetTransactionByHandle) {
     EXPECT_EQ(kCfdSuccess, ret);
     EXPECT_EQ(0, index);
 
+    ret = CfdGetTxOutIndexWithOffsetByHandle(
+        err_handle, tx_handle, 1, "16AQVuBMt818u2HBcbxztAZTT2VTDKupPS", "", &index);
+    EXPECT_EQ(kCfdOutOfRangeError, ret);
+    EXPECT_EQ(0, index);
+
     ret = CfdGetTxOutIndexByHandle(
         handle, tx_handle, "", "76a9147480a33f950689af511e6e84c138dbbd3c3ee41588ac", &index);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(1, index);
+
+    ret = CfdGetTxOutIndexWithOffsetByHandle(
+        handle, tx_handle, 1, "", "76a9147480a33f950689af511e6e84c138dbbd3c3ee41588ac", &index);
     EXPECT_EQ(kCfdSuccess, ret);
     EXPECT_EQ(1, index);
 
@@ -639,6 +654,8 @@ TEST(cfdcapi_transaction, GetTransactionByHandle) {
   }
 
   ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  ret = CfdFreeHandle(err_handle);
   EXPECT_EQ(kCfdSuccess, ret);
 }
 

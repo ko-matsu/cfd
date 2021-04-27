@@ -3869,12 +3869,20 @@ int CfdGetTxInIndexByHandle(
 int CfdGetTxOutIndexByHandle(
     void* handle, void* tx_data_handle, const char* address,
     const char* direct_locking_script, uint32_t* index) {
+  return CfdGetTxOutIndexWithOffsetByHandle(
+      handle, tx_data_handle, 0, address, direct_locking_script, index);
+}
+
+int CfdGetTxOutIndexWithOffsetByHandle(
+    void* handle, void* tx_data_handle, uint32_t offset, const char* address,
+    const char* direct_locking_script, uint32_t* index) {
   try {
     cfd::Initialize();
     CheckBuffer(tx_data_handle, kPrefixTransactionData);
     CfdCapiTransactionData* tx_data =
         static_cast<CfdCapiTransactionData*>(tx_data_handle);
 
+    std::vector<uint32_t> indexes;
     bool is_find = false;
     bool is_bitcoin = false;
     ConvertNetType(tx_data->net_type, &is_bitcoin);
@@ -3885,10 +3893,10 @@ int CfdGetTxOutIndexByHandle(
       TransactionContext* tx =
           static_cast<TransactionContext*>(tx_data->tx_obj);
       if (!IsEmptyString(direct_locking_script)) {
-        is_find = tx->IsFindTxOut(Script(direct_locking_script), index);
+        tx->IsFindTxOut(Script(direct_locking_script), index, &indexes);
       } else if (!IsEmptyString(address)) {
         Address addr(address);
-        is_find = tx->IsFindTxOut(addr, index);
+        tx->IsFindTxOut(addr, index, &indexes);
       } else {
         // do nothing
       }
@@ -3897,7 +3905,7 @@ int CfdGetTxOutIndexByHandle(
       ConfidentialTransactionContext* tx =
           static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
       if (!IsEmptyString(direct_locking_script)) {
-        is_find = tx->IsFindTxOut(Script(direct_locking_script), index);
+        tx->IsFindTxOut(Script(direct_locking_script), index, &indexes);
       } else if (!IsEmptyString(address)) {
         ElementsAddressFactory address_factory;
         std::string addr_str(address);
@@ -3908,10 +3916,17 @@ int CfdGetTxOutIndexByHandle(
         } else {
           addr = address_factory.GetAddress(addr_str);
         }
-        is_find = tx->IsFindTxOut(addr, index);
+        tx->IsFindTxOut(addr, index, &indexes);
       } else {
         // fee
-        is_find = tx->IsFindFeeTxOut(index);
+        uint32_t temp_index = 0;
+        is_find = tx->IsFindFeeTxOut(&temp_index);
+        if (is_find) {
+          if (offset > temp_index)
+            is_find = false;
+          else if (index != nullptr)
+            *index = temp_index;
+        }
       }
 #else
       throw CfdException(
@@ -3919,11 +3934,29 @@ int CfdGetTxOutIndexByHandle(
 #endif  // CFD_DISABLE_ELEMENTS
     }
 
+    if ((!is_find) && (!indexes.empty())) {
+      for (const auto& work_index : indexes) {
+        if (offset <= work_index) {
+          is_find = true;
+          if (index != nullptr) *index = work_index;
+          break;
+        }
+      }
+    }
+
     if (!is_find) {
-      warn(CFD_LOG_SOURCE, "target not found.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. search target is not found.");
+      if (index != nullptr) *index = 0;
+      if (offset == 0) {
+        warn(CFD_LOG_SOURCE, "target not found.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to parameter. search target is not found.");
+      } else {
+        warn(CFD_LOG_SOURCE, "target not found by offset.");
+        throw CfdException(
+            CfdError::kCfdOutOfRangeError,
+            "There are no targets after the offset.");
+      }
     }
 
     return CfdErrorCode::kCfdSuccess;
