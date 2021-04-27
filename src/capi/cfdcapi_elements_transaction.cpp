@@ -2692,14 +2692,14 @@ int CfdSetIssueAsset(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. token_string is null.");
     }
-    if ((asset_address == nullptr) || (asset_locking_script == nullptr)) {
+    if ((asset_address == nullptr) && (asset_locking_script == nullptr)) {
       warn(CFD_LOG_SOURCE, "asset address and script is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. asset address and script is null.");
     }
-    if ((token_amount > 0) &&
-        ((token_address == nullptr) || (token_locking_script == nullptr))) {
+    if ((token_amount > 0) && (token_address == nullptr) &&
+        (token_locking_script == nullptr)) {
       warn(CFD_LOG_SOURCE, "token address and script is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
@@ -2769,7 +2769,7 @@ int CfdSetReissueAsset(
     CheckBuffer(create_handle, kPrefixTransactionData);
     CfdCapiTransactionData* tx_data =
         static_cast<CfdCapiTransactionData*>(create_handle);
-    if ((address == nullptr) || (direct_locking_script == nullptr)) {
+    if ((address == nullptr) && (direct_locking_script == nullptr)) {
       warn(CFD_LOG_SOURCE, "asset address and script is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
@@ -2980,13 +2980,20 @@ int CfdAddTxPegoutOutput(
       throw CfdException(
           CfdError::kCfdIllegalArgumentError, "Invalid network type.");
     }
+    Privkey master_online_privkey;
+    if (Privkey::HasWif(master_online_key)) {
+      master_online_privkey = Privkey::FromWif(master_online_key);
+    } else {
+      master_online_privkey = Privkey(master_online_key);
+    }
+
     ConfidentialTransactionContext* tx =
         static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
     Address btc_derive_address;
     tx->AddPegoutTxOut(
         Amount(amount), ConfidentialAssetId(asset),
         BlockHash(mainchain_genesis_block_hash), Address(), mainchain_net_type,
-        Pubkey(online_pubkey), Privkey(master_online_key),
+        Pubkey(online_pubkey), master_online_privkey,
         mainchain_output_descriptor, bip32_counter, ByteData(whitelist),
         elements_net_type, &btc_derive_address);
 

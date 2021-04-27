@@ -152,6 +152,7 @@ struct CfdCapiFundRawTxData {
  * @brief cfd-capi SplitTxOutData struct.
  */
 struct CfdCapiSplitTxOutData {
+  char prefix[kPrefixLength];                //!< buffer prefix
   NetType net_type;                          //!< network type
   std::vector<Amount>* amount_list;          //!< amount list
   std::vector<Script>* locking_script_list;  //!< locking script list
@@ -460,7 +461,7 @@ int CfdAddSplitTxOutData(
     CfdCapiSplitTxOutData* split_data =
         static_cast<CfdCapiSplitTxOutData*>(split_output_handle);
 
-    if (IsEmptyString(address) || IsEmptyString(direct_locking_script)) {
+    if (IsEmptyString(address) && IsEmptyString(direct_locking_script)) {
       warn(CFD_LOG_SOURCE, "address and script is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,

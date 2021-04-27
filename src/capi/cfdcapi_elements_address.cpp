@@ -187,6 +187,12 @@ int CfdGetPeginAddress(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. pegin_address is null.");
     }
+    if ((pubkey == nullptr) && (redeem_script == nullptr)) {
+      warn(CFD_LOG_SOURCE, "pubkey and script is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey and script is null.");
+    }
     if (claim_script == nullptr) {
       warn(CFD_LOG_SOURCE, "claim_script is null.");
       throw CfdException(
@@ -209,7 +215,7 @@ int CfdGetPeginAddress(
     }
     auto addr_type = ConvertHashToAddressType(hash_type);
     Script claim_script_obj;
-    if (Pubkey::IsValid(ByteData(pubkey))) {
+    if ((pubkey != nullptr) && Pubkey::IsValid(ByteData(pubkey))) {
       claim_script_obj = ScriptUtil::CreateP2wpkhLockingScript(Pubkey(pubkey));
     } else {
       claim_script_obj =
