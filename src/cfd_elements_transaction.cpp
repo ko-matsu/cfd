@@ -257,6 +257,13 @@ Address ConfidentialTransactionContext::GetTxOutAddress(
   }
 }
 
+bool ConfidentialTransactionContext::HasBlinding() const {
+  for (const auto& txout : vout_) {
+    if (txout.GetConfidentialValue().HasBlinding()) return true;
+  }
+  return false;
+}
+
 uint32_t ConfidentialTransactionContext::AddTxOut(
     const Address& address, const Amount& value,
     const ConfidentialAssetId& asset) {
@@ -408,12 +415,14 @@ void ConfidentialTransactionContext::SplitTxOut(
       (amount_list.size() != nonce_list.size())) {
     throw CfdException(
         CfdError::kCfdIllegalArgumentError, "Unmatch each list count.");
+  } else if (amount_list.empty()) {
+    throw CfdException(CfdError::kCfdIllegalArgumentError, "list is empty.");
+  } else if (HasBlinding()) {
+    throw CfdException(CfdError::kCfdIllegalStateError, "Already blinded.");
   }
 
   auto ref = GetTxOut(index);
-  if (ref.GetConfidentialValue().HasBlinding()) {
-    throw CfdException(CfdError::kCfdIllegalStateError, "Already blinded.");
-  } else if (ref.GetLockingScript().IsEmpty()) {
+  if (ref.GetLockingScript().IsEmpty()) {
     throw CfdException(
         CfdError::kCfdIllegalArgumentError, "Target is fee output.");
   }

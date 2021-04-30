@@ -390,6 +390,8 @@ void TransactionContext::SplitTxOut(
   if (amount_list.size() != locking_script_list.size()) {
     throw CfdException(
         CfdError::kCfdIllegalArgumentError, "Unmatch list count.");
+  } else if (amount_list.empty()) {
+    throw CfdException(CfdError::kCfdIllegalArgumentError, "list is empty.");
   }
 
   auto ref = GetTxOut(index);
