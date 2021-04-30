@@ -934,7 +934,4 @@ TEST(TransactionContext, SplitTxOutByCA)
     tx.GetHex());
 }
 
-/*
-cfd::ConfidentialTransactionContext::CallbackStateChange(unsigned int)	0
-*/
 #endif

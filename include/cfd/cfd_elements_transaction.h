@@ -203,6 +203,13 @@ class CFD_EXPORT ConfidentialTransactionContext
       bool ignore_error = false) const;
 
   /**
+   * @brief Get if it is blind.
+   * @retval true  blind
+   * @retval false unblind
+   */
+  bool HasBlinding() const;
+
+  /**
    * @brief ConfidentialTransaction's AddTxIn.
    */
   using ConfidentialTransaction::AddTxIn;
