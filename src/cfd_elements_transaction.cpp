@@ -546,7 +546,7 @@ IssuanceParameter ConfidentialTransactionContext::SetAssetIssuance(
   std::vector<IssuanceOutputParameter> issue_output_list;
   std::vector<IssuanceOutputParameter> token_output_list;
   issue_output_list.push_back(issue_output);
-  token_output_list.push_back(token_output);
+  if (token_amount != 0) token_output_list.push_back(token_output);
   return SetAssetIssuance(
       outpoint, issue_amount, issue_output_list, token_amount,
       token_output_list, is_blind, contract_hash);
@@ -598,9 +598,11 @@ IssuanceParameter ConfidentialTransactionContext::SetAssetIssuance(
   set_func(
       issue_output_list, &asset_output_amount_list, &asset_locking_script_list,
       &asset_nonce_list);
-  set_func(
-      token_output_list, &token_output_amount_list, &token_locking_script_list,
-      &token_nonce_list);
+  if (token_amount != 0) {
+    set_func(
+        token_output_list, &token_output_amount_list,
+        &token_locking_script_list, &token_nonce_list);
+  }
 
   return SetAssetIssuance(
       txin_index, issue_amount, asset_output_amount_list,
