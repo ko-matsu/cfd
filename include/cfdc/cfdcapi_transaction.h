@@ -115,6 +115,21 @@ CFDC_API int CfdSplitTxOut(
     uint32_t txout_index);
 
 /**
+ * @brief update witness stack on transaction input.
+ * @param[in] handle            cfd handle.
+ * @param[in] create_handle     create transaction handle.
+ * @param[in] stack_type        witness stack type.(see: CfdTxWitnessStackType)
+ * @param[in] txid              txin txid.
+ * @param[in] vout              txin vout.
+ * @param[in] stack_index       witness stack index.
+ * @param[in] stack_item        update witness stack item.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdUpdateWitnessStack(
+    void* handle, void* create_handle, int stack_type, const char* txid,
+    uint32_t vout, uint32_t stack_index, const char* stack_item);
+
+/**
  * @brief clear witness stack on transaction input.
  * @param[in] handle            cfd handle.
  * @param[in] create_handle     create transaction handle.
