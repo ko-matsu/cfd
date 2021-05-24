@@ -60,19 +60,18 @@ CFDC_API int CfdVerifyEcSignature(
 
 /**
  * @brief Create an adaptor signature over the given message using the given
- * private key. Returns an AdaptorPair of the adaptor signature and its proof.
+ * private key. Return the adaptor signature.
  *
  * @param[in] handle cfd handle.
  * @param[in] msg the message to create the signature for.
  * @param[in] sk the secret key to create the signature with.
- * @param[in] adaptor the adaptor to adapt the signature with.
- * @param[out] adaptor_signature the adaptor signature
- * @param[out] adaptor_proof the adaptor proof
+ * @param[in] encryption_key the encryption key to adapt the signature with.
+ * @param[out] adaptor_signature the adaptor signature and proof.
  * @return CfdErrorCode
  */
-CFDC_API int CfdSignEcdsaAdaptor(
-    void* handle, const char* msg, const char* sk, const char* adaptor,
-    char** adaptor_signature, char** adaptor_proof);
+CFDC_API int CfdEncryptEcdsaAdaptor(
+    void* handle, const char* msg, const char* sk, const char* encryption_key,
+    char** adaptor_signature);
 
 /**
  * @brief "Decrypt" an adaptor signature using the provided secret, returning
@@ -84,7 +83,7 @@ CFDC_API int CfdSignEcdsaAdaptor(
  * @param[out] signature the ECDSA signature
  * @return CfdErrorCode
  */
-CFDC_API int CfdAdaptEcdsaAdaptor(
+CFDC_API int CfdDecryptEcdsaAdaptor(
     void* handle, const char* adaptor_signature, const char* adaptor_secret,
     char** signature);
 
@@ -95,13 +94,13 @@ CFDC_API int CfdAdaptEcdsaAdaptor(
  * @param[in] handle cfd handle.
  * @param[in] adaptor_signature the adaptor signature
  * @param[in] signature the ECDSA signature
- * @param[in] adaptor the adaptor for the signature
+ * @param[in] encryption_key the adaptor for the signature
  * @param[out] adaptor_secret the secret
  * @return CfdErrorCode
  */
-CFDC_API int CfdExtractEcdsaAdaptorSecret(
+CFDC_API int CfdRecoverEcdsaAdaptor(
     void* handle, const char* adaptor_signature, const char* signature,
-    const char* adaptor, char** adaptor_secret);
+    const char* encryption_key, char** adaptor_secret);
 
 /**
  * @brief Verify that an adaptor proof is valid with respect to a given
@@ -109,15 +108,14 @@ CFDC_API int CfdExtractEcdsaAdaptorSecret(
  *
  * @param[in] handle cfd handle.
  * @param[in] adaptor_signature the adaptor signature
- * @param[in] proof the adaptor proof
- * @param[in] adaptor the adaptor for the signature
  * @param[in] msg the message to create the signature for.
  * @param[in] pubkey the public key
+ * @param[in] encryption_key the adaptor for the signature
  * @return CfdErrorCode
  */
 CFDC_API int CfdVerifyEcdsaAdaptor(
-    void* handle, const char* adaptor_signature, const char* proof,
-    const char* adaptor, const char* msg, const char* pubkey);
+    void* handle, const char* adaptor_signature, const char* msg,
+    const char* pubkey, const char* encryption_key);
 
 /**
  * @brief Get a schnorr public key from a private key.
