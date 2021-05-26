@@ -774,7 +774,8 @@ TEST(cfdcapi_key, MnemonicTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
-TEST(cfdcapi_key, EcdsaAdaptorTest) {
+
+TEST(cfdcapi_key, EcdsaAdaptorSignatureTest) {
   void* handle = NULL;
   int ret = CfdCreateHandle(&handle);
   EXPECT_EQ(kCfdSuccess, ret);
@@ -789,42 +790,34 @@ TEST(cfdcapi_key, EcdsaAdaptorTest) {
   const char* pubkey =
       "03490cec9a53cd8f2f664aea61922f26ee920c42d2489778bb7c9d9ece44d149a7";
   const char* adaptor_sig_str =
-      "00cbe0859638c3600ea1872ed7a55b8182a251969f59d7d2da6bd4afedf25f5021a49956"
-      "234cbbbbede8ca72e0113319c84921bf1224897a6abd89dc96b9c5b208";
-  const char* adaptor_proof_str =
-      "00b02472be1ba09f5675488e841a10878b38c798ca63eff3650c8e311e3e2ebe2e3b6fee"
-      "5654580a91cc5149a71bf25bcbeae63dea3ac5ad157a0ab7373c3011d0fc2592a07f719c"
-      "5fc1323f935569ecd010db62f045e965cc1d564eb42cce8d6d";
+      "02717ff3bb1c1ab09782f1f9ac0ea9f07006717efe0771d1ab7fc856bf6bb802c2"
+      "03164e2639cff6ad8943244d4f31533b0f168f026242905c0a761681b2eaf7329b"
+      "de184ef11c5a9d89a871422ae92f42b0ae09c975d34450cb0c77eeeaa6988115"
+      "2fb87fca8d09454743b5d77abb60aea5263e93eecfbf933a9efd6e48b5b7946f"
+      "d8021bf858141f1c3854d24778baf27e642d288e07851b3e83c33a64ab10ee85";
 
-  const char* adaptor_sig2 =
-      "01099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f47bb90"
-      "e2ad6630900b69f55674c8ad74a419e6ce113c10a21a79345a6e47bc74c1";
-  const ByteData sig_der(
-      "30440220099c91aa1fe7f25c41085c1d3c9e73fe04a9d24dac3f9c2172d6198628e57f47"
-      "02204d13456e98d8989043fd4674302ce90c432e2f8bb0269f02c72aafec60b72de101");
+  const ByteData raw_sig(
+      "717ff3bb1c1ab09782f1f9ac0ea9f07006717efe0771d1ab7fc856bf6bb802c2"
+      "60d6deb1bc09038b4eb8244a645beed1387890b58b83f0674102b21561456f20");
   const char* secret =
       "475697a71a74ff3f2a8f150534e9b67d4b0b6561fab86fcaa51f8c9d6c9db8c6";
 
   char* adaptor_signature = NULL;
-  char* adaptor_proof = NULL;
-  ret = CfdSignEcdsaAdaptor(handle, msg, sk, adaptor,
-      &adaptor_signature, &adaptor_proof);
+  ret = CfdEncryptEcdsaAdaptor(handle, msg, sk, adaptor,
+      &adaptor_signature);
   EXPECT_EQ(kCfdSuccess, ret);
   if (ret == kCfdSuccess) {
     EXPECT_STREQ(adaptor_sig_str, adaptor_signature);
-    EXPECT_STREQ(adaptor_proof_str, adaptor_proof);
     CfdFreeStringBuffer(adaptor_signature);
-    CfdFreeStringBuffer(adaptor_proof);
   }
 
   ret = CfdVerifyEcdsaAdaptor(
-      handle, adaptor_sig_str, adaptor_proof_str, adaptor, msg, pubkey);
+      handle, adaptor_sig_str, msg, pubkey, adaptor);
   EXPECT_EQ(kCfdSuccess, ret);
 
   SigHashType sig_hash;
-  auto raw_sig = CryptoUtil::ConvertSignatureFromDer(sig_der, &sig_hash);
   char* signature = NULL;
-  ret = CfdAdaptEcdsaAdaptor(handle, adaptor_sig2, secret, &signature);
+  ret = CfdDecryptEcdsaAdaptor(handle, adaptor_sig_str, secret, &signature);
   EXPECT_EQ(kCfdSuccess, ret);
   if (ret == kCfdSuccess) {
     EXPECT_STREQ(raw_sig.GetHex().c_str(), signature);
@@ -832,8 +825,8 @@ TEST(cfdcapi_key, EcdsaAdaptorTest) {
   }
 
   char* adaptor_secret = NULL;
-  ret = CfdExtractEcdsaAdaptorSecret(
-      handle, adaptor_sig2, raw_sig.GetHex().c_str(), adaptor, &adaptor_secret);
+  ret = CfdRecoverEcdsaAdaptor(
+      handle, adaptor_sig_str, raw_sig.GetHex().c_str(), adaptor, &adaptor_secret);
   EXPECT_EQ(kCfdSuccess, ret);
   if (ret == kCfdSuccess) {
     EXPECT_STREQ(secret, adaptor_secret);

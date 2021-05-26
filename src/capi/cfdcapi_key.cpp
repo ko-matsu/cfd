@@ -28,10 +28,7 @@
 using cfd::api::ExtKeyType;
 using cfd::api::HDWalletApi;
 using cfd::api::KeyApi;
-using cfd::core::AdaptorPair;
-using cfd::core::AdaptorProof;
 using cfd::core::AdaptorSignature;
-using cfd::core::AdaptorUtil;
 using cfd::core::ByteData;
 using cfd::core::ByteData256;
 using cfd::core::CfdError;
@@ -207,12 +204,10 @@ int CfdVerifyEcSignature(
   }
 }
 
-int CfdSignEcdsaAdaptor(
-    void* handle, const char* msg, const char* sk, const char* adaptor,
-    char** adaptor_signature, char** adaptor_proof) {
+int CfdEncryptEcdsaAdaptor(
+    void* handle, const char* msg, const char* sk, const char* encryption_key,
+    char** adaptor_signature) {
   int result = CfdErrorCode::kCfdUnknownError;
-  char* work_signature = nullptr;
-  char* work_proof = nullptr;
   try {
     cfd::Initialize();
     if (IsEmptyString(msg)) {
@@ -227,11 +222,11 @@ int CfdSignEcdsaAdaptor(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. sk is null or empty.");
     }
-    if (IsEmptyString(adaptor)) {
-      warn(CFD_LOG_SOURCE, "adaptor is null or empty.");
+    if (IsEmptyString(encryption_key)) {
+      warn(CFD_LOG_SOURCE, "encryption_key is null or empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. adaptor is null or empty.");
+          "Failed to parameter. encryption_key is null or empty.");
     }
     if (adaptor_signature == nullptr) {
       warn(CFD_LOG_SOURCE, "adaptor signature is null.");
@@ -239,21 +234,11 @@ int CfdSignEcdsaAdaptor(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. adaptor signature is null.");
     }
-    if (adaptor_proof == nullptr) {
-      warn(CFD_LOG_SOURCE, "adaptor proof is null.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. adaptor proof is null.");
-    }
 
-    AdaptorPair pair =
-        AdaptorUtil::Sign(ByteData256(msg), Privkey(sk), Pubkey(adaptor));
+    auto sig = AdaptorSignature::Encrypt(
+        ByteData256(msg), Privkey(sk), Pubkey(encryption_key));
 
-    work_signature = CreateString(pair.signature.GetData().GetHex());
-    work_proof = CreateString(pair.proof.GetData().GetHex());
-
-    *adaptor_signature = work_signature;
-    *adaptor_proof = work_proof;
+    *adaptor_signature = CreateString(sig.GetData().GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -262,11 +247,10 @@ int CfdSignEcdsaAdaptor(
   } catch (...) {
     SetLastFatalError(handle, "unknown error.");
   }
-  FreeBufferOnError(&work_signature, &work_proof);
   return result;
 }
 
-int CfdAdaptEcdsaAdaptor(
+int CfdDecryptEcdsaAdaptor(
     void* handle, const char* adaptor_signature, const char* adaptor_secret,
     char** signature) {
   int result = CfdErrorCode::kCfdUnknownError;
@@ -291,9 +275,8 @@ int CfdAdaptEcdsaAdaptor(
           "Failed to parameter. signature is null.");
     }
 
-    ByteData sig = AdaptorUtil::Adapt(
-        AdaptorSignature(adaptor_signature), Privkey(adaptor_secret));
-
+    AdaptorSignature adaptor_sig(adaptor_signature);
+    ByteData sig = adaptor_sig.Decrypt(Privkey(adaptor_secret));
     *signature = CreateString(sig.GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -306,9 +289,9 @@ int CfdAdaptEcdsaAdaptor(
   return result;
 }
 
-int CfdExtractEcdsaAdaptorSecret(
+int CfdRecoverEcdsaAdaptor(
     void* handle, const char* adaptor_signature, const char* signature,
-    const char* adaptor, char** adaptor_secret) {
+    const char* encryption_key, char** adaptor_secret) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -324,11 +307,11 @@ int CfdExtractEcdsaAdaptorSecret(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. signature is null or empty.");
     }
-    if (IsEmptyString(adaptor)) {
-      warn(CFD_LOG_SOURCE, "adaptor is null or empty.");
+    if (IsEmptyString(encryption_key)) {
+      warn(CFD_LOG_SOURCE, "encryption_key is null or empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. adaptor is null or empty.");
+          "Failed to parameter. encryption_key is null or empty.");
     }
     if (adaptor_secret == nullptr) {
       warn(CFD_LOG_SOURCE, "adaptor_secret is null.");
@@ -337,10 +320,8 @@ int CfdExtractEcdsaAdaptorSecret(
           "Failed to parameter. adaptor_secret is null.");
     }
 
-    Privkey secret = AdaptorUtil::ExtractSecret(
-        AdaptorSignature(adaptor_signature), ByteData(signature),
-        Pubkey(adaptor));
-
+    AdaptorSignature sig(adaptor_signature);
+    Privkey secret = sig.Recover(ByteData(signature), Pubkey(encryption_key));
     *adaptor_secret = CreateString(secret.GetHex());
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -354,8 +335,8 @@ int CfdExtractEcdsaAdaptorSecret(
 }
 
 int CfdVerifyEcdsaAdaptor(
-    void* handle, const char* adaptor_signature, const char* proof,
-    const char* adaptor, const char* msg, const char* pubkey) {
+    void* handle, const char* adaptor_signature, const char* msg,
+    const char* pubkey, const char* encryption_key) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
     cfd::Initialize();
@@ -365,17 +346,11 @@ int CfdVerifyEcdsaAdaptor(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. adaptor_signature is null or empty.");
     }
-    if (IsEmptyString(proof)) {
-      warn(CFD_LOG_SOURCE, "proof is null or empty.");
+    if (IsEmptyString(encryption_key)) {
+      warn(CFD_LOG_SOURCE, "encryption_key is null or empty.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. proof is null or empty.");
-    }
-    if (IsEmptyString(adaptor)) {
-      warn(CFD_LOG_SOURCE, "adaptor is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. adaptor is null or empty.");
+          "Failed to parameter. encryption_key is null or empty.");
     }
     if (IsEmptyString(msg)) {
       warn(CFD_LOG_SOURCE, "msg is null or empty.");
@@ -390,9 +365,9 @@ int CfdVerifyEcdsaAdaptor(
           "Failed to parameter. pubkey is null or empty.");
     }
 
-    bool is_verify = AdaptorUtil::Verify(
-        AdaptorSignature(adaptor_signature), AdaptorProof(proof),
-        Pubkey(adaptor), ByteData256(msg), Pubkey(pubkey));
+    AdaptorSignature sig(adaptor_signature);
+    bool is_verify =
+        sig.Verify(ByteData256(msg), Pubkey(pubkey), Pubkey(encryption_key));
     if (!is_verify) {
       return CfdErrorCode::kCfdSignVerificationError;
     }
