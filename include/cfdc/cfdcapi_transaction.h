@@ -154,6 +154,19 @@ CFDC_API int CfdUpdateTxInScriptSig(
     const char* script_sig);
 
 /**
+ * @brief update sequence on transaction input.
+ * @param[in] handle            cfd handle.
+ * @param[in] create_handle     create transaction handle.
+ * @param[in] txid              txin txid.
+ * @param[in] vout              txin vout.
+ * @param[in] sequence          sequence number.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdUpdateTxInSequence(
+    void* handle, void* create_handle, const char* txid, uint32_t vout,
+    uint32_t sequence);
+
+/**
  * @brief set utxo data on transaction input.
  * @details for calculate schnorr sighature.
  * @param[in] handle            cfd handle.

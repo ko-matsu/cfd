@@ -620,40 +620,6 @@ int CfdFreeSplitTxOutHandle(void* handle, void* split_output_handle) {
   return result;
 }
 
-#if 0
-/*
-int CfdUpdateTxInSequence(
-    void* handle, void* create_handle, const char* txid, uint32_t vout,
-    uint32_t sequence) {
-  int result = CfdErrorCode::kCfdUnknownError;
-  try {
-    cfd::Initialize();
-    CheckBuffer(create_handle, kPrefixTransactionData);
-    CfdCapiTransactionData* tx_data =
-        static_cast<CfdCapiTransactionData*>(create_handle);
-    if (IsEmptyString(txid)) {
-      warn(CFD_LOG_SOURCE, "txid is null or empty.");
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Failed to parameter. txid is null or empty.");
-    }
-    warn(CFD_LOG_SOURCE, "txid[{}] vout[{}] sequence[{}]",
-        std::string(txid), vout, sequence);
-
-    // FIXME Not implemented. You need to add the API for cfd-core first.
-    return CfdErrorCode::kCfdInternalError;
-  } catch (const CfdException& except) {
-    result = SetLastError(handle, except);
-  } catch (const std::exception& std_except) {
-    SetLastFatalError(handle, std_except.what());
-  } catch (...) {
-    SetLastFatalError(handle, "unknown error.");
-  }
-  return result;
-}
-*/
-#endif
-
 int CfdUpdateWitnessStack(
     void* handle, void* create_handle, int stack_type, const char* txid,
     uint32_t vout, uint32_t stack_index, const char* stack_item) {
@@ -803,6 +769,56 @@ int CfdUpdateTxInScriptSig(
           static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
       auto index = tx->GetTxInIndex(txid_obj, vout);
       tx->SetUnlockingScript(index, script);
+#else
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
+#endif  // CFD_DISABLE_ELEMENTS
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdUpdateTxInSequence(
+    void* handle, void* create_handle, const char* txid, uint32_t vout,
+    uint32_t sequence) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(create_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(create_handle);
+    if (IsEmptyString(txid)) {
+      warn(CFD_LOG_SOURCE, "txid is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. txid is null or empty.");
+    }
+
+    Txid txid_obj(txid);
+    bool is_bitcoin = false;
+    ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    } else if (is_bitcoin) {
+      TransactionContext* tx =
+          static_cast<TransactionContext*>(tx_data->tx_obj);
+      auto index = tx->GetTxInIndex(txid_obj, vout);
+      tx->SetTxInSequence(index, sequence);
+    } else {
+#ifndef CFD_DISABLE_ELEMENTS
+      ConfidentialTransactionContext* tx =
+          static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+      auto index = tx->GetTxInIndex(txid_obj, vout);
+      tx->SetTxInSequence(index, sequence);
 #else
       throw CfdException(
           CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
