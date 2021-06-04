@@ -322,8 +322,7 @@ int CfdGetTxOutProof(
           CfdError::kCfdIllegalStateError,
           "Invalid handle state. block is null");
     } else if (block_data->net_type <= NetType::kRegtest) {
-      auto proof = block_data->block->GetTxOutProof(
-          std::vector<Txid>{Txid(std::string(txid))});
+      auto proof = block_data->block->GetTxOutProof(Txid(txid));
       *txout_proof = CreateString(proof.GetHex());
     } else {
 #ifndef CFD_DISABLE_ELEMENTS
@@ -378,6 +377,91 @@ int CfdExistTxidInBlock(void* handle, void* block_handle, const char* txid) {
     }
 
     if (!has_txid) return CfdErrorCode::kCfdNotFoundError;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetTxCountInBlock(
+    void* handle, void* block_handle, uint32_t* tx_count) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(block_handle, kPrefixBlock);
+    CfdCapiBlockData* block_data =
+        static_cast<CfdCapiBlockData*>(block_handle);
+    if (tx_count == nullptr) {
+      warn(CFD_LOG_SOURCE, "tx_count is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. tx_count is null.");
+    }
+
+    if (block_data->block == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Invalid handle state. block is null");
+    } else if (block_data->net_type <= NetType::kRegtest) {
+      *tx_count = block_data->block->GetTransactionCount();
+    } else {
+#ifndef CFD_DISABLE_ELEMENTS
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
+#else
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
+#endif  // CFD_DISABLE_ELEMENTS
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetTxidFromBlock(
+    void* handle, void* block_handle, uint32_t index, char** txid) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(block_handle, kPrefixBlock);
+    CfdCapiBlockData* block_data =
+        static_cast<CfdCapiBlockData*>(block_handle);
+    if (txid == nullptr) {
+      warn(CFD_LOG_SOURCE, "txid is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. txid is null.");
+    }
+
+    if (block_data->block == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Invalid handle state. block is null");
+    } else if (block_data->net_type <= NetType::kRegtest) {
+      auto txid_obj = block_data->block->GetTxid(index);
+      *txid = CreateString(txid_obj.GetHex());
+    } else {
+#ifndef CFD_DISABLE_ELEMENTS
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
+#else
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Elements is not supported.");
+#endif  // CFD_DISABLE_ELEMENTS
+    }
+
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
