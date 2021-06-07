@@ -334,7 +334,13 @@ int CfdUpdateConfidentialTxOut(
           "Failed to parameter. asset is null or empty.");
     }
 
-    ConfidentialTransaction ctx(tx_hex_string);
+    ConfidentialTransactionContext ctx(tx_hex_string);
+    if (ctx.HasBlinding()) {
+      warn(CFD_LOG_SOURCE, "tx is already blinded.");
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Failed to blinded. this function can use unblind tx only.");
+    }
 
     ConfidentialValue value;
     if (IsEmptyString(value_commitment)) {
