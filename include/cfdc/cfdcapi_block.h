@@ -109,6 +109,29 @@ CFDC_API int CfdGetTxOutProof(
 CFDC_API int CfdExistTxidInBlock(
     void* handle, void* block_handle, const char* txid);
 
+/**
+ * @brief Get transaction count in block.
+ * @param[in] handle                cfd handle.
+ * @param[in] block_handle          block handle.
+ * @param[out] tx_count             tx count in block.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTxCountInBlock(
+    void* handle, void* block_handle, uint32_t* tx_count);
+
+/**
+ * @brief Get txid from block.
+ * @param[in] handle                cfd handle.
+ * @param[in] block_handle          block handle.
+ * @param[in] index                 index. (max: tx count)
+ * @param[out] txid                 txid.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTxidFromBlock(
+    void* handle, void* block_handle, uint32_t index, char** txid);
+
 #ifdef __cplusplus
 #if 0
 {

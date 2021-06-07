@@ -89,6 +89,19 @@ TEST(cfdcapi_block, GetBlockData) {
         "7f5fb624f5cdce391362aa6befea307c4e778e008e799b40ca7119046f26ab31");
     EXPECT_EQ(kCfdNotFoundError, ret);
 
+    uint32_t tx_count = 0;
+    ret = CfdGetTxCountInBlock(handle, block_handle, &tx_count);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(1, tx_count);
+
+    char* temp_txid = nullptr;
+    ret = CfdGetTxidFromBlock(handle, block_handle, 0, &temp_txid);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(txid, temp_txid);
+      CfdFreeStringBuffer(temp_txid);
+    }
+
     ret = CfdFreeBlockHandle(handle, block_handle);
     EXPECT_EQ(kCfdSuccess, ret);
   }
