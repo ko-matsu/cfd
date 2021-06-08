@@ -33,9 +33,10 @@ using cfd::core::Pubkey;
 using cfd::core::logger::warn;
 
 /// base58 error message
-static constexpr const char* kBase58Error = " base58 decode error.";
+static constexpr const char* kBase58Error = "Decode base58 error.";
 /// key type error message
-static constexpr const char* kKeyTypeError = " keytype error.";
+static constexpr const char* kKeyTypeError =
+    "Invalid serialize data. this data is ExtPubkey data.";
 
 std::vector<std::string> HDWalletApi::GetMnemonicWordlist(
     const std::string& language) const {
