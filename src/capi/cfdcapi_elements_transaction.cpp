@@ -2412,6 +2412,86 @@ int CfdGetConfidentialTxInfoByHandle(
   return error_code;
 }
 
+int CfdHasPegoutConfidentialTxOut(
+    void* handle, void* tx_data_handle, uint32_t index) {
+  int ret = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tx_data_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(tx_data_handle);
+    bool is_bitcoin = false;
+    ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    } else if (is_bitcoin) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Invalid handle state. tx is bitcoin.");
+    }
+
+    ConfidentialTransactionContext* tx =
+        static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+    if (!tx->HasPegoutTxOut(index)) return CfdErrorCode::kCfdNotFoundError;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    ret = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return ret;
+}
+
+int CfdGetPegoutMainchainAddress(
+    void* handle, void* tx_data_handle, uint32_t index, int mainchain_network,
+    char** mainchain_address) {
+  int ret = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(tx_data_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(tx_data_handle);
+    if (mainchain_address == nullptr) {
+      warn(CFD_LOG_SOURCE, "mainchain_address is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. mainchain_address is null.");
+    }
+    bool is_bitcoin = false;
+    ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    } else if (is_bitcoin) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Invalid handle state. tx is bitcoin.");
+    }
+    auto mainchain_net_type = ConvertNetType(mainchain_network, &is_bitcoin);
+    if (!is_bitcoin) {
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. mainchain_network is not bitcoin.");
+    }
+
+    ConfidentialTransactionContext* tx =
+        static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+    auto addr = tx->GetTxOutPegoutAddress(index, mainchain_net_type);
+    *mainchain_address = CreateString(addr.GetAddress());
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    ret = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return ret;
+}
+
 int CfdGetTxInIssuanceInfoByHandle(
     void* handle, void* tx_data_handle, uint32_t index, char** entropy,
     char** nonce, int64_t* asset_amount, char** asset_value,
