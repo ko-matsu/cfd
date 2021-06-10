@@ -345,6 +345,31 @@ CFDC_API int CfdGetConfidentialTxInfoByHandle(
     uint32_t* version, uint32_t* locktime);
 
 /**
+ * @brief Has pegout output by elements transaction.
+ * @param[in] handle            cfd handle.
+ * @param[in] tx_data_handle    transaction data handle.
+ * @param[in] index             txout index.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdHasPegoutConfidentialTxOut(
+    void* handle, void* tx_data_handle, uint32_t index);
+
+/**
+ * @brief get pegout address by elements transaction.
+ * @param[in] handle            cfd handle.
+ * @param[in] tx_data_handle    transaction data handle.
+ * @param[in] index                 txout index.
+ * @param[in] mainchain_network     mainchain network.
+ * @param[out] mainchain_address    mainchain address.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetPegoutMainchainAddress(
+    void* handle, void* tx_data_handle, uint32_t index, int mainchain_network,
+    char** mainchain_address);
+
+/**
  * @brief get elements issuance information.
  * @param[in] handle            cfd handle.
  * @param[in] tx_data_handle    transaction data handle.

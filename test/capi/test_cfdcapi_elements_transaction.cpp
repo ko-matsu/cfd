@@ -2087,6 +2087,30 @@ TEST(cfdcapi_elements_transaction, CfdAddPegoutTest) {
   }
 
   if (ret == kCfdSuccess) {
+    void* err_handle = NULL;
+    ret = CfdCreateHandle(&err_handle);
+    if (ret == kCfdSuccess) {
+      ret = CfdHasPegoutConfidentialTxOut(err_handle, create_handle, 0);
+      EXPECT_EQ(kCfdNotFoundError, ret);
+      CfdFreeHandle(err_handle);
+    }
+
+    ret = CfdHasPegoutConfidentialTxOut(handle, create_handle, 1);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  if (ret == kCfdSuccess) {
+    char* addr = nullptr;
+    ret = CfdGetPegoutMainchainAddress(
+      handle, create_handle, 1, kCfdNetworkRegtest, &addr);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("2N8UxQ5u9YXYFn6Ukj5KGXCMDUZTixKTXHo", addr);
+      CfdFreeStringBuffer(addr);
+    }
+  }
+
+  if (ret == kCfdSuccess) {
     ret = CfdFinalizeTransaction(handle, create_handle, &tx_string);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
