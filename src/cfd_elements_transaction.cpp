@@ -256,6 +256,20 @@ Address ConfidentialTransactionContext::GetTxOutAddress(
     return Address();
   }
 }
+bool ConfidentialTransactionContext::HasPegoutTxOut(uint32_t index) const {
+  if (vout_.size() <= index) return false;
+  return vout_[index].GetLockingScript().IsPegoutScript();
+}
+
+Address ConfidentialTransactionContext::GetTxOutPegoutAddress(
+    uint32_t index, NetType mainchain_network) const {
+  if (vout_.size() <= index) {
+    throw CfdException(
+        CfdError::kCfdOutOfRangeError, "vout out_of_range error.");
+  }
+  return Address::GetPegoutAddress(
+      mainchain_network, vout_[index].GetLockingScript());
+}
 
 bool ConfidentialTransactionContext::HasBlinding() const {
   for (const auto& txout : vout_) {
