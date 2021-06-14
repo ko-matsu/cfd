@@ -804,7 +804,11 @@ void ConfidentialTransactionContext::CollectInputUtxo(
       if (!IsFindUtxoMap(outpoint)) {
         for (const auto& utxo : utxos) {
           if ((utxo.vout == vout) && utxo.txid.Equals(txid)) {
-            utxo_map_.emplace_back(utxo);
+            UtxoData dest;
+            Utxo temp;
+            memset(&temp, 0, sizeof(temp));
+            UtxoUtil::ConvertToUtxo(utxo, &temp, &dest);
+            utxo_map_.emplace_back(dest);
             break;
           }
         }
