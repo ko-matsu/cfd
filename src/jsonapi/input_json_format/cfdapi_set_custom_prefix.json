@@ -1,0 +1,82 @@
+{
+  "namespace": ["cfd","api","json"],
+  "functionName": "SetCustomPrefix",
+  "comment": "set customize prefix.",
+  "see": [
+    "https://github.com/p2pderivatives/cfd-core/blob/master/src/cfdcore_address.cpp#L152",
+    "https://github.com/p2pderivatives/cfd-core/blob/master/src/cfdcore_key.cpp#L338"
+  ],
+  "request": {
+    ":class": "SetCustomPrefixRequest",
+    ":class:comment": "Request for custom prefix setting.",
+    "addressJsonDatas:require": "optional",
+    "addressJsonDatas:comment": "address prefix customize json data list",
+    "addressJsonDatas": [
+      {
+        ":class": "AddressPrefixCustomizeData",
+        ":class:comment": "address prefix customize data.",
+        "nettype": "",
+        "nettype:require": "require",
+        "nettype:comment": "network type",
+        "nettype:hint": "mainnet, testnet, regtest, liquidv1, elementsregtest, custom",
+        "p2pkh": "6f",
+        "p2pkh:require": "require",
+        "p2pkh:comment": "p2pkh prefix",
+        "p2sh": "c4",
+        "p2sh:require": "require",
+        "p2sh:comment": "p2sh prefix",
+        "bech32": "bcrt",
+        "bech32:require": "require",
+        "bech32:comment": "bech32 prefix",
+        "blinded": "",
+        "blinded:require": "optional",
+        "blinded:comment": "(elements only) blinded p2pkh prefix",
+        "blindedP2sh": "",
+        "blindedP2sh:require": "optional",
+        "blindedP2sh:comment": "(elements only) blinded p2sh prefix. If not set, use blinded.",
+        "blech32": "",
+        "blech32:require": "optional",
+        "blech32:comment": "(elements only) blind bech32 prefix"
+      }
+    ],
+    "keyJsonDatas:require": "optional",
+    "keyJsonDatas:comment": "key prefix customize json data list",
+    "keyJsonDatas": [
+      {
+        ":class": "KeyPrefixCustomizeData",
+        ":class:comment": "key prefix customize data.",
+        "IsMainnet": "false",
+        "IsMainnet:require": "optional",
+        "IsMainnet:comment": "mainnet flag. true is 'true' or empty.",
+        "wif": "ef",
+        "wif:require": "require",
+        "wif:comment": "wif prefix",
+        "bip32xpub": "043587cf",
+        "bip32xpub:require": "require",
+        "bip32xpub:comment": "bip32xpub version",
+        "bip32xprv": "04358394",
+        "bip32xprv:require": "require",
+        "bip32xprv:comment": "bip32xprv version",
+        "bip49ypub": "",
+        "bip49ypub:require": "optional",
+        "bip49ypub:comment": "bip49ypub version",
+        "bip49yprv": "",
+        "bip49yprv:require": "optional",
+        "bip49yprv:comment": "bip49yprv version",
+        "bip84zpub": "",
+        "bip84zpub:require": "optional",
+        "bip84zpub:comment": "bip84zpub version",
+        "bip84zprv": "",
+        "bip84zprv:require": "optional",
+        "bip84zprv:comment": "bip84zprv version"
+      }
+    ]
+  },
+  "response": {
+    ":class": "VoidFunctionResponse",
+    ":class:comment": "Request for void function.",
+    "success": false,
+    "success:require": "require",
+    "success:comment": "success flag"
+  }
+}

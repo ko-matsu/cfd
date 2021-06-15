@@ -643,6 +643,10 @@ extern "C" int CfdRequestExecuteJson(
       result = JsonMappingApi::DecodeRawTransaction(std::string(json_string));
     } else if (command == "DecodePsbt") {
       result = JsonMappingApi::DecodePsbt(std::string(json_string));
+    } else if (command == "SetCustomPrefix") {
+      result = JsonMappingApi::SetCustomPrefix(std::string(json_string));
+    } else if (command == "ClearCustomPrefix") {
+      result = JsonMappingApi::ClearCustomPrefix();
     } else {
       throw CfdException(
           CfdError::kCfdIllegalArgumentError, "unknown request name.");

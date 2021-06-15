@@ -1,0 +1,12 @@
+{
+  "namespace": ["cfd","api","json"],
+  "functionName": "ClearCustomPrefix",
+  "comment": "Clear custom prefix function.",
+  "response": {
+    ":class": "VoidFunctionResponse",
+    ":class:comment": "Request for void function.",
+    "success": false,
+    "success:require": "require",
+    "success:comment": "success flag"
+  }
+}

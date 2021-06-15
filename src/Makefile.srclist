@@ -42,5 +42,6 @@ CFD_JSONAPI_SOURCES = \
   jsonapi/cfd_json_mapping_api.cpp \
   jsonapi/cfd_json_transaction.cpp \
   jsonapi/cfd_json_psbt.cpp \
+  jsonapi/cfd_json_utility.cpp \
   jsonapi/autogen/cfd_api_json_autogen.cpp
 

@@ -50,6 +50,19 @@ class CFD_EXPORT JsonMappingApi {
       const std::string &request_message);
 #endif  // CFD_DISABLE_ELEMENTS
 
+  /**
+   * @brief SetCustomPrefix.
+   * @param[in] request_message     json message
+   * @return json message
+   */
+  static std::string SetCustomPrefix(const std::string &request_message);
+
+  /**
+   * @brief ClearCustomPrefix.
+   * @return json message
+   */
+  static std::string ClearCustomPrefix();
+
  private:
   JsonMappingApi();
 };

@@ -235,6 +235,23 @@ struct XpubDataStruct {
 };
 
 // ------------------------------------------------------------------------
+// AddressPrefixCustomizeDataStruct
+// ------------------------------------------------------------------------
+/**
+ * @brief AddressPrefixCustomizeDataStruct struct
+ */
+struct AddressPrefixCustomizeDataStruct {
+  std::string nettype = "";       //!< nettype  // NOLINT
+  std::string p2pkh = "6f";       //!< p2pkh  // NOLINT
+  std::string p2sh = "c4";        //!< p2sh  // NOLINT
+  std::string bech32 = "bcrt";    //!< bech32  // NOLINT
+  std::string blinded = "";       //!< blinded  // NOLINT
+  std::string blinded_p2sh = "";  //!< blinded_p2sh  // NOLINT
+  std::string blech32 = "";       //!< blech32  // NOLINT
+  std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
+};
+
+// ------------------------------------------------------------------------
 // DecodePsbtInputStruct
 // ------------------------------------------------------------------------
 /**
@@ -313,6 +330,24 @@ struct ElementsDecodeRawTransactionTxOutStruct {
 };
 
 // ------------------------------------------------------------------------
+// KeyPrefixCustomizeDataStruct
+// ------------------------------------------------------------------------
+/**
+ * @brief KeyPrefixCustomizeDataStruct struct
+ */
+struct KeyPrefixCustomizeDataStruct {
+  std::string is_mainnet = "false";    //!< is_mainnet  // NOLINT
+  std::string wif = "ef";              //!< wif  // NOLINT
+  std::string bip32xpub = "043587cf";  //!< bip32xpub  // NOLINT
+  std::string bip32xprv = "04358394";  //!< bip32xprv  // NOLINT
+  std::string bip49ypub = "";          //!< bip49ypub  // NOLINT
+  std::string bip49yprv = "";          //!< bip49yprv  // NOLINT
+  std::string bip84zpub = "";          //!< bip84zpub  // NOLINT
+  std::string bip84zprv = "";          //!< bip84zprv  // NOLINT
+  std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
+};
+
+// ------------------------------------------------------------------------
 // PsbtGlobalXpubStruct
 // ------------------------------------------------------------------------
 /**
@@ -327,6 +362,17 @@ struct PsbtGlobalXpubStruct {
 };
 namespace cfd {
 namespace api {
+
+// ------------------------------------------------------------------------
+// VoidFunctionResponseStruct
+// ------------------------------------------------------------------------
+/**
+ * @brief VoidFunctionResponseStruct struct
+ */
+struct VoidFunctionResponseStruct {
+  bool success = false;  //!< success  // NOLINT
+  std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
+};
 
 // ------------------------------------------------------------------------
 // DecodePsbtRequestStruct
@@ -406,6 +452,18 @@ struct ElementsDecodeRawTransactionResponseStruct {
   uint32_t locktime = 0;                                      //!< locktime  // NOLINT
   std::vector<ElementsDecodeRawTransactionTxInStruct> vin;    //!< vin  // NOLINT
   std::vector<ElementsDecodeRawTransactionTxOutStruct> vout;  //!< vout  // NOLINT
+  std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
+};
+
+// ------------------------------------------------------------------------
+// SetCustomPrefixRequestStruct
+// ------------------------------------------------------------------------
+/**
+ * @brief SetCustomPrefixRequestStruct struct
+ */
+struct SetCustomPrefixRequestStruct {
+  std::vector<AddressPrefixCustomizeDataStruct> address_json_datas;  //!< address_json_datas  // NOLINT
+  std::vector<KeyPrefixCustomizeDataStruct> key_json_datas;          //!< key_json_datas  // NOLINT
   std::set<std::string> ignore_items;   //!< using on JSON mapping convert.
 };
 
