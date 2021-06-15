@@ -703,6 +703,206 @@ TEST(cfdcapi_key, ExtkeyTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_key, ExtkeyPatternTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  const char* kSeed = "0e09fbdd00e575b654d480ae979f24da45ef4dee645c7dc2e3b30b2e093d38dda0202357754cc856f8920b8e31dd02e9d34f6a2b20dc825c6ba90f90009085e1";
+  const char* kPubkey = "03516369486c27b7d1d6ee0acea16b9e551afd7509e3d845be5031a8313b3ffd5c";
+  const char* kPrivkey = "0ff13951c5e144fe83130bca6011df2b0bc3ca7c039dfbc8d7b2cdf612b570a4";
+  const char* kWifMainnet = "Kwkhb3aAjaQHGuB22TWBy9C95qdVjmzWaVi4ALreyQ3J21ijnbiN";
+  const char* kWifTestnet = "cN7h3xa2Ae6YSLeHQsKKLThCi4vuQE6CeXrXGmKAUWhJGkpKc6dS";
+  uint32_t derive_num = 44;
+  const char* kDerivePath = "44";
+
+  struct ExtkeyPatternTestData {
+    std::string name;
+    int bip32_format_type;
+    int network_type;
+    const char* extprivkey;
+    const char* extpubkey;
+    const char* derive_extprivkey;
+    const char* derive_extpubkey;
+    const char* pub_version;
+  };
+  static const ExtkeyPatternTestData kTestDataList[] = {
+    {
+      "bip32:mainnet",
+      kCfdBip32FormatTypeNormal,
+      kCfdNetworkMainnet,
+      "xprv9s21ZrQH143K38XAstQ4D3hCGbgydJgNff6CcwmkrWTBxksb2G4CsqAywJCKbTdywfCpmpJyxqf77iKK1ju1J982iP2PriifaNZLMbyPQCx",
+      "xpub661MyMwAqRbcFcbdyuw4aBdvpdXU2mQE2t1oRLBNQqzAqZCjZoNTRdVTnbfewkSqeo4p4VoBCT2ndY9s9zoxQzYtxH73AXP5BiKp4jbS4it",
+      "xprv9tviYANcBgUENaVpFFU3WE75UECUQANDenzYG1jeEoJtxuoBwFea7L6GY5dweDgGhRYgMh33GCcJgzYCzHcU2uY1HF1sueqmAtNR7AFQ2pD",
+      "xpub67v4wfuW242Xb4aHMH13sN3p2G2xod6521v94Q9Fo8qsqi8LUnxpf8QkPNhVccmDZG3PRS5PNgAXXifbxcgy6gS1vLiRM9k2fLnvKnFA6zq",
+      "0488b21e",
+    },
+    {
+      "bip32:testnet",
+      kCfdBip32FormatTypeNormal,
+      kCfdNetworkTestnet,
+      "tprv8ZgxMBicQKsPdwkhYTFZNhKBaj7BrpiP1D1KVNCDLUwfkMcg1dPxPaYRrUMybq2JK6jbmuvk8CEuaZs48xEx7CPdF2EhX5SiVUJkoGmdvt3",
+      "tpubD6NzVbkrYhZ4XQnVS6v9n6yJ9kd829uHaWc6mtEWkkk4aqsSe2DYa5AJ2dkSUFQ5Shbig5K3jYrqKieUYrfCJS1C1srLr43JmfvDphF7jQE",
+      "tprv8bbfKVgwaxJJyPjLupKYfsj4nMcgdgQDzLuf8SA6imoNkWYGvczKd5TiTFobeb4b4s5TMneoRZC79r5x7VxQqxobotEBa1Zp5z7qYrTVvH8",
+      "tpubD8HhTujBjKyyrrm8oTz95HPBMP8co1b8ZeWSQxCQ93bmazo3Z1ouoa5adQnH97iTMAaJ31bFumzaDuADMUYCz7tJywTj2gQGFJPL5sMss9U",
+      "043587cf",
+    },
+    {
+      "bip49:mainnet",
+      kCfdBip32FormatTypeBip49,
+      kCfdNetworkMainnet,
+      "yprvABrGsX5C9jantRiHiFBgR8nhSZqRZvfsamcRQLfeEWq51rgpGvDmVtq7xW9ubNHuMJKdXHuYRW1ezzvsjSK26NodaiipSdY9r6cyk9JgjW8",
+      "ypub6QqdH2c5z7966unkpGignGjRzbfuyPPiwzY2Cj5FnrN3tf1xpTY23h9boodEwf6m4SBcoyPjf7PLWpmRshDyDEEVpcoTkSCZTSPTTFvmihB",
+      "yprvADkyqq3XLN1iDsgw5cFfiKCaeCLvLnMiZuWm3QdXcogn21cRBup8jPkQZHbXe8LC74fV7AdbirxraH9mhz2Uq9Dc9aiJVZfFScS4Vh2ekLD",
+      "ypub6SkLFLaRAja1SMmQBdng5T9KCEBQkF5Zw8SMqo39B9DktowZjT8PHC4tQaf5cXR8xuACAufwqLX5R1HAgK6ytv7cngQqw4ZWw4rZiMFPTAP",
+      "049d7cb2",
+    },
+    {
+      "bip49:testnet",
+      kCfdBip32FormatTypeBip49,
+      kCfdNetworkTestnet,
+      "uprv8tXDerPXZ1QsVEwpNp3BanQgkhFdoShsvKXYGm66iVKYoTRuGHZX1eCZsgKZbjgDijrQXPXJarbTTrUcreexuS5E7Mw86zGCmCNQBtELiFA",
+      "upub57Wa4MvRPNyAhj2HUqaBwvMRJj68CuRjHYT959ViGprXgFm3opsmZSX3iyntx2V5RsiPp51VpTy8ygKAzuZv2HW6MG1mQnvcNY8su1hHuHT",
+      "uprv8vRvdAMrjdqnpgvTkB7AsxpZxKm8aJPiuTRsuq3z6nBFocMWBH9tF97rUTmBeViWUWCG7GFMtDYf38hWqCNReCVCgDvc9vPJMiBUwMPssP3",
+      "upub59RH2ftka1Q63AzvrCeBF6mJWMbcym7aGgMUiDTbf7iEgQgeipU8nwSLKkpjctoTLLgyB1Hhzh6ssrpuoXSvhyPDKKd9bRHZrAbzA4iQjZG",
+      "044a5262",
+    },
+    {
+      "bip84:mainnet",
+      kCfdBip32FormatTypeBip84,
+      kCfdNetworkMainnet,
+      "zprvAWgYBBk7JR8GjiuQYbyJdDtCcXysWYfNVt8eBjZXcXCx4xW3XaPL7xVFyi7VbGwpkwSSGmW6tANCtHYST8j2tcVET4RF2YMe7pgd8n9uMRM",
+      "zpub6jftahH18ngZxCysedWJzMpwAZpMv1PDs74Ez7y9ArjvwkqC57hafkojq1apwZkgU5JRZSzJ7mjtQ7NzbPdz1Tv6gxVtLM23jAT6qqM33qr",
+      "zprvAYbF9ViSV3ZC5At3uy3HvQJ5pAVNHQMDV22ypoXQzp4f57ReSZyhMTQYaVZ7e2z7WhnHreEABXKQTZmLRgSVdNuD1vQj5UUjiLVhtDXvrDy",
+      "zpub6mabZ1FLKR7VHexX1zaJHYEpNCKrgs54rExadBw2Z9bdwuknz7HwuFj2RncfcS54NYGzvPGWHzsdJHtjQ1Wzh9oDf27GWyP1CnvD6ykhvRn",
+      "04b24746",
+    },
+    {
+      "bip84:testnet",
+      kCfdBip32FormatTypeBip84,
+      kCfdNetworkTestnet,
+      "vprv9DMUxX4ShgxMLY8wDAponsWBvfQ5k4hNqS3m49yz6VhRrZF8Wwj5dhrhttH9beL98NyDGs7s3Wx1M96BaM4yhfkpyhdYgu5h2vS3aQMofWX",
+      "vpub5SLqN2bLY4WeZ2DQKCMpA1SvUhEa9XRECeyMrYPbeqEQjMaH4V3LBWBBkBkUww8zqWqCZYc4H8KgrxvjibyvpXBhDbiBzhk6eGCXHX9VwmM",
+      "vprv9FGBvq2mtKPGfz7aaXto63v58HuaWvPDpZx6hDwsUnZ8riAjRwKSsCmzVfimeQNRt9K4rjqvLsuCvRK5YtnSSSAoYZd2jqCndSF8KzQrCPY",
+      "vpub5UFYLLZfigwZtUC3gZRoTBrogKk4vP75BnshVcMV3867jWVsyUdhR16ULxnKcoTNjyomvUtGTMTRm9SUXDrwWD4pBfKaBL747tfdYf5ZH7N",
+      "045f1cf6",
+    },
+  };
+
+  size_t size = sizeof(kTestDataList) / sizeof(ExtkeyPatternTestData);
+  for (size_t index = 0; index < size; ++index) {
+    SCOPED_TRACE("test_" + kTestDataList[index].name);
+
+    char* extprivkey = nullptr;
+    char* extpubkey = nullptr;
+    char* derive_extprivkey = nullptr;
+    char* derive_extpubkey = nullptr;
+    char* privkey = nullptr;
+    char* wif = nullptr;
+    char* pubkey = nullptr;
+    char* path = nullptr;
+    ret = CfdCreateExtkeyByFormatFromSeed(handle, kSeed,
+        kTestDataList[index].network_type, kCfdExtPrivkey,
+        kTestDataList[index].bip32_format_type, &extprivkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kTestDataList[index].extprivkey, extprivkey);
+      CfdFreeStringBuffer(extprivkey);
+    }
+
+    ret = CfdCreateExtPubkey(handle, kTestDataList[index].extprivkey,
+        kTestDataList[index].network_type, &extpubkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kTestDataList[index].extpubkey, extpubkey);
+      CfdFreeStringBuffer(extpubkey);
+    }
+
+    ret = CfdCreateExtkeyFromParent(handle, kTestDataList[index].extprivkey,
+        derive_num, false, kTestDataList[index].network_type,
+        kCfdExtPrivkey, &derive_extprivkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kTestDataList[index].derive_extprivkey, derive_extprivkey);
+      CfdFreeStringBuffer(derive_extprivkey);
+    }
+
+    ret = CfdCreateExtkeyFromParentPath(handle, kTestDataList[index].extpubkey,
+        kDerivePath, kTestDataList[index].network_type,
+        kCfdExtPubkey, &derive_extpubkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kTestDataList[index].derive_extpubkey, derive_extpubkey);
+      CfdFreeStringBuffer(derive_extpubkey);
+    }
+
+    derive_extprivkey = nullptr;
+    ret = CfdCreateExtkeyByFormat(handle, kTestDataList[index].network_type,
+        kCfdExtPrivkey, "", "00000000", kPrivkey,
+        "6ba6fe01878a68bd0691da3b0485ff90781b4ba8731dca2364f73bca4cb994b4",
+        0, 0, kTestDataList[index].bip32_format_type, &extprivkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kTestDataList[index].extprivkey, extprivkey);
+      CfdFreeStringBuffer(extprivkey);
+    }
+
+    ret = CfdGetPrivkeyFromExtkey(handle, kTestDataList[index].extprivkey,
+        kTestDataList[index].network_type, &privkey, &wif);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kPrivkey, privkey);
+      if (kTestDataList[index].network_type == kCfdNetworkMainnet) {
+        EXPECT_STREQ(kWifMainnet, wif);
+      } else {
+        EXPECT_STREQ(kWifTestnet, wif);
+      }
+      CfdFreeStringBuffer(privkey);
+      CfdFreeStringBuffer(wif);
+    }
+
+    ret = CfdGetPubkeyFromExtkey(handle, kTestDataList[index].extpubkey,
+        kTestDataList[index].network_type, &pubkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kPubkey, pubkey);
+      CfdFreeStringBuffer(pubkey);
+    }
+
+    ret = CfdGetParentExtkeyPathData(handle, kTestDataList[index].extprivkey,
+        kDerivePath, kCfdExtPrivkey, &path, &derive_extprivkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("[00000000/44]", path);
+      EXPECT_STREQ(kTestDataList[index].derive_extprivkey, derive_extprivkey);
+      CfdFreeStringBuffer(path);
+      CfdFreeStringBuffer(derive_extprivkey);
+    }
+
+    uint32_t depth = 0;
+    uint32_t child_number = 0;
+    char* version = nullptr;
+    char* finger_print = nullptr;
+    char* chain_code = nullptr;
+    ret = CfdGetExtkeyInformation(handle, kTestDataList[index].derive_extpubkey,
+        &version, &finger_print, &chain_code, &depth, &child_number);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(kTestDataList[index].pub_version, version);
+      EXPECT_STREQ("03af54a0", finger_print);
+      EXPECT_STREQ("60e694e8121800da6cd00a6943420d4b1de78b8071cd265a2345f92eb02f265a", chain_code);
+      EXPECT_EQ(1, depth);
+      EXPECT_EQ(44, child_number);
+      CfdFreeStringBuffer(version);
+      CfdFreeStringBuffer(finger_print);
+      CfdFreeStringBuffer(chain_code);
+    }
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
 
 TEST(cfdcapi_key, MnemonicTest) {
   void* handle = NULL;

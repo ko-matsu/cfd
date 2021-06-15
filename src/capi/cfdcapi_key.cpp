@@ -12,7 +12,6 @@
 
 #include "capi/cfdc_internal.h"
 #include "cfd/cfd_common.h"
-#include "cfd/cfdapi_hdwallet.h"
 #include "cfd/cfdapi_key.h"
 #include "cfdc/cfdcapi_common.h"
 #include "cfdcore/cfdcore_common.h"
@@ -25,8 +24,6 @@
 #include "cfdcore/cfdcore_transaction_common.h"
 #include "cfdcore/cfdcore_util.h"
 
-using cfd::api::ExtKeyType;
-using cfd::api::HDWalletApi;
 using cfd::api::KeyApi;
 using cfd::core::AdaptorSignature;
 using cfd::core::ByteData;
@@ -38,6 +35,7 @@ using cfd::core::DescriptorKeyInfo;
 using cfd::core::ExtPrivkey;
 using cfd::core::ExtPubkey;
 using cfd::core::HDWallet;
+using cfd::core::KeyData;
 using cfd::core::NetType;
 using cfd::core::Privkey;
 using cfd::core::Pubkey;
@@ -83,6 +81,24 @@ struct CfdCapiCombinePubkey {
   std::vector<std::string>* pubkey_list;
 };
 
+/**
+ * @brief check extkey network type.
+ * @param[in] input_net_type      input network type
+ * @param[in] extkey_net_type     extkey network type
+ */
+static void CheckExtkeyNetworkType(
+    NetType input_net_type, NetType extkey_net_type) {
+  bool is_mainnet = (input_net_type == NetType::kMainnet);
+  bool is_key_mainnet = (extkey_net_type == NetType::kMainnet);
+  if (is_mainnet != is_key_mainnet) {
+    warn(
+        CFD_LOG_SOURCE, "network unmatch. {},{}", input_net_type,
+        extkey_net_type);
+    throw CfdException(
+        CfdError::kCfdIllegalArgumentError, "extkey networkType unmatch.");
+  }
+}
+
 }  // namespace capi
 }  // namespace cfd
 
@@ -94,7 +110,9 @@ using cfd::capi::AllocBuffer;
 using cfd::capi::CfdCapiCombinePubkey;
 using cfd::capi::CfdCapiGetMnemonicWordList;
 using cfd::capi::CheckBuffer;
+using cfd::capi::CheckExtkeyNetworkType;
 using cfd::capi::ConvertNetType;
+using cfd::capi::ConvertToBip32Format;
 using cfd::capi::CreateString;
 using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
@@ -1632,6 +1650,14 @@ int CfdNegatePrivkey(void* handle, const char* privkey, char** output) {
 int CfdCreateExtkeyFromSeed(
     void* handle, const char* seed_hex, int network_type, int key_type,
     char** extkey) {
+  return CfdCreateExtkeyByFormatFromSeed(
+      handle, seed_hex, network_type, key_type, kCfdBip32FormatTypeNormal,
+      extkey);
+}
+
+int CfdCreateExtkeyByFormatFromSeed(
+    void* handle, const char* seed_hex, int network_type, int key_type,
+    int format_type, char** extkey) {
   try {
     cfd::Initialize();
     if (extkey == nullptr) {
@@ -1655,10 +1681,14 @@ int CfdCreateExtkeyFromSeed(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. privkey's network_type is invalid.");
     }
-    ExtKeyType output_key_type = static_cast<ExtKeyType>(key_type);
-    HDWalletApi api;
-    std::string key = api.CreateExtkeyFromSeed(
-        ByteData(seed_hex), net_type, output_key_type);
+    auto bip32_format_type = ConvertToBip32Format(format_type);
+    ExtPrivkey privkey(ByteData(seed_hex), net_type, bip32_format_type);
+    std::string key;
+    if (key_type == kCfdExtPrivkey) {
+      key = privkey.ToString();
+    } else {
+      key = privkey.GetExtPubkey().ToString();
+    }
     *extkey = CreateString(key);
 
     return CfdErrorCode::kCfdSuccess;
@@ -1677,6 +1707,16 @@ CFDC_API int CfdCreateExtkey(
     void* handle, int network_type, int key_type, const char* parent_key,
     const char* fingerprint, const char* key, const char* chain_code,
     unsigned char depth, uint32_t child_number, char** extkey) {
+  return CfdCreateExtkeyByFormat(
+      handle, network_type, key_type, parent_key, fingerprint, key, chain_code,
+      depth, child_number, kCfdBip32FormatTypeNormal, extkey);
+}
+
+CFDC_API int CfdCreateExtkeyByFormat(
+    void* handle, int network_type, int key_type, const char* parent_key,
+    const char* fingerprint, const char* key, const char* chain_code,
+    unsigned char depth, uint32_t child_number, int format_type,
+    char** extkey) {
   try {
     cfd::Initialize();
     if (extkey == nullptr) {
@@ -1710,8 +1750,9 @@ CFDC_API int CfdCreateExtkey(
     if (!IsEmptyString(fingerprint)) {
       fingerprint_str = fingerprint;
     }
+    auto bip32_format = ConvertToBip32Format(format_type);
 
-    if (key_type == ExtKeyType::kExtPrivkey) {
+    if (key_type == kCfdExtPrivkey) {
       Privkey privkey;
       if (key_str.size() == (Privkey::kPrivkeySize * 2)) {
         privkey = Privkey(key_str);
@@ -1727,24 +1768,24 @@ CFDC_API int CfdCreateExtkey(
         }
         ExtPrivkey extprivkey(
             net_type, parent_privkey, privkey, ByteData256(chain_code_str),
-            depth, child_number);
+            depth, child_number, bip32_format);
         *extkey = CreateString(extprivkey.ToString());
       } else {
         ExtPrivkey extprivkey(
             net_type, ByteData(fingerprint_str), privkey,
-            ByteData256(chain_code_str), depth, child_number);
+            ByteData256(chain_code_str), depth, child_number, bip32_format);
         *extkey = CreateString(extprivkey.ToString());
       }
     } else {
       if (fingerprint_str.empty()) {
         ExtPubkey extpubkey(
             net_type, Pubkey(parent_key_str), Pubkey(key_str),
-            ByteData256(chain_code_str), depth, child_number);
+            ByteData256(chain_code_str), depth, child_number, bip32_format);
         *extkey = CreateString(extpubkey.ToString());
       } else {
         ExtPubkey extpubkey(
             net_type, ByteData(fingerprint_str), Pubkey(key_str),
-            ByteData256(chain_code_str), depth, child_number);
+            ByteData256(chain_code_str), depth, child_number, bip32_format);
         *extkey = CreateString(extpubkey.ToString());
       }
     }
@@ -1787,10 +1828,33 @@ int CfdCreateExtkeyFromParent(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. privkey's network_type is invalid.");
     }
-    ExtKeyType output_key_type = static_cast<ExtKeyType>(key_type);
-    HDWalletApi api;
-    std::string key = api.CreateExtkeyFromParent(
-        extkey, net_type, output_key_type, child_number, hardened);
+    KeyData key_data(extkey);
+    if ((!key_data.HasExtPrivkey()) && (!key_data.HasExtPubkey())) {
+      warn(CFD_LOG_SOURCE, "Invalid extkey.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. Invalid extkey.");
+    }
+    CheckExtkeyNetworkType(net_type, key_data.GetExtPubkey().GetNetworkType());
+
+    std::vector<uint32_t> path = {child_number};
+    if (hardened) path[0] = ExtPrivkey::kHardenedKey | child_number;
+    std::string key;
+    if (key_type == kCfdExtPrivkey) {
+      if (!key_data.HasExtPrivkey()) {
+        warn(
+            CFD_LOG_SOURCE,
+            "Illegal key_type. Cannot create privkey from pubkey.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Illegal key_type. Cannot create privkey from pubkey.");
+      }
+      key_data = key_data.DerivePrivkey(path, false);
+      key = key_data.GetExtPrivkey().ToString();
+    } else {
+      key_data = key_data.DerivePubkey(path, false);
+      key = key_data.GetExtPubkey().ToString();
+    }
     *child_extkey = CreateString(key);
 
     return CfdErrorCode::kCfdSuccess;
@@ -1835,10 +1899,31 @@ int CfdCreateExtkeyFromParentPath(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. privkey's network_type is invalid.");
     }
-    ExtKeyType output_key_type = static_cast<ExtKeyType>(key_type);
-    HDWalletApi api;
-    std::string key = api.CreateExtkeyFromPathString(
-        extkey, net_type, output_key_type, path_string);
+    KeyData key_data(extkey);
+    if ((!key_data.HasExtPrivkey()) && (!key_data.HasExtPubkey())) {
+      warn(CFD_LOG_SOURCE, "Invalid extkey.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. Invalid extkey.");
+    }
+    CheckExtkeyNetworkType(net_type, key_data.GetExtPubkey().GetNetworkType());
+
+    std::string key;
+    if (key_type == kCfdExtPrivkey) {
+      if (!key_data.HasExtPrivkey()) {
+        warn(
+            CFD_LOG_SOURCE,
+            "Illegal key_type. Cannot create privkey from pubkey.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Illegal key_type. Cannot create privkey from pubkey.");
+      }
+      key_data = key_data.DerivePrivkey(path_string, false);
+      key = key_data.GetExtPrivkey().ToString();
+    } else {
+      key_data = key_data.DerivePubkey(path_string, false);
+      key = key_data.GetExtPubkey().ToString();
+    }
     *child_extkey = CreateString(key);
 
     return CfdErrorCode::kCfdSuccess;
@@ -1878,8 +1963,9 @@ int CfdCreateExtPubkey(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. privkey's network_type is invalid.");
     }
-    HDWalletApi api;
-    std::string key = api.CreateExtPubkey(extkey, net_type);
+    ExtPrivkey privkey(extkey);
+    CheckExtkeyNetworkType(net_type, privkey.GetNetworkType());
+    auto key = privkey.GetExtPubkey().ToString();
     *ext_pubkey = CreateString(key);
 
     return CfdErrorCode::kCfdSuccess;
@@ -1916,16 +2002,13 @@ int CfdGetPrivkeyFromExtkey(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. privkey's network_type is invalid.");
     }
-    HDWalletApi api;
-    std::string key;
-    if (privkey != nullptr) {
-      key = api.GetPrivkeyFromExtkey(extkey, net_type, false);
-      work_privkey = CreateString(key);
-    }
-    if (wif != nullptr) {
-      key = api.GetPrivkeyFromExtkey(extkey, net_type, true);
-      work_wif = CreateString(key);
-    }
+
+    ExtPrivkey ext_privkey(extkey);
+    CheckExtkeyNetworkType(net_type, ext_privkey.GetNetworkType());
+
+    Privkey key = ext_privkey.GetPrivkey();
+    if (privkey != nullptr) work_privkey = CreateString(key.GetHex());
+    if (wif != nullptr) work_wif = CreateString(key.GetWif());
 
     if (work_privkey != nullptr) *privkey = work_privkey;
     if (work_wif != nullptr) *wif = work_wif;
@@ -1969,8 +2052,17 @@ int CfdGetPubkeyFromExtkey(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. privkey's network_type is invalid.");
     }
-    HDWalletApi api;
-    std::string key = api.GetPubkeyFromExtkey(extkey, net_type);
+
+    KeyData key_data(extkey);
+    if ((!key_data.HasExtPrivkey()) && (!key_data.HasExtPubkey())) {
+      warn(CFD_LOG_SOURCE, "Invalid extkey.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. Invalid extkey.");
+    }
+    CheckExtkeyNetworkType(net_type, key_data.GetExtPubkey().GetNetworkType());
+
+    auto key = key_data.GetPubkey().GetHex();
     *pubkey = CreateString(key);
 
     return CfdErrorCode::kCfdSuccess;
@@ -2127,8 +2219,7 @@ int CfdInitializeMnemonicWordList(
     if (!IsEmptyString(language)) {
       lang = language;
     }
-    HDWalletApi api;
-    std::vector<std::string> wordlist = api.GetMnemonicWordlist(lang);
+    std::vector<std::string> wordlist = HDWallet::GetMnemonicWordlist(lang);
     if (max_index != nullptr) {
       *max_index = static_cast<uint32_t>(wordlist.size());
     }
@@ -2237,10 +2328,38 @@ int CfdConvertMnemonicToSeed(
     std::vector<std::string> mnemonic_words = StringUtil::Split(mnemonic, " ");
 
     ByteData entropy_data;
-    HDWalletApi api;
-    ByteData seed_data = api.ConvertMnemonicToSeed(
-        mnemonic_words, passphrase_str, strict_check, lang,
-        use_ideographic_space, &entropy_data);
+    if (strict_check) {
+      if (lang.empty()) {
+        warn(
+            CFD_LOG_SOURCE,
+            "Failed to ConvertMnemonicToSeed. If check mnemonic strictly, "
+            "need "
+            "to set language.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to ConvertMnemonicToSeed. If check mnemonic strictly, "
+            "need "
+            "to set language.");
+      }
+
+      if (!HDWallet::CheckValidMnemonic(mnemonic_words, lang)) {
+        warn(
+            CFD_LOG_SOURCE,
+            "Failed to ConvertMnemonicToSeed. Mnemonic strict check error.");
+        throw CfdException(
+            CfdError::kCfdIllegalArgumentError,
+            "Failed to ConvertMnemonicToSeed. Mnemonic strict check error.");
+      }
+    }
+
+    // calculate entropy
+    if (!lang.empty() && entropy != nullptr) {
+      entropy_data = HDWallet::ConvertMnemonicToEntropy(mnemonic_words, lang);
+    }
+
+    // calculate seed
+    HDWallet wallet(mnemonic_words, passphrase, use_ideographic_space);
+    ByteData seed_data = wallet.GetSeed();
     work_entropy = CreateString(entropy_data.GetHex());
 
     *seed = CreateString(seed_data.GetHex());
@@ -2280,9 +2399,8 @@ int CfdConvertEntropyToMnemonic(
       lang = language;
     }
 
-    HDWalletApi api;
-    std::vector<std::string> word_list =
-        api.ConvertEntropyToMnemonic(ByteData(std::string(entropy)), lang);
+    std::vector<std::string> word_list = HDWallet::ConvertEntropyToMnemonic(
+        ByteData(std::string(entropy)), lang);
     std::string mnemonic_str;
     for (const auto& word : word_list) {
       if (!mnemonic_str.empty()) mnemonic_str += " ";
