@@ -4644,6 +4644,426 @@ class XpubData
 };
 
 // ------------------------------------------------------------------------
+// AddressPrefixCustomizeData
+// ------------------------------------------------------------------------
+/**
+ * @brief JSON-API (AddressPrefixCustomizeData) class
+ */
+class AddressPrefixCustomizeData
+  : public cfd::core::JsonClassBase<AddressPrefixCustomizeData> {
+ public:
+  AddressPrefixCustomizeData() {
+    CollectFieldName();
+  }
+  virtual ~AddressPrefixCustomizeData() {
+    // do nothing
+  }
+  /**
+   * @brief collect field name.
+   */
+  static void CollectFieldName();
+
+  /**
+   * @brief Get of nettype
+   * @return nettype
+   */
+  std::string GetNettype() const {
+    return nettype_;
+  }
+  /**
+   * @brief Set to nettype
+   * @param[in] nettype    setting value.
+   */
+  void SetNettype(  // line separate
+    const std::string& nettype) {  // NOLINT
+    this->nettype_ = nettype;
+  }
+  /**
+   * @brief Get data type of nettype
+   * @return Data type of nettype
+   */
+  static std::string GetNettypeFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of nettype field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetNettypeString(  // line separate
+      const AddressPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.nettype_);
+  }
+  /**
+   * @brief Set json object to nettype field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetNettypeString(  // line separate
+      AddressPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.nettype_, json_value);
+  }
+
+  /**
+   * @brief Get of p2pkh
+   * @return p2pkh
+   */
+  std::string GetP2pkh() const {
+    return p2pkh_;
+  }
+  /**
+   * @brief Set to p2pkh
+   * @param[in] p2pkh    setting value.
+   */
+  void SetP2pkh(  // line separate
+    const std::string& p2pkh) {  // NOLINT
+    this->p2pkh_ = p2pkh;
+  }
+  /**
+   * @brief Get data type of p2pkh
+   * @return Data type of p2pkh
+   */
+  static std::string GetP2pkhFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of p2pkh field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetP2pkhString(  // line separate
+      const AddressPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.p2pkh_);
+  }
+  /**
+   * @brief Set json object to p2pkh field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetP2pkhString(  // line separate
+      AddressPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.p2pkh_, json_value);
+  }
+
+  /**
+   * @brief Get of p2sh
+   * @return p2sh
+   */
+  std::string GetP2sh() const {
+    return p2sh_;
+  }
+  /**
+   * @brief Set to p2sh
+   * @param[in] p2sh    setting value.
+   */
+  void SetP2sh(  // line separate
+    const std::string& p2sh) {  // NOLINT
+    this->p2sh_ = p2sh;
+  }
+  /**
+   * @brief Get data type of p2sh
+   * @return Data type of p2sh
+   */
+  static std::string GetP2shFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of p2sh field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetP2shString(  // line separate
+      const AddressPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.p2sh_);
+  }
+  /**
+   * @brief Set json object to p2sh field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetP2shString(  // line separate
+      AddressPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.p2sh_, json_value);
+  }
+
+  /**
+   * @brief Get of bech32
+   * @return bech32
+   */
+  std::string GetBech32() const {
+    return bech32_;
+  }
+  /**
+   * @brief Set to bech32
+   * @param[in] bech32    setting value.
+   */
+  void SetBech32(  // line separate
+    const std::string& bech32) {  // NOLINT
+    this->bech32_ = bech32;
+  }
+  /**
+   * @brief Get data type of bech32
+   * @return Data type of bech32
+   */
+  static std::string GetBech32FieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of bech32 field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBech32String(  // line separate
+      const AddressPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.bech32_);
+  }
+  /**
+   * @brief Set json object to bech32 field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBech32String(  // line separate
+      AddressPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.bech32_, json_value);
+  }
+
+  /**
+   * @brief Get of blinded
+   * @return blinded
+   */
+  std::string GetBlinded() const {
+    return blinded_;
+  }
+  /**
+   * @brief Set to blinded
+   * @param[in] blinded    setting value.
+   */
+  void SetBlinded(  // line separate
+    const std::string& blinded) {  // NOLINT
+    this->blinded_ = blinded;
+  }
+  /**
+   * @brief Get data type of blinded
+   * @return Data type of blinded
+   */
+  static std::string GetBlindedFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of blinded field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBlindedString(  // line separate
+      const AddressPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.blinded_);
+  }
+  /**
+   * @brief Set json object to blinded field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBlindedString(  // line separate
+      AddressPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.blinded_, json_value);
+  }
+
+  /**
+   * @brief Get of blindedP2sh
+   * @return blindedP2sh
+   */
+  std::string GetBlindedP2sh() const {
+    return blinded_p2sh_;
+  }
+  /**
+   * @brief Set to blindedP2sh
+   * @param[in] blinded_p2sh    setting value.
+   */
+  void SetBlindedP2sh(  // line separate
+    const std::string& blinded_p2sh) {  // NOLINT
+    this->blinded_p2sh_ = blinded_p2sh;
+  }
+  /**
+   * @brief Get data type of blindedP2sh
+   * @return Data type of blindedP2sh
+   */
+  static std::string GetBlindedP2shFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of blindedP2sh field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBlindedP2shString(  // line separate
+      const AddressPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.blinded_p2sh_);
+  }
+  /**
+   * @brief Set json object to blindedP2sh field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBlindedP2shString(  // line separate
+      AddressPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.blinded_p2sh_, json_value);
+  }
+
+  /**
+   * @brief Get of blech32
+   * @return blech32
+   */
+  std::string GetBlech32() const {
+    return blech32_;
+  }
+  /**
+   * @brief Set to blech32
+   * @param[in] blech32    setting value.
+   */
+  void SetBlech32(  // line separate
+    const std::string& blech32) {  // NOLINT
+    this->blech32_ = blech32;
+  }
+  /**
+   * @brief Get data type of blech32
+   * @return Data type of blech32
+   */
+  static std::string GetBlech32FieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of blech32 field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBlech32String(  // line separate
+      const AddressPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.blech32_);
+  }
+  /**
+   * @brief Set json object to blech32 field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBlech32String(  // line separate
+      AddressPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.blech32_, json_value);
+  }
+
+  /**
+   * @brief Set ignore item.
+   * @param[in] key   ignore target key name.
+   */
+  void SetIgnoreItem(const std::string& key) {
+    ignore_items.insert(key);
+  }
+
+  /**
+   * @brief Convert struct to class.
+   * @param[in] data   struct data.
+   */
+  void ConvertFromStruct(
+      const AddressPrefixCustomizeDataStruct& data);
+
+  /**
+   * @brief Convert class to struct.
+   * @return  struct data.
+   */
+  AddressPrefixCustomizeDataStruct ConvertToStruct()  const;
+
+ protected:
+  /**
+   * @brief definition type of Map table.
+   */
+  using AddressPrefixCustomizeDataMapTable =
+    cfd::core::JsonTableMap<AddressPrefixCustomizeData>;
+
+  /**
+   * @brief Get JSON mapping object.
+   * @return JSON mapping object.
+   * @see cfd::core::JsonClassBase::GetJsonMapper()
+   */
+  virtual const AddressPrefixCustomizeDataMapTable& GetJsonMapper() const {  // NOLINT
+    return json_mapper;
+  }
+  /**
+   * @brief Get item lists of JSON mapping.
+   * Fetch a list of target variable names in the order of definition.
+   * @return Item lists of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetJsonItemList()
+   */
+  virtual const std::vector<std::string>& GetJsonItemList() const {
+    return item_list;
+  }
+  /**
+   * @brief Get ignore item lists of JSON mapping.
+   * Ignore the target variable at Serialize.
+   * @return Item list of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetIgnoreItem()
+   */
+  virtual const std::set<std::string>& GetIgnoreItem() const {
+    return ignore_items;
+  }
+
+ private:
+ /**
+  * @brief JsonFunctionMap table
+  */
+  static AddressPrefixCustomizeDataMapTable json_mapper;
+  /**
+   * @brief field name list.
+   */
+  static std::vector<std::string> item_list;
+  /**
+   * @brief ignore item list.
+   */
+  std::set<std::string> ignore_items;
+
+  /**
+   * @brief JsonAPI(nettype) value
+   */
+  std::string nettype_ = "";
+  /**
+   * @brief JsonAPI(p2pkh) value
+   */
+  std::string p2pkh_ = "6f";
+  /**
+   * @brief JsonAPI(p2sh) value
+   */
+  std::string p2sh_ = "c4";
+  /**
+   * @brief JsonAPI(bech32) value
+   */
+  std::string bech32_ = "bcrt";
+  /**
+   * @brief JsonAPI(blinded) value
+   */
+  std::string blinded_ = "";
+  /**
+   * @brief JsonAPI(blindedP2sh) value
+   */
+  std::string blinded_p2sh_ = "";
+  /**
+   * @brief JsonAPI(blech32) value
+   */
+  std::string blech32_ = "";
+};
+
+// ------------------------------------------------------------------------
 // DecodePsbtInput
 // ------------------------------------------------------------------------
 /**
@@ -6812,6 +7232,473 @@ class ElementsDecodeRawTransactionTxOut
 };
 
 // ------------------------------------------------------------------------
+// KeyPrefixCustomizeData
+// ------------------------------------------------------------------------
+/**
+ * @brief JSON-API (KeyPrefixCustomizeData) class
+ */
+class KeyPrefixCustomizeData
+  : public cfd::core::JsonClassBase<KeyPrefixCustomizeData> {
+ public:
+  KeyPrefixCustomizeData() {
+    CollectFieldName();
+  }
+  virtual ~KeyPrefixCustomizeData() {
+    // do nothing
+  }
+  /**
+   * @brief collect field name.
+   */
+  static void CollectFieldName();
+
+  /**
+   * @brief Get of IsMainnet
+   * @return IsMainnet
+   */
+  std::string GetIsMainnet() const {
+    return is_mainnet_;
+  }
+  /**
+   * @brief Set to IsMainnet
+   * @param[in] is_mainnet    setting value.
+   */
+  void SetIsMainnet(  // line separate
+    const std::string& is_mainnet) {  // NOLINT
+    this->is_mainnet_ = is_mainnet;
+  }
+  /**
+   * @brief Get data type of IsMainnet
+   * @return Data type of IsMainnet
+   */
+  static std::string GetIsMainnetFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of IsMainnet field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetIsMainnetString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.is_mainnet_);
+  }
+  /**
+   * @brief Set json object to IsMainnet field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetIsMainnetString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.is_mainnet_, json_value);
+  }
+
+  /**
+   * @brief Get of wif
+   * @return wif
+   */
+  std::string GetWif() const {
+    return wif_;
+  }
+  /**
+   * @brief Set to wif
+   * @param[in] wif    setting value.
+   */
+  void SetWif(  // line separate
+    const std::string& wif) {  // NOLINT
+    this->wif_ = wif;
+  }
+  /**
+   * @brief Get data type of wif
+   * @return Data type of wif
+   */
+  static std::string GetWifFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of wif field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetWifString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.wif_);
+  }
+  /**
+   * @brief Set json object to wif field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetWifString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.wif_, json_value);
+  }
+
+  /**
+   * @brief Get of bip32xpub
+   * @return bip32xpub
+   */
+  std::string GetBip32xpub() const {
+    return bip32xpub_;
+  }
+  /**
+   * @brief Set to bip32xpub
+   * @param[in] bip32xpub    setting value.
+   */
+  void SetBip32xpub(  // line separate
+    const std::string& bip32xpub) {  // NOLINT
+    this->bip32xpub_ = bip32xpub;
+  }
+  /**
+   * @brief Get data type of bip32xpub
+   * @return Data type of bip32xpub
+   */
+  static std::string GetBip32xpubFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of bip32xpub field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBip32xpubString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.bip32xpub_);
+  }
+  /**
+   * @brief Set json object to bip32xpub field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBip32xpubString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.bip32xpub_, json_value);
+  }
+
+  /**
+   * @brief Get of bip32xprv
+   * @return bip32xprv
+   */
+  std::string GetBip32xprv() const {
+    return bip32xprv_;
+  }
+  /**
+   * @brief Set to bip32xprv
+   * @param[in] bip32xprv    setting value.
+   */
+  void SetBip32xprv(  // line separate
+    const std::string& bip32xprv) {  // NOLINT
+    this->bip32xprv_ = bip32xprv;
+  }
+  /**
+   * @brief Get data type of bip32xprv
+   * @return Data type of bip32xprv
+   */
+  static std::string GetBip32xprvFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of bip32xprv field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBip32xprvString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.bip32xprv_);
+  }
+  /**
+   * @brief Set json object to bip32xprv field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBip32xprvString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.bip32xprv_, json_value);
+  }
+
+  /**
+   * @brief Get of bip49ypub
+   * @return bip49ypub
+   */
+  std::string GetBip49ypub() const {
+    return bip49ypub_;
+  }
+  /**
+   * @brief Set to bip49ypub
+   * @param[in] bip49ypub    setting value.
+   */
+  void SetBip49ypub(  // line separate
+    const std::string& bip49ypub) {  // NOLINT
+    this->bip49ypub_ = bip49ypub;
+  }
+  /**
+   * @brief Get data type of bip49ypub
+   * @return Data type of bip49ypub
+   */
+  static std::string GetBip49ypubFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of bip49ypub field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBip49ypubString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.bip49ypub_);
+  }
+  /**
+   * @brief Set json object to bip49ypub field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBip49ypubString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.bip49ypub_, json_value);
+  }
+
+  /**
+   * @brief Get of bip49yprv
+   * @return bip49yprv
+   */
+  std::string GetBip49yprv() const {
+    return bip49yprv_;
+  }
+  /**
+   * @brief Set to bip49yprv
+   * @param[in] bip49yprv    setting value.
+   */
+  void SetBip49yprv(  // line separate
+    const std::string& bip49yprv) {  // NOLINT
+    this->bip49yprv_ = bip49yprv;
+  }
+  /**
+   * @brief Get data type of bip49yprv
+   * @return Data type of bip49yprv
+   */
+  static std::string GetBip49yprvFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of bip49yprv field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBip49yprvString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.bip49yprv_);
+  }
+  /**
+   * @brief Set json object to bip49yprv field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBip49yprvString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.bip49yprv_, json_value);
+  }
+
+  /**
+   * @brief Get of bip84zpub
+   * @return bip84zpub
+   */
+  std::string GetBip84zpub() const {
+    return bip84zpub_;
+  }
+  /**
+   * @brief Set to bip84zpub
+   * @param[in] bip84zpub    setting value.
+   */
+  void SetBip84zpub(  // line separate
+    const std::string& bip84zpub) {  // NOLINT
+    this->bip84zpub_ = bip84zpub;
+  }
+  /**
+   * @brief Get data type of bip84zpub
+   * @return Data type of bip84zpub
+   */
+  static std::string GetBip84zpubFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of bip84zpub field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBip84zpubString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.bip84zpub_);
+  }
+  /**
+   * @brief Set json object to bip84zpub field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBip84zpubString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.bip84zpub_, json_value);
+  }
+
+  /**
+   * @brief Get of bip84zprv
+   * @return bip84zprv
+   */
+  std::string GetBip84zprv() const {
+    return bip84zprv_;
+  }
+  /**
+   * @brief Set to bip84zprv
+   * @param[in] bip84zprv    setting value.
+   */
+  void SetBip84zprv(  // line separate
+    const std::string& bip84zprv) {  // NOLINT
+    this->bip84zprv_ = bip84zprv;
+  }
+  /**
+   * @brief Get data type of bip84zprv
+   * @return Data type of bip84zprv
+   */
+  static std::string GetBip84zprvFieldType() {
+    return "std::string";
+  }
+  /**
+   * @brief Get json string of bip84zprv field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetBip84zprvString(  // line separate
+      const KeyPrefixCustomizeData& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.bip84zprv_);
+  }
+  /**
+   * @brief Set json object to bip84zprv field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetBip84zprvString(  // line separate
+      KeyPrefixCustomizeData& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.bip84zprv_, json_value);
+  }
+
+  /**
+   * @brief Set ignore item.
+   * @param[in] key   ignore target key name.
+   */
+  void SetIgnoreItem(const std::string& key) {
+    ignore_items.insert(key);
+  }
+
+  /**
+   * @brief Convert struct to class.
+   * @param[in] data   struct data.
+   */
+  void ConvertFromStruct(
+      const KeyPrefixCustomizeDataStruct& data);
+
+  /**
+   * @brief Convert class to struct.
+   * @return  struct data.
+   */
+  KeyPrefixCustomizeDataStruct ConvertToStruct()  const;
+
+ protected:
+  /**
+   * @brief definition type of Map table.
+   */
+  using KeyPrefixCustomizeDataMapTable =
+    cfd::core::JsonTableMap<KeyPrefixCustomizeData>;
+
+  /**
+   * @brief Get JSON mapping object.
+   * @return JSON mapping object.
+   * @see cfd::core::JsonClassBase::GetJsonMapper()
+   */
+  virtual const KeyPrefixCustomizeDataMapTable& GetJsonMapper() const {  // NOLINT
+    return json_mapper;
+  }
+  /**
+   * @brief Get item lists of JSON mapping.
+   * Fetch a list of target variable names in the order of definition.
+   * @return Item lists of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetJsonItemList()
+   */
+  virtual const std::vector<std::string>& GetJsonItemList() const {
+    return item_list;
+  }
+  /**
+   * @brief Get ignore item lists of JSON mapping.
+   * Ignore the target variable at Serialize.
+   * @return Item list of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetIgnoreItem()
+   */
+  virtual const std::set<std::string>& GetIgnoreItem() const {
+    return ignore_items;
+  }
+
+ private:
+ /**
+  * @brief JsonFunctionMap table
+  */
+  static KeyPrefixCustomizeDataMapTable json_mapper;
+  /**
+   * @brief field name list.
+   */
+  static std::vector<std::string> item_list;
+  /**
+   * @brief ignore item list.
+   */
+  std::set<std::string> ignore_items;
+
+  /**
+   * @brief JsonAPI(IsMainnet) value
+   */
+  std::string is_mainnet_ = "false";
+  /**
+   * @brief JsonAPI(wif) value
+   */
+  std::string wif_ = "ef";
+  /**
+   * @brief JsonAPI(bip32xpub) value
+   */
+  std::string bip32xpub_ = "043587cf";
+  /**
+   * @brief JsonAPI(bip32xprv) value
+   */
+  std::string bip32xprv_ = "04358394";
+  /**
+   * @brief JsonAPI(bip49ypub) value
+   */
+  std::string bip49ypub_ = "";
+  /**
+   * @brief JsonAPI(bip49yprv) value
+   */
+  std::string bip49yprv_ = "";
+  /**
+   * @brief JsonAPI(bip84zpub) value
+   */
+  std::string bip84zpub_ = "";
+  /**
+   * @brief JsonAPI(bip84zprv) value
+   */
+  std::string bip84zprv_ = "";
+};
+
+// ------------------------------------------------------------------------
 // PsbtGlobalXpub
 // ------------------------------------------------------------------------
 /**
@@ -7089,6 +7976,144 @@ class PsbtGlobalXpub
    * @brief JsonAPI(descriptorXpub) value
    */
   std::string descriptor_xpub_ = "";
+};
+
+// ------------------------------------------------------------------------
+// VoidFunctionResponse
+// ------------------------------------------------------------------------
+/**
+ * @brief JSON-API (VoidFunctionResponse) class
+ */
+class VoidFunctionResponse
+  : public cfd::core::JsonClassBase<VoidFunctionResponse> {
+ public:
+  VoidFunctionResponse() {
+    CollectFieldName();
+  }
+  virtual ~VoidFunctionResponse() {
+    // do nothing
+  }
+  /**
+   * @brief collect field name.
+   */
+  static void CollectFieldName();
+
+  /**
+   * @brief Get of success
+   * @return success
+   */
+  bool GetSuccess() const {
+    return success_;
+  }
+  /**
+   * @brief Set to success
+   * @param[in] success    setting value.
+   */
+  void SetSuccess(  // line separate
+    const bool& success) {  // NOLINT
+    this->success_ = success;
+  }
+  /**
+   * @brief Get data type of success
+   * @return Data type of success
+   */
+  static std::string GetSuccessFieldType() {
+    return "bool";
+  }
+  /**
+   * @brief Get json string of success field.
+   * @param[in,out] obj     class object.
+   * @return JSON string
+   */
+  static std::string GetSuccessString(  // line separate
+      const VoidFunctionResponse& obj) {  // NOLINT
+    return cfd::core::ConvertToString(obj.success_);
+  }
+  /**
+   * @brief Set json object to success field.
+   * @param[in,out] obj     class object.
+   * @param[in] json_value  JSON object.
+   */
+  static void SetSuccessString(  // line separate
+      VoidFunctionResponse& obj,  // NOLINT
+      const UniValue& json_value) {
+    cfd::core::ConvertFromUniValue(  // line separate
+      obj.success_, json_value);
+  }
+
+  /**
+   * @brief Set ignore item.
+   * @param[in] key   ignore target key name.
+   */
+  void SetIgnoreItem(const std::string& key) {
+    ignore_items.insert(key);
+  }
+
+  /**
+   * @brief Convert struct to class.
+   * @param[in] data   struct data.
+   */
+  void ConvertFromStruct(
+      const VoidFunctionResponseStruct& data);
+
+  /**
+   * @brief Convert class to struct.
+   * @return  struct data.
+   */
+  VoidFunctionResponseStruct ConvertToStruct()  const;
+
+ protected:
+  /**
+   * @brief definition type of Map table.
+   */
+  using VoidFunctionResponseMapTable =
+    cfd::core::JsonTableMap<VoidFunctionResponse>;
+
+  /**
+   * @brief Get JSON mapping object.
+   * @return JSON mapping object.
+   * @see cfd::core::JsonClassBase::GetJsonMapper()
+   */
+  virtual const VoidFunctionResponseMapTable& GetJsonMapper() const {  // NOLINT
+    return json_mapper;
+  }
+  /**
+   * @brief Get item lists of JSON mapping.
+   * Fetch a list of target variable names in the order of definition.
+   * @return Item lists of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetJsonItemList()
+   */
+  virtual const std::vector<std::string>& GetJsonItemList() const {
+    return item_list;
+  }
+  /**
+   * @brief Get ignore item lists of JSON mapping.
+   * Ignore the target variable at Serialize.
+   * @return Item list of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetIgnoreItem()
+   */
+  virtual const std::set<std::string>& GetIgnoreItem() const {
+    return ignore_items;
+  }
+
+ private:
+ /**
+  * @brief JsonFunctionMap table
+  */
+  static VoidFunctionResponseMapTable json_mapper;
+  /**
+   * @brief field name list.
+   */
+  static std::vector<std::string> item_list;
+  /**
+   * @brief ignore item list.
+   */
+  std::set<std::string> ignore_items;
+
+  /**
+   * @brief JsonAPI(success) value
+   */
+  bool success_ = false;
 };
 
 // ------------------------------------------------------------------------
@@ -9008,6 +10033,193 @@ class ElementsDecodeRawTransactionResponse
    * @brief JsonAPI(vout) value
    */
   JsonObjectVector<ElementsDecodeRawTransactionTxOut, ElementsDecodeRawTransactionTxOutStruct> vout_;  // NOLINT
+};
+
+// ------------------------------------------------------------------------
+// SetCustomPrefixRequest
+// ------------------------------------------------------------------------
+/**
+ * @brief JSON-API (SetCustomPrefixRequest) class
+ */
+class SetCustomPrefixRequest
+  : public cfd::core::JsonClassBase<SetCustomPrefixRequest> {
+ public:
+  SetCustomPrefixRequest() {
+    CollectFieldName();
+  }
+  virtual ~SetCustomPrefixRequest() {
+    // do nothing
+  }
+  /**
+   * @brief collect field name.
+   */
+  static void CollectFieldName();
+
+  /**
+   * @brief Get of addressJsonDatas.
+   * @return addressJsonDatas
+   */
+  JsonObjectVector<AddressPrefixCustomizeData, AddressPrefixCustomizeDataStruct>& GetAddressJsonDatas() {  // NOLINT
+    return address_json_datas_;
+  }
+  /**
+   * @brief Set to addressJsonDatas.
+   * @param[in] address_json_datas    setting value.
+   */
+  void SetAddressJsonDatas(  // line separate
+      const JsonObjectVector<AddressPrefixCustomizeData, AddressPrefixCustomizeDataStruct>& address_json_datas) {  // NOLINT
+    this->address_json_datas_ = address_json_datas;
+  }
+  /**
+   * @brief Get data type of addressJsonDatas.
+   * @return Data type of addressJsonDatas.
+   */
+  static std::string GetAddressJsonDatasFieldType() {
+    return "JsonObjectVector<AddressPrefixCustomizeData, AddressPrefixCustomizeDataStruct>";  // NOLINT
+  }
+  /**
+   * @brief Get json string of addressJsonDatas field.
+   * @param[in,out] obj     class object
+   * @return JSON string.
+   */
+  static std::string GetAddressJsonDatasString(  // line separate
+      const SetCustomPrefixRequest& obj) {  // NOLINT
+    // Do not set to const, because substitution of member variables
+    // may occur in pre / post processing inside Serialize
+    return obj.address_json_datas_.Serialize();
+  }
+  /**
+   * @brief Set json object to addressJsonDatas field.
+   * @param[in,out] obj     class object
+   * @param[in] json_value  JSON object
+   */
+  static void SetAddressJsonDatasString(  // line separate
+      SetCustomPrefixRequest& obj,  // NOLINT
+      const UniValue& json_value) {
+    obj.address_json_datas_.DeserializeUniValue(json_value);
+  }
+
+  /**
+   * @brief Get of keyJsonDatas.
+   * @return keyJsonDatas
+   */
+  JsonObjectVector<KeyPrefixCustomizeData, KeyPrefixCustomizeDataStruct>& GetKeyJsonDatas() {  // NOLINT
+    return key_json_datas_;
+  }
+  /**
+   * @brief Set to keyJsonDatas.
+   * @param[in] key_json_datas    setting value.
+   */
+  void SetKeyJsonDatas(  // line separate
+      const JsonObjectVector<KeyPrefixCustomizeData, KeyPrefixCustomizeDataStruct>& key_json_datas) {  // NOLINT
+    this->key_json_datas_ = key_json_datas;
+  }
+  /**
+   * @brief Get data type of keyJsonDatas.
+   * @return Data type of keyJsonDatas.
+   */
+  static std::string GetKeyJsonDatasFieldType() {
+    return "JsonObjectVector<KeyPrefixCustomizeData, KeyPrefixCustomizeDataStruct>";  // NOLINT
+  }
+  /**
+   * @brief Get json string of keyJsonDatas field.
+   * @param[in,out] obj     class object
+   * @return JSON string.
+   */
+  static std::string GetKeyJsonDatasString(  // line separate
+      const SetCustomPrefixRequest& obj) {  // NOLINT
+    // Do not set to const, because substitution of member variables
+    // may occur in pre / post processing inside Serialize
+    return obj.key_json_datas_.Serialize();
+  }
+  /**
+   * @brief Set json object to keyJsonDatas field.
+   * @param[in,out] obj     class object
+   * @param[in] json_value  JSON object
+   */
+  static void SetKeyJsonDatasString(  // line separate
+      SetCustomPrefixRequest& obj,  // NOLINT
+      const UniValue& json_value) {
+    obj.key_json_datas_.DeserializeUniValue(json_value);
+  }
+
+  /**
+   * @brief Set ignore item.
+   * @param[in] key   ignore target key name.
+   */
+  void SetIgnoreItem(const std::string& key) {
+    ignore_items.insert(key);
+  }
+
+  /**
+   * @brief Convert struct to class.
+   * @param[in] data   struct data.
+   */
+  void ConvertFromStruct(
+      const SetCustomPrefixRequestStruct& data);
+
+  /**
+   * @brief Convert class to struct.
+   * @return  struct data.
+   */
+  SetCustomPrefixRequestStruct ConvertToStruct()  const;
+
+ protected:
+  /**
+   * @brief definition type of Map table.
+   */
+  using SetCustomPrefixRequestMapTable =
+    cfd::core::JsonTableMap<SetCustomPrefixRequest>;
+
+  /**
+   * @brief Get JSON mapping object.
+   * @return JSON mapping object.
+   * @see cfd::core::JsonClassBase::GetJsonMapper()
+   */
+  virtual const SetCustomPrefixRequestMapTable& GetJsonMapper() const {  // NOLINT
+    return json_mapper;
+  }
+  /**
+   * @brief Get item lists of JSON mapping.
+   * Fetch a list of target variable names in the order of definition.
+   * @return Item lists of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetJsonItemList()
+   */
+  virtual const std::vector<std::string>& GetJsonItemList() const {
+    return item_list;
+  }
+  /**
+   * @brief Get ignore item lists of JSON mapping.
+   * Ignore the target variable at Serialize.
+   * @return Item list of JSON mapping.
+   * @see cfd::core::JsonClassBase::GetIgnoreItem()
+   */
+  virtual const std::set<std::string>& GetIgnoreItem() const {
+    return ignore_items;
+  }
+
+ private:
+ /**
+  * @brief JsonFunctionMap table
+  */
+  static SetCustomPrefixRequestMapTable json_mapper;
+  /**
+   * @brief field name list.
+   */
+  static std::vector<std::string> item_list;
+  /**
+   * @brief ignore item list.
+   */
+  std::set<std::string> ignore_items;
+
+  /**
+   * @brief JsonAPI(addressJsonDatas) value
+   */
+  JsonObjectVector<AddressPrefixCustomizeData, AddressPrefixCustomizeDataStruct> address_json_datas_;  // NOLINT
+  /**
+   * @brief JsonAPI(keyJsonDatas) value
+   */
+  JsonObjectVector<KeyPrefixCustomizeData, KeyPrefixCustomizeDataStruct> key_json_datas_;  // NOLINT
 };
 
 // @formatter:on

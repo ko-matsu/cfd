@@ -735,6 +735,159 @@ TEST(cfdcapi_common, CfdHashMessageByText) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_common, CustomPrefixTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  const char* custom_json = "{\"addressJsonDatas\":[{"
+      "\"nettype\":\"testnet\",\"p2pkh\":\"71\","
+      "\"p2sh\":\"83\",\"bech32\":\"btn\""
+    "},{"
+      "\"nettype\":\"regtest\",\"p2pkh\":\"95\","
+      "\"p2sh\":\"a2\",\"bech32\":\"brt\""
+    "}],"
+    "\"keyJsonDatas\":[{"
+      "\"IsMainnet\":\"\",\"wif\":\"40\","
+      "\"bip32xpub\":\"0473e78d\",\"bip32xprv\":\"0473e354\""
+    "},{"
+      "\"wif\":\"60\","
+      "\"bip32xpub\":\"0420bd3a\",\"bip32xprv\":\"0420b900\""
+    "}]}";
+  char* resp = nullptr;
+  ret = CfdRequestExecuteJson(handle, "SetCustomPrefix", custom_json, &resp);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (resp != nullptr) CfdFreeStringBuffer(resp);
+
+  try {
+    using cfd::core::Pubkey;
+    using cfd::core::Script;
+    using cfd::core::Address;
+    using cfd::core::ScriptUtil;
+    using cfd::core::WitnessVersion;
+    using cfd::core::HDWallet;
+    using cfd::core::ExtPubkey;
+    using cfd::core::ExtPrivkey;
+
+    auto btc_list = cfd::core::GetBitcoinAddressFormatList();
+    for (const auto& item : btc_list) {
+      NetType nettype = item.GetNetType();
+      if (nettype == NetType::kMainnet) {
+        EXPECT_EQ("00", item.GetString(cfd::core::kPrefixP2pkh));
+        EXPECT_EQ("05", item.GetString(cfd::core::kPrefixP2sh));
+        EXPECT_EQ("bc", item.GetString(cfd::core::kPrefixBech32Hrp));
+      } else if (nettype == NetType::kTestnet) {
+        EXPECT_EQ("71", item.GetString(cfd::core::kPrefixP2pkh));
+        EXPECT_EQ("83", item.GetString(cfd::core::kPrefixP2sh));
+        EXPECT_EQ("btn", item.GetString(cfd::core::kPrefixBech32Hrp));
+      } else if (nettype == NetType::kRegtest) {
+        EXPECT_EQ("95", item.GetString(cfd::core::kPrefixP2pkh));
+        EXPECT_EQ("a2", item.GetString(cfd::core::kPrefixP2sh));
+        EXPECT_EQ("brt", item.GetString(cfd::core::kPrefixBech32Hrp));
+      } else {
+        EXPECT_EQ("Invalid nettype.", item.GetString(cfd::core::kNettype));
+      }
+    }
+
+    // address check
+    Pubkey pk(
+      "02d21c625759280111907a06df050cccbc875b11a50bdafa71dae5d1e8695ba82e");
+    Script p2pkh_script = ScriptUtil::CreateP2pkhLockingScript(pk);
+    Address p2pkh = Address(NetType::kTestnet, pk, btc_list);
+    Address p2sh = Address(NetType::kTestnet, p2pkh_script, btc_list);
+    Address p2wpkh = Address(
+      NetType::kTestnet, WitnessVersion::kVersion0, pk, btc_list);
+    EXPECT_EQ("niAnB9k5NMVpeysW3VAzSMyw3rTHkWbrhs",
+      p2pkh.GetAddress());
+    EXPECT_EQ("uoruZ8Km3BeRgDHPnjHHPpBAC75ADUhQzt",
+      p2sh.GetAddress());
+    EXPECT_EQ("btn1qn98wsxje7xk68axrn979fuzqrd04880s8dr45z",
+      p2wpkh.GetAddress());
+
+    p2pkh = Address(NetType::kRegtest, pk, btc_list);
+    p2sh = Address(NetType::kRegtest, p2pkh_script, btc_list);
+    p2wpkh = Address(
+      NetType::kRegtest, WitnessVersion::kVersion0, pk, btc_list);
+    EXPECT_EQ("23CLVd4USvrBN6atcvbATtsnFi1jFJzBMWG",
+      p2pkh.GetAddress());
+    EXPECT_EQ("28HLc5VZh3n1b2ec5YjcARhcYhk4Q9x2yz8",
+      p2sh.GetAddress());
+    EXPECT_EQ("brt1qn98wsxje7xk68axrn979fuzqrd04880s345gz2",
+      p2wpkh.GetAddress());
+
+    Address reg_p2pkh = Address("23CLVd4USvrBN6atcvbATtsnFi1jFJzBMWG");
+    EXPECT_EQ("23CLVd4USvrBN6atcvbATtsnFi1jFJzBMWG",
+      reg_p2pkh.GetAddress());
+    EXPECT_EQ(NetType::kRegtest, reg_p2pkh.GetNetType());
+    Address reg_p2wpkh = Address("brt1qn98wsxje7xk68axrn979fuzqrd04880s345gz2");
+    EXPECT_EQ("brt1qn98wsxje7xk68axrn979fuzqrd04880s345gz2",
+      reg_p2wpkh.GetAddress());
+    EXPECT_EQ(NetType::kRegtest, reg_p2wpkh.GetNetType());
+
+    auto fmt_list = cfd::core::GetKeyFormatList();
+    for (const auto& item : fmt_list) {
+      if (item.IsMainnet()) {
+        EXPECT_EQ("40", item.GetString(cfd::core::kWifPrefix));
+        EXPECT_EQ("0473e78d", item.GetString(cfd::core::kBip32Xpub));
+        EXPECT_EQ("0473e354", item.GetString(cfd::core::kBip32Xprv));
+      } else {
+        EXPECT_EQ("60", item.GetString(cfd::core::kWifPrefix));
+        EXPECT_EQ("0420bd3a", item.GetString(cfd::core::kBip32Xpub));
+        EXPECT_EQ("0420b900", item.GetString(cfd::core::kBip32Xprv));
+      }
+    }
+
+    ByteData seed(
+      "c55257c360c07c72029aebc1b53c05ed0362ada38ead3e3e9efa3708e53495531f09a6987599d18264c1e1c92f2cf141630c7a3c4ab7c81b2f001698e7463b04");
+    HDWallet wallet(seed);
+    auto extpriv0m = wallet.GeneratePrivkey(NetType::kMainnet);
+    auto extpriv0t = wallet.GeneratePrivkey(NetType::kTestnet);
+    auto extpub0m = extpriv0m.GetExtPubkey();
+    auto extpub0t = extpriv0t.GetExtPubkey();
+    EXPECT_EQ(
+      "wprvikzVDokm6P1KtKfqXgTJv8XpWZcukZYCFsmaRemcFvKZakza93Zwuo15JHekgFrn6ZZai45KS6AitFzNGo2sTf17aiPR86dWi9Tq82Qgo1r",
+      extpriv0m.ToString());
+    EXPECT_EQ(
+      "wpubWgH9tQnJckSFRpnyr5rjEzmB3bmxQ9nzR21zjuYXxKb8VsQ6bjNrpu2Aph61HVbgR9UFxZuRKe5FMHkZncoGNGUF1zjL8eyQSoacUbLMX4F",
+      extpub0m.ToString());
+    EXPECT_EQ(
+      "sprv8Erh3X3hFeKuoD653knTvhJHkiKLxbhym6yyMYfKJ9kPXc3AnztLtmAyv29tc6yQn95qGE6e6TmYRokeKRMdyBXuyXTihmcpwoqJJPtTyAy",
+      extpriv0t.ToString());
+    EXPECT_EQ(
+      "spub4Tr3T2ab61tD1hAY9nKUHqF2Jk9qN4Rq8Kua9w4vrVHNQQNKLYCbSZVTmHWGjUHEXBze8DprMkvK8ATi6tdKxBBjwmLdjVtuMKo4yLfkDWR",
+      extpub0t.ToString());
+
+    // parse extkey
+    ExtPrivkey parse_sk1m(
+      "wprvikzVDokm6P1KtKfqXgTJv8XpWZcukZYCFsmaRemcFvKZakza93Zwuo15JHekgFrn6ZZai45KS6AitFzNGo2sTf17aiPR86dWi9Tq82Qgo1r");
+    ExtPubkey parse_pk1t(
+      "spub4Tr3T2ab61tD1hAY9nKUHqF2Jk9qN4Rq8Kua9w4vrVHNQQNKLYCbSZVTmHWGjUHEXBze8DprMkvK8ATi6tdKxBBjwmLdjVtuMKo4yLfkDWR");
+    EXPECT_EQ(extpriv0m.ToString(), parse_sk1m.ToString());
+    EXPECT_EQ(extpub0t.ToString(), parse_pk1t.ToString());
+
+    try {
+      // unsupported prefix
+      ExtPubkey parse_xpub0t(
+        "tpubD6NzVbkrYhZ4XyJymmEgYC3uVhyj4YtPFX6yRTbW6RvfRC7Ag3sVhKSz7MNzFWW5MJ7aVBKXCAX7En296EYdpo43M4a4LaeaHuhhgHToSJF");
+    } catch (const CfdException& except1) {
+      EXPECT_STREQ("unsupported extkey version.", except1.what());
+    }
+  } catch (const CfdException& except) {
+    EXPECT_STREQ("", except.what());
+  } catch (...) {
+    EXPECT_EQ("", "Throw exception.");
+  }
+
+  resp = nullptr;
+  ret = CfdRequestExecuteJson(handle, "ClearCustomPrefix", "", &resp);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (resp != nullptr) CfdFreeStringBuffer(resp);
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 // last test.
 /* comment out.
 TEST(cfdcapi_common, CfdFinalize) {

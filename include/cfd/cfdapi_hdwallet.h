@@ -33,6 +33,7 @@ enum ExtKeyType {
 
 /**
  * @brief HDWallet関数群クラス
+ * @deprecated The function has unsupported.
  */
 class CFD_EXPORT HDWalletApi {
  public:

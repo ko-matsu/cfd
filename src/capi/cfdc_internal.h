@@ -157,6 +157,13 @@ CFDC_API cfd::core::AddressType ConvertHashToAddressType(int hash_type);
 CFDC_API cfd::core::AddressType ConvertAddressType(int address_type);
 
 /**
+ * @brief convert to bip32 format type.
+ * @param[in] format_type  bip32 format type.
+ * @return Bip32FormatType
+ */
+CFDC_API cfd::core::Bip32FormatType ConvertToBip32Format(int format_type);
+
+/**
  * @brief get witness version.
  * @param[in] hash_type  hash type.
  * @return WitnessVersion

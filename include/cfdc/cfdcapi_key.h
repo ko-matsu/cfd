@@ -30,6 +30,18 @@ enum CfdExtKeyType {
 };
 
 /**
+ * @brief bip32 format type.
+ */
+enum CfdBip32FormatType {
+  /** format: normal(bip32) */
+  kCfdBip32FormatTypeNormal = 0,
+  /** format: bip49 */
+  kCfdBip32FormatTypeBip49,
+  /** format: bip84 */
+  kCfdBip32FormatTypeBip84,
+};
+
+/**
  * @brief calcurate ec signature.
  * @param[in] handle        cfd handle.
  * @param[in] sighash       sighash.
@@ -569,6 +581,22 @@ CFDC_API int CfdCreateExtkeyFromSeed(
     char** extkey);
 
 /**
+ * @brief create extkey from seed.
+ * @param[in] handle          cfd handle.
+ * @param[in] seed_hex        seed data(hex).
+ * @param[in] network_type    network type.
+ * @param[in] key_type        extkey type.
+ * @param[in] format_type     bip32 format type.
+ * @param[out] extkey         extkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCreateExtkeyByFormatFromSeed(
+    void* handle, const char* seed_hex, int network_type, int key_type,
+    int format_type, char** extkey);
+
+/**
  * @brief create extkey from direct info.
  * @param[in] handle          cfd handle.
  * @param[in] network_type    network type.
@@ -588,6 +616,29 @@ CFDC_API int CfdCreateExtkey(
     void* handle, int network_type, int key_type, const char* parent_key,
     const char* fingerprint, const char* key, const char* chain_code,
     unsigned char depth, uint32_t child_number, char** extkey);
+
+/**
+ * @brief create extkey from direct info.
+ * @param[in] handle          cfd handle.
+ * @param[in] network_type    network type.
+ * @param[in] key_type        extkey type.
+ * @param[in] parent_key      parent key. (If there is no fingerprint)
+ * @param[in] fingerprint     fingerprint.
+ * @param[in] key             public or private key.
+ * @param[in] chain_code      chain code.
+ * @param[in] depth           depth.
+ * @param[in] child_number    child key number.
+ * @param[in] format_type     bip32 format type.
+ * @param[out] extkey         extkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCreateExtkeyByFormat(
+    void* handle, int network_type, int key_type, const char* parent_key,
+    const char* fingerprint, const char* key, const char* chain_code,
+    unsigned char depth, uint32_t child_number, int format_type,
+    char** extkey);
 
 /**
  * @brief derive extkey from number.
