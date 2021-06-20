@@ -1013,7 +1013,9 @@ int CfdCreateSighashByHandle(
       auto utxo = tx->GetTxInUtxoData(outpoint);
       ConfidentialValue value;
       auto utxo_value = utxo.value_commitment;
-      if (!value.HasBlinding()) utxo_value = ConfidentialValue(utxo.amount);
+      if (!utxo_value.HasBlinding()) {
+        utxo_value = ConfidentialValue(utxo.amount);
+      }
       if (utxo.address_type == AddressType::kTaprootAddress) {
         throw CfdException(
             CfdError::kCfdIllegalStateError,
