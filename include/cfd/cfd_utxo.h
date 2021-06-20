@@ -120,6 +120,11 @@ class CFD_EXPORT CoinSelectionOption {
    * @return dust fee satoshi
    */
   Amount GetDustFeeAmount(const Address& address) const;
+  /**
+   * @brief Get the ignore fee asset flag.
+   * @return ignore fee asset flag.
+   */
+  bool HasIgnoreFeeAsset() const;
 
   /**
    * @brief Set the BnB using flag.
@@ -156,6 +161,11 @@ class CFD_EXPORT CoinSelectionOption {
    * @param[in] baserate    fee baserate (for BTC/byte)
    */
   void SetDustFeeRate(double baserate);
+  /**
+   * @brief Set the ignore fee asset.
+   * @param[in] has_ignore_fee_asset    ignore fee asset
+   */
+  void SetIgnoreFeeAsset(bool has_ignore_fee_asset);
 
   /**
    * @brief Initializes size related information equivalent to bitcoin.
@@ -212,6 +222,7 @@ class CFD_EXPORT CoinSelectionOption {
   uint64_t long_term_fee_baserate_;  //!< longterm fee baserate
   int64_t knapsack_minimum_change_;  //!< knapsack min change
   int64_t dust_fee_rate_;            //!< dust fee rate
+  bool has_ignore_fee_asset_;        //!< ignore fee asset
 #ifndef CFD_DISABLE_ELEMENTS
   ConfidentialAssetId fee_asset_;  //!< asset to be used as a fee
   int exponent_ = 0;               //!< rangeproof exponent value

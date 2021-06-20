@@ -1327,4 +1327,69 @@ TEST(ElementsTransactionApi, FundRawTransaction_prod) {
   EXPECT_EQ(txc.GetVsize(), 374);
 }
 
+TEST(ElementsTransactionApi, FundRawTransaction_emptyUtxo) {
+  cfd::Initialize();
+  ElementsAddressFactory factory(NetType::kLiquidV1);
+  ConfidentialAssetId asset("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225");
+  // Address1
+  UtxoData utxo1;
+  utxo1.block_height = 0;
+  utxo1.binary_data = nullptr;
+  utxo1.txid = Txid("5e5fd4e860d999b30b268ed583dfcfe805c395f8290d8307f6617fdc3f029de3");
+  utxo1.vout = 0;
+  utxo1.locking_script = Script("0014860d7bed1010c2ccb5247889daa5c58023fa9f8d");
+  // utxo1.redeem_script = Script("");
+  utxo1.address = factory.GetAddress("ert1qscxhhmgszrpvedfy0zya4fw9sq3l48udr728gs");
+  utxo1.descriptor = "wpkh(02db28ad892aa1e500d1e88ffa24200088bc82a8a87807cd13a1d1a1c7799c41e5)";
+  utxo1.amount = Amount(int64_t{99999500});
+  utxo1.address_type = AddressType::kP2wpkhAddress;
+  utxo1.asset = asset;
+
+  double fee_rate = 0.15;
+  ConfidentialAssetId fee_asset = asset;
+  std::map<std::string, Amount> map_target_value;
+  map_target_value.emplace(asset.GetHex(), Amount());
+  std::map<std::string, std::string> reserve_txout_address;
+  reserve_txout_address.emplace(asset.GetHex(), "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex");
+  std::vector<ElementsUtxoAndOption> selected_txin_utxos;
+  Amount estimate_fee;
+  UtxoFilter filter;
+  std::vector<std::string> append_txout_addresses;
+  CoinSelectionOption option;
+  option.InitializeConfidentialTxSizeInfo();
+  option.SetEffectiveFeeBaserate(fee_rate);
+  option.SetLongTermFeeBaserate(fee_rate);
+  option.SetFeeAsset(fee_asset);
+  option.SetBlindInfo(0, 52);
+  option.SetKnapsackMinimumChange(0);
+
+  ConfidentialTransactionContext txc("020000000101e39d023fdc7f61f607830d29f895c305e8cfdf83d58e260bb399d960e8d45f5e0000004000ffffffff000000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014f3ea0aba73fdb23912ebd21f46e156cdd9e94280c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a9141500eb4946dee5979e708c8b2c6d090773f3b8d1870247304402204d9faa0b3b9c76b3ee875ae9205b50e05c2d0a8dff8e26d269f68eb72531af1402201f71d1e2bec6b7ea90d45dec158d3f85942e0fc09cfad29d917d3cbc6acd981d012103b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105");
+  cfd::core::Transaction tx(
+    "020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a9141500eb4946dee5979e708c8b2c6d090773f3b8d1870247304402204d9faa0b3b9c76b3ee875ae9205b50e05c2d0a8dff8e26d269f68eb72531af1402201f71d1e2bec6b7ea90d45dec158d3f85942e0fc09cfad29d917d3cbc6acd981d012103b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc00000000");
+  Script claim_script("0014f3ea0aba73fdb23912ebd21f46e156cdd9e94280");
+  std::vector<cfd::UtxoData> utxos;
+  ElementsUtxoAndOption utxo_data1;
+  utxo_data1.utxo = utxo1;
+  utxo_data1.is_pegin = true;
+  utxo_data1.fedpeg_script = claim_script;
+  utxo_data1.pegin_btc_tx_size = tx.GetTotalSize();
+  selected_txin_utxos.push_back(utxo_data1);
+
+  try {
+    ElementsTransactionApi api;
+    ConfidentialTransactionController ctx = api.FundRawTransaction(
+        txc.GetHex(), utxos, map_target_value, selected_txin_utxos,
+        reserve_txout_address, fee_asset, true, fee_rate, &estimate_fee,
+        &filter, &option, &append_txout_addresses, NetType::kElementsRegtest);
+    txc = ConfidentialTransactionContext(ctx.GetHex());
+  } catch (const CfdException& except) {
+    EXPECT_STREQ("", except.what());
+    throw except;
+  }
+
+  EXPECT_EQ(txc.GetFeeAmount().GetSatoshiValue(), estimate_fee.GetSatoshiValue());
+  EXPECT_STREQ(txc.GetHex().c_str(), "020000000101e39d023fdc7f61f607830d29f895c305e8cfdf83d58e260bb399d960e8d45f5e0000004000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000000d500000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5de3702fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014f3ea0aba73fdb23912ebd21f46e156cdd9e94280c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a9141500eb4946dee5979e708c8b2c6d090773f3b8d1870247304402204d9faa0b3b9c76b3ee875ae9205b50e05c2d0a8dff8e26d269f68eb72531af1402201f71d1e2bec6b7ea90d45dec158d3f85942e0fc09cfad29d917d3cbc6acd981d012103b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f3010500000000");
+  EXPECT_EQ(txc.GetVsize(), 307);
+}
+
 #endif  // CFD_DISABLE_ELEMENTS
