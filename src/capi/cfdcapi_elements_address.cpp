@@ -50,6 +50,7 @@ using cfd::core::logger::warn;
 using cfd::capi::AllocBuffer;
 using cfd::capi::CheckBuffer;
 using cfd::capi::ConvertAddressType;
+using cfd::capi::ConvertFromCfdNetType;
 using cfd::capi::ConvertHashToAddressType;
 using cfd::capi::ConvertNetType;
 using cfd::capi::CreateString;
@@ -127,26 +128,7 @@ int CfdParseConfidentialAddress(
     Address addr = confidential_addr.GetUnblindedAddress();
     if (network_type != nullptr) {
       // convert to c_network_type
-      switch (addr.GetNetType()) {
-        case NetType::kMainnet:
-          *network_type = kCfdNetworkMainnet;
-          break;
-        case NetType::kTestnet:
-          *network_type = kCfdNetworkTestnet;
-          break;
-        case NetType::kRegtest:
-          *network_type = kCfdNetworkRegtest;
-          break;
-        case NetType::kLiquidV1:
-          *network_type = kCfdNetworkLiquidv1;
-          break;
-        case NetType::kElementsRegtest:
-          *network_type = kCfdNetworkElementsRegtest;
-          break;
-        default:
-          *network_type = kCfdNetworkCustomChain;
-          break;
-      }
+      *network_type = ConvertFromCfdNetType(addr.GetNetType());
     }
     if (address != nullptr) {
       work_address = CreateString(addr.GetAddress());
