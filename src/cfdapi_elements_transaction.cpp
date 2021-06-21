@@ -851,6 +851,7 @@ void CollectUtxoDataByFundRawTransaction(
  * @param[in] utxo_filter               utxo filter
  * @param[in] option                    coin selection option
  * @param[in] utxo_list                 utxo list
+ * @param[in] utxo_fee_map              utxo fee map
  * @param[in,out] ctxc                  confidential transaction context
  * @param[out] append_txout_addresses   append txout address list
  * @param[out] estimate_fee             estimate fee
@@ -869,7 +870,9 @@ void CalculateFeeAndFundTransaction(
     const std::map<std::string, std::string>& reserve_txout_address,
     NetType net_type, bool is_blind_estimate_fee,
     const UtxoFilter& utxo_filter, const CoinSelectionOption& option,
-    const std::vector<Utxo>& utxo_list, ConfidentialTransactionContext* ctxc,
+    const std::vector<Utxo>& utxo_list,
+    const std::map<std::string, int64_t>& utxo_fee_map,
+    ConfidentialTransactionContext* ctxc,
     std::vector<std::string>* append_txout_addresses, Amount* estimate_fee) {
   std::string fee_asset_str = fee_asset.GetHex();
   uint8_t fee_asset_bytes[33];
@@ -931,8 +934,10 @@ void CalculateFeeAndFundTransaction(
   ConfidentialTransactionContext txc_dummy(ctxc->GetHex());
   uint32_t dummy_txout_index = 0;
   std::vector<ElementsUtxoAndOption> new_selected_utxos;
+  std::vector<ElementsUtxoAndOption> new_selected_utxos_not_lbtc;
   // Reset the selected UTXO information to the Utxo class for Elements to recalculate the fee. // NOLINT
   new_selected_utxos = selected_txin_utxos;
+  new_selected_utxos_not_lbtc = selected_txin_utxos;
   for (const auto& coin : selected_coins) {
     memcpy(txid_bytes.data(), coin.txid, txid_bytes.size());
     Txid txid = Txid(ByteData256(txid_bytes));
@@ -941,6 +946,9 @@ void CalculateFeeAndFundTransaction(
         ElementsUtxoAndOption utxo_data = {};
         utxo_data.utxo = utxo;
         new_selected_utxos.push_back(utxo_data);
+        if (utxo.asset.GetHex() != fee_asset_str) {
+          new_selected_utxos_not_lbtc.push_back(utxo_data);
+        }
         break;
       }
     }
@@ -998,6 +1006,10 @@ void CalculateFeeAndFundTransaction(
     Amount utxo_fee;
     std::map<std::string, int64_t> new_target_values;
     new_target_values.emplace(fee_asset_str, fee_asset_target_value);
+    if (utxo_fee_map.find(fee_asset_str) != utxo_fee_map.end()) {
+      int64_t past_utxo_fee = utxo_fee_map.at(fee_asset_str);
+      fee = fee - past_utxo_fee;
+    }
     fee_selected_coins = coin_select.SelectCoins(
         new_target_values, utxo_list, utxo_filter, option, fee,
         &new_amount_map, &utxo_fee, nullptr);
@@ -1009,6 +1021,21 @@ void CalculateFeeAndFundTransaction(
         break;
       }
     }
+    // re-calculate utxo list
+    new_selected_utxos = new_selected_utxos_not_lbtc;
+    for (const auto& coin : fee_selected_coins) {
+      memcpy(txid_bytes.data(), coin.txid, txid_bytes.size());
+      Txid txid = Txid(ByteData256(txid_bytes));
+      for (const UtxoData& utxo : utxodata_list) {
+        if ((txid.Equals(utxo.txid)) && (coin.vout == utxo.vout)) {
+          ElementsUtxoAndOption utxo_data = {};
+          utxo_data.utxo = utxo;
+          new_selected_utxos.push_back(utxo_data);
+          break;
+        }
+      }
+    }
+
     // estimate fee after coinselection (new fee < old fee)
     int64_t dummy_amount =
         fee_selected_value + txin_amount - tx_amount - fee.GetSatoshiValue();
@@ -1018,6 +1045,7 @@ void CalculateFeeAndFundTransaction(
         is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
         minimum_bits);
     if (new_fee < fee) fee = new_fee;
+    Amount past_fee = fee;
     fee += utxo_fee;
   }
   if ((fee_selected_value + txin_amount) < (tx_amount + fee)) {
@@ -1207,6 +1235,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   CoinSelection coin_select;
   std::vector<Utxo> utxo_list = UtxoUtil::ConvertToUtxo(utxodata_list);
   std::map<std::string, int64_t> amount_map;
+  std::map<std::string, int64_t> utxo_fee_map;
   std::vector<Utxo> selected_coins;
   Amount utxo_fee;
   auto otherCoinOpt = option;
@@ -1215,7 +1244,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   }
   selected_coins = coin_select.SelectCoins(
       select_require_values, utxo_list, utxo_filter, otherCoinOpt, fee,
-      &amount_map, &utxo_fee, nullptr);
+      &amount_map, &utxo_fee, nullptr, &utxo_fee_map);
 
   // defined fee_asset_bytes
   std::string fee_asset_str;
@@ -1333,8 +1362,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
         *this, addr_factory, txin_amount_map, tx_amount_map, target_values,
         input_max_map, selected_coins, utxodata_list, fee_asset,
         selected_txin_utxos, reserve_txout_address, net_type,
-        is_blind_estimate_fee, utxo_filter, option, utxo_list, &ctxc,
-        append_txout_addresses, estimate_fee);
+        is_blind_estimate_fee, utxo_filter, option, utxo_list, utxo_fee_map,
+        &ctxc, append_txout_addresses, estimate_fee);
   }
 
   for (auto& utxo : selected_coins) {

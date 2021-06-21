@@ -282,6 +282,8 @@ class CFD_EXPORT CoinSelection {
    * @param[out] utxo_fee_value   the fee amount for utxo
    * @param[out] map_searched_bnb Flag of whether you searched with BnB.
    *   The result is stored for each Asset specified by map_target_value.
+   * @param[out] map_utxo_fee_value Fee utxo amount map.
+   *   The collection amount for each Asset specified by map_target_value is stored.
    * @return UTXO list. If it is empty, the error ends.
    */
   std::vector<Utxo> SelectCoins(
@@ -289,7 +291,8 @@ class CFD_EXPORT CoinSelection {
       const UtxoFilter& filter, const CoinSelectionOption& option_params,
       const Amount& tx_fee_value, AmountMap* map_select_value,
       Amount* utxo_fee_value = nullptr,
-      std::map<std::string, bool>* map_searched_bnb = nullptr);
+      std::map<std::string, bool>* map_searched_bnb = nullptr,
+      AmountMap* map_utxo_fee_value = nullptr);
 #endif  // CFD_DISABLE_ELEMENTS
 
   /**
