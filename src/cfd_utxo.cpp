@@ -87,7 +87,8 @@ CoinSelectionOption::CoinSelectionOption()
     : effective_fee_baserate_(kDefaultLongTermFeeRate),
       long_term_fee_baserate_(kDefaultLongTermFeeRate),
       knapsack_minimum_change_(-1),
-      dust_fee_rate_(kDustRelayTxFeeRate) {
+      dust_fee_rate_(kDustRelayTxFeeRate),
+      has_ignore_fee_asset_(false) {
   // do nothing
 }
 
@@ -132,6 +133,10 @@ Amount CoinSelectionOption::GetDustFeeAmount(const Address& address) const {
   return dust_fee.GetFee(size);
 }
 
+bool CoinSelectionOption::HasIgnoreFeeAsset() const {
+  return has_ignore_fee_asset_;
+}
+
 void CoinSelectionOption::SetUseBnB(bool use_bnb) { use_bnb_ = use_bnb; }
 
 void CoinSelectionOption::SetChangeOutputSize(size_t size) {
@@ -162,6 +167,10 @@ void CoinSelectionOption::SetDustFeeRate(double baserate) {
   if (baserate >= 0) {
     dust_fee_rate_ = static_cast<uint64_t>(floor(baserate * 1000));
   }
+}
+
+void CoinSelectionOption::SetIgnoreFeeAsset(bool has_ignore_fee_asset) {
+  has_ignore_fee_asset_ = has_ignore_fee_asset;
 }
 
 void CoinSelectionOption::InitializeTxSizeInfo() {
@@ -324,7 +333,7 @@ std::vector<Utxo> CoinSelection::SelectCoins(
   // add fee asset to target asset list
   AmountMap work_target_values = map_target_value;
   ConfidentialAssetId fee_asset;
-  if (calculate_fee) {
+  if (calculate_fee && (!option_params.HasIgnoreFeeAsset())) {
     fee_asset = option_params.GetFeeAsset();
     auto iter = work_target_values.find(fee_asset.GetHex());
     if (iter == std::end(work_target_values)) {
@@ -404,7 +413,7 @@ std::vector<Utxo> CoinSelection::SelectCoins(
       continue;
     }
 
-    // fee以外の asset については、tx_fee=0, feeを考慮せずに計算
+    // For assets other than fees, calculate without considering fees.
     const auto& target_value = target.second;
     coin_selection_function(
         target_value, asset_utxos[target.first], Amount(), target.first,
@@ -412,7 +421,7 @@ std::vector<Utxo> CoinSelection::SelectCoins(
   }
 
   // do coin selection with fee asset
-  if (calculate_fee) {
+  if (calculate_fee && (!option_params.HasIgnoreFeeAsset())) {
     const auto& target_value = work_target_values[fee_asset.GetHex()];
     coin_selection_function(
         target_value, asset_utxos[fee_asset.GetHex()], tx_fee_out,

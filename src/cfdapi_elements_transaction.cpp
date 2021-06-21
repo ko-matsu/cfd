@@ -1115,6 +1115,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   utxodata_list.reserve(utxos.size());
   const auto txin_list = ctxc.GetTxInList();  // txin_utxo_list
   const auto txout_list = ctxc.GetTxOutList();
+  uint32_t utxo_fee_asset_count = 0;
   for (const auto& utxo : utxos) {
     bool isFind = false;
     for (const auto& txin : txin_list) {
@@ -1126,6 +1127,10 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     }
     if (!isFind) {
       utxodata_list.push_back(utxo);
+      if ((!fee_asset.IsEmpty()) &&
+          (fee_asset.GetHex() == utxo.asset.GetHex())) {
+        ++utxo_fee_asset_count;
+      }
     }
     std::string asset = utxo.asset.GetHex();
     int64_t utxo_amount = utxo.amount.GetSatoshiValue();
@@ -1204,9 +1209,13 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
   std::map<std::string, int64_t> amount_map;
   std::vector<Utxo> selected_coins;
   Amount utxo_fee;
+  auto otherCoinOpt = option;
+  if (use_fee && (utxo_fee_asset_count == 0)) {
+    otherCoinOpt.SetIgnoreFeeAsset(true);
+  }
   selected_coins = coin_select.SelectCoins(
-      select_require_values, utxo_list, utxo_filter, option, fee, &amount_map,
-      &utxo_fee, nullptr);
+      select_require_values, utxo_list, utxo_filter, otherCoinOpt, fee,
+      &amount_map, &utxo_fee, nullptr);
 
   // defined fee_asset_bytes
   std::string fee_asset_str;

@@ -1403,4 +1403,284 @@ TEST(cfdcapi_transaction, VerifyTxSignElements) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_transaction, ElementsSignTransactionTest) {
+  void* handle = nullptr;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  struct CfdSignTransactionTestData {
+    int network;
+    int key_network;
+    const char* txid;
+    uint32_t vout;
+    const char* descriptor;
+    int64_t utxo_amount;
+    const char* utxo_commitment;
+    const char* redeem_script;
+    const char* tapscript_control;
+    const char* tapleaf_hash;
+    const char* annex;
+    const char* aux_rand;
+    const char* pubkey;
+    const char* privkey;
+    int sighash_type;
+    const char* txout_address;
+    int64_t amount;
+    const char* asset;
+    const char* signed_tx;
+    bool use_direct_sign;
+    int hash_type;
+  };
+  const struct CfdSignTransactionTestData exp_datas[] = {
+    {  // p2wpkh
+      kCfdNetworkElementsRegtest,
+      kCfdNetworkRegtest,
+      "cd6adc252632eb0768ac6407e586cc74bfed739d6c8b9efa55305eb37cbd76dd", 0,
+      "wpkh(023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44)",
+      2500000000,
+      "",
+      nullptr, nullptr, nullptr, nullptr, nullptr,
+      "023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44",
+      "28190dff04c40f130b7be4a597213338cb8860ff38bbab5236bd1b3ff8472554",
+      kCfdSigHashAll,
+      "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
+      2499999000,
+      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+      "020000000101dd76bd7cb35e3055fa9e8b6c9d73edbf74cc86e50764ac6807eb322625dc6acd0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f51802fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e80000000000000000024730440220451027781118259d92ca7fef774b3d90fe90e92109879a123f1d266c6dbf480602204e9612cf045f499c00cad4c2bf07a95cf9aad192bbfb18f95e56770ea324cb3c0121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c440000000000",
+      false, kCfdP2wpkh
+    },
+    {  // p2wpkh auto sign
+      kCfdNetworkElementsRegtest,
+      kCfdNetworkRegtest,
+      "cd6adc252632eb0768ac6407e586cc74bfed739d6c8b9efa55305eb37cbd76dd", 0,
+      "wpkh(023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44)",
+      2500000000,
+      "",
+      nullptr, nullptr, nullptr, nullptr, nullptr,
+      "023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44",
+      "28190dff04c40f130b7be4a597213338cb8860ff38bbab5236bd1b3ff8472554",
+      kCfdSigHashAll,
+      "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
+      2499999000,
+      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+      "020000000101dd76bd7cb35e3055fa9e8b6c9d73edbf74cc86e50764ac6807eb322625dc6acd0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f51802fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e80000000000000000024730440220451027781118259d92ca7fef774b3d90fe90e92109879a123f1d266c6dbf480602204e9612cf045f499c00cad4c2bf07a95cf9aad192bbfb18f95e56770ea324cb3c0121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c440000000000",
+      true, kCfdP2wpkh
+    },
+    {  // p2wsh-multisig
+      kCfdNetworkElementsRegtest,
+      kCfdNetworkRegtest,
+      "cd6adc252632eb0768ac6407e586cc74bfed739d6c8b9efa55305eb37cbd76dd", 0,
+      "wsh(multi(1,023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44,03ebb70cf8b4adfff5559794d2e972d55c9429dbda25cd5911615dcab422d031ae))",
+      2500000000,
+      "",
+      "5121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c442103ebb70cf8b4adfff5559794d2e972d55c9429dbda25cd5911615dcab422d031ae52ae",
+      nullptr, nullptr, nullptr, nullptr,
+      "023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44",
+      "28190dff04c40f130b7be4a597213338cb8860ff38bbab5236bd1b3ff8472554",
+      kCfdSigHashAll,
+      "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
+      2499999000,
+      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+      "020000000101dd76bd7cb35e3055fa9e8b6c9d73edbf74cc86e50764ac6807eb322625dc6acd0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f51802fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e8000000000000000003004730440220159cf45907d607b3200f6f66823715477fb46a25389c6105925ddfd6149a8c6402206ba5bbc948e273fef511ddb77bcd4e78eb78a34578dd00e290401ccf9f3e7cce01475121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c442103ebb70cf8b4adfff5559794d2e972d55c9429dbda25cd5911615dcab422d031ae52ae0000000000",
+      false, kCfdP2wsh
+    },
+    {  // blind p2wpkh
+      kCfdNetworkElementsRegtest,
+      kCfdNetworkRegtest,
+      "cd6adc252632eb0768ac6407e586cc74bfed739d6c8b9efa55305eb37cbd76dd", 0,
+      "wpkh(023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44)",
+      2500000000,
+      "08b760fd74cae28eaa41126b3c1129b2d708d893e17b4e61bd9d5a5b12a1c7643b",
+      nullptr, nullptr, nullptr, nullptr, nullptr,
+      "023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c44",
+      "28190dff04c40f130b7be4a597213338cb8860ff38bbab5236bd1b3ff8472554",
+      kCfdSigHashAll,
+      "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex",
+      2499999000,
+      "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225",
+      "020000000101dd76bd7cb35e3055fa9e8b6c9d73edbf74cc86e50764ac6807eb322625dc6acd0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f51802fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e80000000000000000024730440220036e63bafeb6b76f1d5b94c248f7bbdcc1904046627f0712a2105930ae31dda8022028b49544faf211cd632c12e38efa97fdc1233122418dbb035194b83e689b6de80121023179b32721d07deb06cade59f56dedefdc932e89fde56e998f7a0e93a3e30c440000000000",
+      false, kCfdP2wpkh
+    },
+  };
+  size_t list_size = sizeof(exp_datas) / sizeof(struct CfdSignTransactionTestData);
+
+  for (size_t idx = 0; idx < list_size; ++idx) {
+    SCOPED_TRACE("index: " + std::to_string(idx));
+    void* create_handle = nullptr;
+    char* sighash = nullptr;
+    char* sig = nullptr;
+    char* tmp_sig = nullptr;
+    ret = CfdInitializeTransaction(
+        handle, exp_datas[idx].network, 2, 0, nullptr, &create_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_FALSE((NULL == create_handle));
+    if (ret == kCfdSuccess) {
+      ret = CfdSetTransactionUtxoData(handle, create_handle,
+          exp_datas[idx].txid, exp_datas[idx].vout, exp_datas[idx].utxo_amount,
+          exp_datas[idx].utxo_commitment, exp_datas[idx].descriptor,
+          nullptr, exp_datas[idx].asset, nullptr, true);
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      ret = CfdAddTransactionOutput(handle, create_handle,
+          exp_datas[idx].amount, exp_datas[idx].txout_address, nullptr,
+          exp_datas[idx].asset);
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      ret = CfdAddTransactionOutput(handle, create_handle,
+          exp_datas[idx].utxo_amount - exp_datas[idx].amount,
+          nullptr, nullptr, exp_datas[idx].asset);
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      bool has_tapscript = false;
+      if (ret != kCfdSuccess) {
+        // do nothing
+      } else if (exp_datas[idx].use_direct_sign) {
+        ret = CfdAddSignWithPrivkeyByHandle(handle, create_handle,
+            exp_datas[idx].txid, exp_datas[idx].vout, exp_datas[idx].privkey,
+            exp_datas[idx].sighash_type, false, true, exp_datas[idx].aux_rand,
+            exp_datas[idx].annex);
+        EXPECT_EQ(kCfdSuccess, ret);
+      } else {
+        uint32_t code_separator_pos = cfd::core::kDefaultCodeSeparatorPosition;
+        ret = CfdCreateSighashByHandle(handle, create_handle,
+            exp_datas[idx].txid, exp_datas[idx].vout,
+            exp_datas[idx].sighash_type, false,
+            (exp_datas[idx].redeem_script) ? nullptr : exp_datas[idx].pubkey,
+            exp_datas[idx].redeem_script,
+            exp_datas[idx].tapleaf_hash, code_separator_pos,
+            exp_datas[idx].annex, &sighash);
+        EXPECT_EQ(kCfdSuccess, ret);
+        if (ret != kCfdSuccess) {
+          // do nothing
+        } else if (strlen(exp_datas[idx].pubkey) == 64) {
+          // taproot/tapscript
+          ret = CfdSignSchnorr(handle, sighash,
+              exp_datas[idx].privkey, exp_datas[idx].aux_rand, &tmp_sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+          ret = CfdAddSighashTypeInSchnorrSignature(handle, tmp_sig,
+              exp_datas[idx].sighash_type, false, &sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          if (exp_datas[idx].redeem_script != nullptr) {
+            has_tapscript = true;
+            ret = CfdAddTxSignByHandle(handle, create_handle,
+                exp_datas[idx].txid, exp_datas[idx].vout,
+                exp_datas[idx].hash_type, sig, false,
+                exp_datas[idx].sighash_type, false, true);
+            EXPECT_EQ(kCfdSuccess, ret);
+
+            ret = CfdAddTaprootSignByHandle(handle, create_handle,
+                exp_datas[idx].txid, exp_datas[idx].vout,
+                nullptr, exp_datas[idx].redeem_script,
+                exp_datas[idx].tapscript_control, exp_datas[idx].annex);
+            EXPECT_EQ(kCfdSuccess, ret);
+          } else {
+            ret = CfdAddTaprootSignByHandle(handle, create_handle,
+                exp_datas[idx].txid, exp_datas[idx].vout,
+                sig, nullptr, nullptr, exp_datas[idx].annex);
+            EXPECT_EQ(kCfdSuccess, ret);
+          }
+        } else if (exp_datas[idx].redeem_script != nullptr) {
+          // script
+          ret = CfdCalculateEcSignature(handle, sighash,
+              exp_datas[idx].privkey, nullptr,
+              exp_datas[idx].key_network, true, &sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          // multisig first
+          ret = CfdAddTxSignByHandle(handle, create_handle,
+              exp_datas[idx].txid, exp_datas[idx].vout,
+              exp_datas[idx].hash_type, "", false,
+              exp_datas[idx].sighash_type, false, true);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          ret = CfdAddTxSignByHandle(handle, create_handle,
+              exp_datas[idx].txid, exp_datas[idx].vout,
+              exp_datas[idx].hash_type, sig, true,
+              exp_datas[idx].sighash_type, false, false);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          ret = CfdAddScriptHashLastSignByHandle(handle, create_handle,
+              exp_datas[idx].txid, exp_datas[idx].vout,
+              exp_datas[idx].hash_type, exp_datas[idx].redeem_script);
+          EXPECT_EQ(kCfdSuccess, ret);
+        } else {
+          ret = CfdCalculateEcSignature(handle, sighash,
+              exp_datas[idx].privkey, nullptr,
+              exp_datas[idx].key_network, true, &sig);
+          EXPECT_EQ(kCfdSuccess, ret);
+
+          if (ret == kCfdSuccess) {
+            ret = CfdAddPubkeyHashSignByHandle(handle, create_handle,
+              exp_datas[idx].txid, exp_datas[idx].vout,
+              exp_datas[idx].hash_type, exp_datas[idx].pubkey,
+              sig, true, exp_datas[idx].sighash_type, false);
+            EXPECT_EQ(kCfdSuccess, ret);
+          }
+        }
+
+        if (sighash != nullptr) {
+          CfdFreeStringBuffer(sighash);
+          sighash = nullptr;
+        }
+        if (sig != nullptr) {
+          CfdFreeStringBuffer(sig);
+          sig = nullptr;
+        }
+        if (tmp_sig != nullptr) {
+          CfdFreeStringBuffer(tmp_sig);
+          tmp_sig = nullptr;
+        }
+      }
+
+      if (ret == kCfdSuccess) {
+        char* tx_hex = nullptr;
+        ret = CfdFinalizeTransaction(handle, create_handle, &tx_hex);
+        EXPECT_EQ(kCfdSuccess, ret);
+        if (ret == kCfdSuccess) {
+          EXPECT_STREQ(exp_datas[idx].signed_tx, tx_hex);
+          CfdFreeStringBuffer(tx_hex);
+        }
+      }
+
+      if (ret == kCfdSuccess) {
+        ret = CfdVerifyTxSignByHandle(handle, create_handle,
+            exp_datas[idx].txid, exp_datas[idx].vout);
+        if ((ret != kCfdSuccess) && has_tapscript) {
+          char* err_msg = NULL;
+          CfdGetLastErrorMessage(handle, &err_msg);
+          const char* tapscript_err_msg = "The script analysis of tapscript is not supported.";
+          EXPECT_STREQ(tapscript_err_msg, err_msg);
+          if (strcmp(tapscript_err_msg, err_msg) == 0) {
+            ret = kCfdSuccess;
+          }
+          CfdFreeStringBuffer(err_msg);
+          err_msg = NULL;
+        }
+        EXPECT_EQ(kCfdSuccess, ret);
+      }
+
+      int tmp_ret = CfdFreeTransactionHandle(handle, create_handle);
+      EXPECT_EQ(kCfdSuccess, tmp_ret);
+    }
+
+#if 0
+    ret = CfdGetLastErrorCode(handle);
+    if (ret != kCfdSuccess) {
+      char* str_buffer = NULL;
+      ret = CfdGetLastErrorMessage(handle, &str_buffer);
+      EXPECT_EQ(kCfdSuccess, ret);
+      EXPECT_STREQ("", str_buffer);
+      CfdFreeStringBuffer(str_buffer);
+      str_buffer = NULL;
+      break;
+    }
+#endif
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 #endif  // CFD_DISABLE_ELEMENTS
