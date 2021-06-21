@@ -127,6 +127,13 @@ CFDC_API void FreeBuffer(
 CFDC_API void CheckBuffer(void* address, const std::string& prefix);
 
 /**
+ * @brief convert from net type.
+ * @param[in] network_type  network type.
+ * @return CfdNetworkType
+ */
+CFDC_API int ConvertFromCfdNetType(cfd::core::NetType network_type);
+
+/**
  * @brief convert to net type.
  * @param[in] network_type  network type.
  * @param[out] is_bitcoin   bitcoin or other.

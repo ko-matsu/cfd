@@ -652,6 +652,14 @@ TEST(cfdcapi_key, ExtkeyTest) {
       EXPECT_EQ(4, depth);
       EXPECT_EQ(2, child_number);
 
+      int net_type = 0;
+      int key_type = 0;
+      ret = CfdGetExtkeyInfo(handle, extprivkey3, nullptr, nullptr, nullptr,
+          &depth, &child_number, &key_type, &net_type);
+      EXPECT_EQ(kCfdSuccess, ret);
+      EXPECT_EQ(kCfdExtPrivkey, key_type);
+      EXPECT_EQ(kCfdNetworkMainnet, net_type);
+
       char* get_extkey = nullptr;
       ret = CfdCreateExtkey(handle, kNetwork, kCfdExtPrivkey, nullptr,
           fingerprint, privkey, chain_code,
