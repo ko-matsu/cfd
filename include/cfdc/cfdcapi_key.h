@@ -686,6 +686,7 @@ CFDC_API int CfdGetParentExtkeyPathData(
 
 /**
  * @brief get extkey information.
+ * @deprecated see CfdGetExtkeyInfo
  * @param[in] handle             handle pointer.
  * @param[in] extkey             ext key string.
  * @param[out] version           version.
@@ -704,6 +705,30 @@ CFDC_API int CfdGetParentExtkeyPathData(
 CFDC_API int CfdGetExtkeyInformation(
     void* handle, const char* extkey, char** version, char** fingerprint,
     char** chain_code, uint32_t* depth, uint32_t* child_number);
+
+/**
+ * @brief get extkey information.
+ * @param[in] handle             handle pointer.
+ * @param[in] extkey             ext key string.
+ * @param[out] version           version.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] fingerprint       parent fingerprint.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] chain_code        chain code.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @param[out] depth             depth.
+ * @param[out] child_number      child number.
+ * @param[out] key_type          extkey type.
+ * @param[out] network_type      network type.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetExtkeyInfo(
+    void* handle, const char* extkey, char** version, char** fingerprint,
+    char** chain_code, uint32_t* depth, uint32_t* child_number, int* key_type,
+    int* network_type);
 
 /**
  * @brief initialize getting mnemonic word list.

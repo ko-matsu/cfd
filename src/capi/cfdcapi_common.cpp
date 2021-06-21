@@ -90,6 +90,23 @@ void CheckBuffer(void* address, const std::string& prefix) {
   }
 }
 
+int ConvertFromCfdNetType(cfd::core::NetType network_type) {
+  switch (network_type) {
+    case NetType::kMainnet:
+      return kCfdNetworkMainnet;
+    case NetType::kTestnet:
+      return kCfdNetworkTestnet;
+    case NetType::kRegtest:
+      return kCfdNetworkRegtest;
+    case NetType::kLiquidV1:
+      return kCfdNetworkLiquidv1;
+    case NetType::kElementsRegtest:
+      return kCfdNetworkElementsRegtest;
+    default:
+      return kCfdNetworkCustomChain;
+  }
+}
+
 NetType ConvertNetType(int network_type, bool* is_bitcoin) {
   NetType net_type = NetType::kCustomChain;
   switch (network_type) {
