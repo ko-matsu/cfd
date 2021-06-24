@@ -338,7 +338,7 @@ std::vector<Utxo> CoinSelection::SelectCoins(
     fee_asset = option_params.GetFeeAsset();
     auto iter = work_target_values.find(fee_asset.GetHex());
     if (iter == std::end(work_target_values)) {
-      work_target_values.insert(std::make_pair(fee_asset.GetHex(), 0));
+      work_target_values.emplace(fee_asset.GetHex(), 0);
     }
   }
 
@@ -376,7 +376,7 @@ std::vector<Utxo> CoinSelection::SelectCoins(
           "Failed to SelectCoins. Target asset is not found in utxo list.");
     }
 
-    asset_utxos.insert(std::make_pair(target.first, p_utxos));
+    asset_utxos.emplace(target.first, p_utxos);
   }
 
   // coin selection function
@@ -404,10 +404,10 @@ std::vector<Utxo> CoinSelection::SelectCoins(
         &select_value_out, &utxo_fee_out, &use_bnb_out);
     std::copy(ret_utxos.begin(), ret_utxos.end(), std::back_inserter(result));
     tx_fee_out += utxo_fee_out;
-    work_selected_values[asset_id] = select_value_out;
     work_utxo_fee += utxo_fee_out;
-    work_searched_bnb[asset_id] = use_bnb_out;
-    work_map_utxo_fee_value[asset_id] = utxo_fee_out.GetSatoshiValue();
+    work_selected_values.emplace(asset_id, select_value_out);
+    work_searched_bnb.emplace(asset_id, use_bnb_out);
+    work_map_utxo_fee_value.emplace(asset_id, utxo_fee_out.GetSatoshiValue());
   };
 
   // do coin selection exclude fee asset
@@ -426,7 +426,7 @@ std::vector<Utxo> CoinSelection::SelectCoins(
 
   // do coin selection with fee asset
   if (calculate_fee && (!option_params.HasIgnoreFeeAsset())) {
-    const auto& target_value = work_target_values[fee_asset.GetHex()];
+    int64_t target_value = work_target_values[fee_asset.GetHex()];
     coin_selection_function(
         target_value, asset_utxos[fee_asset.GetHex()], tx_fee_out,
         fee_asset.GetHex(), true);

@@ -1035,6 +1035,7 @@ void CalculateFeeAndFundTransaction(
         }
       }
     }
+    fee += utxo_fee;
 
     // estimate fee after coinselection (new fee < old fee)
     int64_t dummy_amount =
@@ -1045,7 +1046,6 @@ void CalculateFeeAndFundTransaction(
         is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
         minimum_bits);
     if (new_fee < fee) fee = new_fee;
-    fee += utxo_fee;
   }
   if ((fee_selected_value + txin_amount) < (tx_amount + fee)) {
     warn(CFD_LOG_SOURCE, "Failed to FundRawTransaction. low fee asset.");
