@@ -147,6 +147,7 @@ using cfd::capi::CfdCapiBlindTxData;
 using cfd::capi::CfdCapiMultisigSignData;
 using cfd::capi::CfdCapiTransactionData;
 using cfd::capi::CheckBuffer;
+using cfd::capi::CheckEmptyString;
 using cfd::capi::ConvertAddressType;
 using cfd::capi::ConvertHashToAddressType;
 using cfd::capi::ConvertNetType;
@@ -3094,6 +3095,69 @@ int CfdAddTxPegoutOutput(
   } catch (...) {
     SetLastFatalError(handle, "unknown error.");
   }
+  return result;
+}
+
+int CfdUnblindTxOutData(
+    void* handle, const char* blinding_key, const char* locking_script,
+    const char* asset_commitment, const char* value_commitment,
+    const char* commitment_nonce, const char* rangeproof, char** asset,
+    int64_t* amount, char** asset_blind_factor, char** value_blind_factor) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  char* work_asset = nullptr;
+  char* work_asset_blinder = nullptr;
+  char* work_value_blinder = nullptr;
+  try {
+    cfd::Initialize();
+    CheckEmptyString(locking_script, "locking_script", CFD_LOG_SOURCE);
+    CheckEmptyString(asset_commitment, "asset", CFD_LOG_SOURCE);
+    CheckEmptyString(value_commitment, "value_commitment", CFD_LOG_SOURCE);
+    CheckEmptyString(commitment_nonce, "commitment_nonce", CFD_LOG_SOURCE);
+    CheckEmptyString(rangeproof, "rangeproof", CFD_LOG_SOURCE);
+    CheckEmptyString(blinding_key, "blinding_key", CFD_LOG_SOURCE);
+
+    Script locking_script_obj(locking_script);
+    ConfidentialAssetId asset_obj(asset_commitment);
+    ConfidentialValue value(value_commitment);
+    ConfidentialNonce nonce(commitment_nonce);
+    ByteData rangeproof_obj(rangeproof);
+    Privkey blinding_key_obj = Privkey::HasWif(blinding_key)
+                                   ? Privkey::FromWif(blinding_key)
+                                   : Privkey(blinding_key);
+    ConfidentialTxOut txout(
+        locking_script_obj, asset_obj, value, nonce, ByteData(),
+        rangeproof_obj);
+    auto unblind_data = txout.Unblind(blinding_key_obj);
+
+    if (asset != nullptr) {
+      work_asset = CreateString(unblind_data.asset.GetHex());
+    }
+    if (asset_blind_factor != nullptr) {
+      work_asset_blinder = CreateString(unblind_data.abf.GetHex());
+    }
+    if (value_blind_factor != nullptr) {
+      work_value_blinder = CreateString(unblind_data.vbf.GetHex());
+    }
+    if (amount != nullptr) {
+      *amount = unblind_data.value.GetAmount().GetSatoshiValue();
+    }
+
+    if (asset != nullptr) *asset = work_asset;
+    if (asset_blind_factor != nullptr) {
+      *asset_blind_factor = work_asset_blinder;
+    }
+    if (value_blind_factor != nullptr) {
+      *value_blind_factor = work_value_blinder;
+    }
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  FreeBufferOnError(&work_asset, &work_asset_blinder, &work_value_blinder);
   return result;
 }
 
