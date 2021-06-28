@@ -968,10 +968,12 @@ void CalculateFeeAndFundTransaction(
   dummy_txout_index = txc_dummy.GetTxOutCount();
   txc_dummy.AddTxOut(
       address, Amount(dummy_sat), ConfidentialAssetId(fee_asset_str));
+  volatile int64_t fee_value = 0;
   Amount fee = api.EstimateFee(
       txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
       is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
       minimum_bits);
+  fee_value = fee.GetSatoshiValue();
 
   int64_t dust_amount =
       option.GetConfidentialDustFeeAmount(address).GetSatoshiValue();
@@ -984,6 +986,7 @@ void CalculateFeeAndFundTransaction(
       // If the existing UTXO is filled, there is no need to select coin and add TxOut. // NOLINT
       fee_asset_target_value = 0;
       fee = Amount(min_fee);
+      fee_value = min_fee;
       info(CFD_LOG_SOURCE, "use minimum fee[{}]", fee.GetSatoshiValue());
     } else if (diff_amount >= fee_asset_target_value) {
       fee_asset_target_value = 0;
@@ -1008,7 +1011,8 @@ void CalculateFeeAndFundTransaction(
     new_target_values.emplace(fee_asset_str, fee_asset_target_value);
     if (utxo_fee_map.find(fee_asset_str) != utxo_fee_map.end()) {
       int64_t past_utxo_fee = utxo_fee_map.at(fee_asset_str);
-      fee = fee - past_utxo_fee;
+      fee_value -= past_utxo_fee;
+      fee = Amount(fee_value);
     }
     fee_selected_coins = coin_select.SelectCoins(
         new_target_values, utxo_list, utxo_filter, option, fee,
@@ -1036,6 +1040,7 @@ void CalculateFeeAndFundTransaction(
       }
     }
     fee += utxo_fee;
+    fee_value += utxo_fee.GetSatoshiValue();
 
     // estimate fee after coinselection (new fee < old fee)
     int64_t dummy_amount =
@@ -1045,7 +1050,9 @@ void CalculateFeeAndFundTransaction(
         txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
         is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
         minimum_bits);
-    if (new_fee < fee) fee = new_fee;
+    int64_t new_fee_value = new_fee.GetSatoshiValue();
+    if (new_fee_value < fee_value) fee_value = new_fee_value;
+    fee = Amount(fee_value);
   }
   if ((fee_selected_value + txin_amount) < (tx_amount + fee)) {
     warn(CFD_LOG_SOURCE, "Failed to FundRawTransaction. low fee asset.");
