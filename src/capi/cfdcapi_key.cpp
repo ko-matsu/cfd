@@ -2180,20 +2180,32 @@ int CfdGetExtkeyInfo(
     }
     if (hdkey_top == "prv") {
       ExtPrivkey ext_privkey(extkey_string);
-      work_version = CreateString(ext_privkey.GetVersionData().GetHex());
-      work_fingerprint =
-          CreateString(ext_privkey.GetFingerprintData().GetHex());
-      work_chain_code = CreateString(ext_privkey.GetChainCode().GetHex());
+      if (version != nullptr) {
+        work_version = CreateString(ext_privkey.GetVersionData().GetHex());
+      }
+      if (fingerprint != nullptr) {
+        work_fingerprint =
+            CreateString(ext_privkey.GetFingerprintData().GetHex());
+      }
+      if (chain_code != nullptr) {
+        work_chain_code = CreateString(ext_privkey.GetChainCode().GetHex());
+      }
       work_depth = ext_privkey.GetDepth();
       work_child_number = ext_privkey.GetChildNum();
       extkey_type = kCfdExtPrivkey;
       net_type = ConvertFromCfdNetType(ext_privkey.GetNetworkType());
     } else {
       ExtPubkey ext_pubkey(extkey_string);
-      work_version = CreateString(ext_pubkey.GetVersionData().GetHex());
-      work_fingerprint =
-          CreateString(ext_pubkey.GetFingerprintData().GetHex());
-      work_chain_code = CreateString(ext_pubkey.GetChainCode().GetHex());
+      if (version != nullptr) {
+        work_version = CreateString(ext_pubkey.GetVersionData().GetHex());
+      }
+      if (fingerprint != nullptr) {
+        work_fingerprint =
+            CreateString(ext_pubkey.GetFingerprintData().GetHex());
+      }
+      if (chain_code != nullptr) {
+        work_chain_code = CreateString(ext_pubkey.GetChainCode().GetHex());
+      }
       work_depth = ext_pubkey.GetDepth();
       work_child_number = ext_pubkey.GetChildNum();
       extkey_type = kCfdExtPubkey;

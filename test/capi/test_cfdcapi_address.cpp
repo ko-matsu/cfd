@@ -40,7 +40,7 @@ TEST(cfdcapi_address, CfdParseDescriptorTest) {
       std::string exp_schnorr_pubkey, std::string exp_tree_string, 
       bool exp_is_multisig, uint32_t exp_max_key_num,
       uint32_t exp_req_sig_num) {
-    uint32_t depth = 0, max_index = 0, max_key_num = 0, req_sig_num = 0;
+    uint32_t max_key_num = 0, req_sig_num = 0;
     int script_type = 0, hash_type = 0, key_type = 0;
     char* locking_script = nullptr;
     char* address = nullptr;

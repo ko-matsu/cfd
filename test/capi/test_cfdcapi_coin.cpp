@@ -979,12 +979,6 @@ TEST(cfdcapi_coin, CfCoinSelection_Asset2) {
   EXPECT_EQ(kCfdSuccess, ret);
   EXPECT_FALSE((NULL == handle));
 
-  auto convert_to_byte = [](const uint8_t* byte_array, size_t size) -> ByteData {
-    std::vector<uint8_t> bytes(size);
-    memcpy(bytes.data(), byte_array, bytes.size());
-    return ByteData(bytes);
-  };
-
   void* coin_select_handle = nullptr;
   std::vector<UtxoData> utxos = CfdGetElementsUtxoDataListByC(true);
   int64_t tx_fee_amount = 2000;

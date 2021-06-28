@@ -312,6 +312,28 @@ void FreeBufferOnError(
   }
 }
 
+void CheckEmptyString(
+    const char* parameter, const char* name,
+    const cfd::core::logger::CfdSourceLocation& location) {
+  if (IsEmptyString(parameter) && (name != nullptr)) {
+    warn(location, "{} is null or empty.", name);
+    throw CfdException(
+        CfdError::kCfdIllegalArgumentError,
+        "Failed to parameter. " + std::string(name) + " is null or empty.");
+  }
+}
+
+void CheckNull(
+    const char* parameter, const char* name,
+    const cfd::core::logger::CfdSourceLocation& location) {
+  if ((parameter == nullptr) && (name != nullptr)) {
+    warn(location, "{} is null.", name);
+    throw CfdException(
+        CfdError::kCfdIllegalArgumentError,
+        "Failed to parameter. " + std::string(name) + " is null.");
+  }
+}
+
 // -----------------------------------------------------------------------------
 // CfdCapiManager
 // -----------------------------------------------------------------------------
