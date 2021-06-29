@@ -1875,4 +1875,111 @@ TEST(cfdcapi_transaction, FundRawTransaction_Check1) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_transaction, FundRawTransaction_Check2) {
+  // from cfd-go
+  struct CfdTestFundElementsUtxoVector {
+    std::string txid;
+    uint32_t vout;
+    int64_t amount;
+    std::string asset;
+    std::string descriptor;
+  };
+  static ConfidentialAssetId exp_dummy_asset_a("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225");
+
+  static const std::vector<CfdTestFundElementsUtxoVector> kFundCoinSelectElementsTestVector3 = {
+    {
+      "2bc630021e76ab6bd7f8da54b0c59381e0265b093629e4384207030adba99775",
+      0,
+      150000000,
+      exp_dummy_asset_a.GetHex(),
+      "sh(wpkh([b8f7f84b/0'/0'/4']029b382de02d1753b04f29e743ec988a7585e16f023d7c76fcb468133781465282))#jm9lh5q5",
+    },
+    {
+      "42120c9e8adc1d0f0d843617a0c91d699a1eb67fb744dde21103d6423fa5c8c5",
+      1,
+      150000000,
+      exp_dummy_asset_a.GetHex(),
+      "sh(wpkh([b8f7f84b/0'/0'/4']029b382de02d1753b04f29e743ec988a7585e16f023d7c76fcb468133781465282))#jm9lh5q5",
+    },
+  };
+  // static const std::string kExpTxData = "0200000000027597a9db0a03074238e42936095b26e08193c5b054daf8d76bab761e0230c62b0000000000ffffffffc5c8a53f42d60311e2dd44b77fb61e9a691dc9a01736840d0f1ddc8a9e0c12420100000000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5e100036a2e218bb512a3e65c80b59fec57aee428b7512276bcfa366c154dd7262994c817a914363273e2f851bda01e24cda41ba748b8d1f54cfe870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000007be00000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000000bebba420230646d493a7ed8cb0091ad6e8feedcc9cd17a9162e61b7cff7929697792ef64217a91497dfc3937ad66e142925a76489eebc75358bca338700000000";
+  static const std::string kExpTxData = "0200000000027597a9db0a03074238e42936095b26e08193c5b054daf8d76bab761e0230c62b0000000000ffffffffc5c8a53f42d60311e2dd44b77fb61e9a691dc9a01736840d0f1ddc8a9e0c12420100000000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5e100036a2e218bb512a3e65c80b59fec57aee428b7512276bcfa366c154dd7262994c817a914363273e2f851bda01e24cda41ba748b8d1f54cfe870125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000007ae00000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000000bebba520230646d493a7ed8cb0091ad6e8feedcc9cd17a9162e61b7cff7929697792ef64217a91497dfc3937ad66e142925a76489eebc75358bca338700000000";
+
+  CfdInitialize();
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  try {
+    const char* tx = "020000000000010125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5e100036a2e218bb512a3e65c80b59fec57aee428b7512276bcfa366c154dd7262994c817a914363273e2f851bda01e24cda41ba748b8d1f54cfe8700000000";
+    uint32_t target_asset_count = 1;
+    auto fee_asset = exp_dummy_asset_a.GetHex();
+    void* fund_handle = nullptr;
+    ret = CfdInitializeFundRawTx(
+        handle, kCfdNetworkElementsRegtest, target_asset_count,
+        fee_asset.c_str(), &fund_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_NE(nullptr, fund_handle);
+    if (ret == kCfdSuccess) {
+      for (const auto& test_data : kFundCoinSelectElementsTestVector3) {
+        ret = CfdAddUtxoForFundRawTx(
+            handle, fund_handle,
+            test_data.txid.c_str(), test_data.vout,
+            test_data.amount,
+            test_data.descriptor.c_str(),
+            test_data.asset.c_str());
+        EXPECT_EQ(kCfdSuccess, ret);
+      }
+
+      ret = CfdAddTargetAmountForFundRawTx(handle, fund_handle, 0, 100000000,
+          exp_dummy_asset_a.GetHex().c_str(),
+          "AzpkHG7iBPzGn3wCoKwEUrNMWA8TCLXTvhK6ftgAmaAGWqDKyDipYSFjsBBcGXKj3Y65Kt9UauCEbftj");
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxIsBlind,
+          0, 0, true);
+      EXPECT_EQ(kCfdSuccess, ret);
+      ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxIsBlind,
+          0, 0, true);
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      int64_t tx_fee_amount = 0;
+      uint32_t append_txout_count = 0;
+      char* output_tx_hex = nullptr;
+      double effective_fee_rate = 1.0;
+      ret = CfdFinalizeFundRawTx(handle, fund_handle, tx,
+          effective_fee_rate, &tx_fee_amount, &append_txout_count,
+          &output_tx_hex);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret == kCfdSuccess) {
+        // EXPECT_EQ(1982, tx_fee_amount);
+        EXPECT_EQ(1966, tx_fee_amount);
+        EXPECT_EQ(1, append_txout_count);
+        EXPECT_STREQ(kExpTxData.c_str(), output_tx_hex);
+        CfdFreeStringBuffer(output_tx_hex);
+      } else {
+        ret = CfdGetLastErrorCode(handle);
+        if (ret != kCfdSuccess) {
+          char* str_buffer = NULL;
+          ret = CfdGetLastErrorMessage(handle, &str_buffer);
+          EXPECT_EQ(kCfdSuccess, ret);
+          EXPECT_STREQ("", str_buffer);
+          CfdFreeStringBuffer(str_buffer);
+          str_buffer = NULL;
+        }
+      }
+    }
+    ret = CfdFreeFundRawTxHandle(handle, fund_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    // EXPECT_STREQ("", context.GetHex().c_str());
+  } catch (const CfdException& except) {
+    EXPECT_STREQ("", except.what());
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 #endif  // CFD_DISABLE_ELEMENTS
