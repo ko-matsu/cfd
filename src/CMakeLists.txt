@@ -229,7 +229,7 @@ target_link_libraries(${CFDJSON_LIBRARY}
     ${UNIVALUE_LIBRARY}
     ${GCOV_LIBRARY}
 )
-endif(ENABLE_JSONAPI)
+endif(NOT ENABLE_JSONAPI)
 
 
 ####################
@@ -337,7 +337,7 @@ target_link_libraries(${CFDC_LIBRARY}
 )
 endif(ENABLE_JSONAPI)
 
-endif(ENABLE_CAPI)
+endif(NOT ENABLE_CAPI)
 
 
 ####################
