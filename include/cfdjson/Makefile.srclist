@@ -1,0 +1,6 @@
+# ./include/cfdjson/Makefile.inc
+
+CFDJSON_PKGINCLUDE_FILES = \
+  cfd_json_common.h \
+  cfd_json_mapping_api.h
+

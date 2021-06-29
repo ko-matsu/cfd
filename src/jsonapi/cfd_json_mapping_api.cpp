@@ -6,8 +6,8 @@
  */
 #include <string>
 
-#include "cfd/cfd_common.h"
-#include "cfd/cfd_json_mapping_api.h"
+#include "cfdjson/cfd_json_common.h"
+#include "cfdjson/cfd_json_mapping_api.h"
 #include "jsonapi/autogen/cfd_api_json_autogen.h"           // NOLINT
 #include "jsonapi/cfd_json_transaction.h"           // NOLINT
 #include "jsonapi/cfd_json_psbt.h"                  // NOLINT

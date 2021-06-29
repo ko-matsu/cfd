@@ -59,6 +59,8 @@ set(LIBWALLY_LIBRARY wally)
 set(UNIVALUE_LIBRARY univalue)
 set(CFDCORE_LIBRARY cfdcore)
 set(CFD_LIBRARY cfd)
+set(CFDJSON_LIBRARY cfdjson)
+set(CFDC_LIBRARY cfdc)
 
 if(WIN32 AND ENABLE_SHARED)
 if(NOT ENABLE_CAPI)
@@ -88,6 +90,8 @@ target_compile_options(${PROJECT_NAME}
 if(ENABLE_SHARED OR USE_CFD_SHARED)
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE
+    CFDC_SHARED=1
+    CFDJSON_SHARED=1
     CFD_SHARED=1
     CFD_CORE_SHARED=1
     ${ELEMENTS_COMP_OPT}
@@ -145,6 +149,8 @@ target_link_libraries(${PROJECT_NAME}
     ${UNIVALUE_LIBRARY}
     ${CFDCORE_LIBRARY}
     ${CFD_LIBRARY}
+    ${CFDC_LIBRARY}
+    ${CFDJSON_LIBRARY}
     gtest_main
     gmock
 )

@@ -22,14 +22,14 @@ extern "C" {
  */
 #ifndef CFDC_API
 #if defined(_WIN32)
-#ifdef CFD_BUILD
+#ifdef CFDC_BUILD
 #define CFDC_API __declspec(dllexport)
-#elif defined(CFD_SHARED)
+#elif defined(CFDC_SHARED)
 #define CFDC_API __declspec(dllimport)
 #else
 #define CFDC_API
 #endif
-#elif defined(__GNUC__) && defined(CFD_BUILD)
+#elif defined(__GNUC__) && defined(CFDC_BUILD)
 #define CFDC_API __attribute__((visibility("default")))
 #else
 #define CFDC_API

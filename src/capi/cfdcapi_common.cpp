@@ -12,7 +12,7 @@
 #include "capi/cfdc_internal.h"
 #include "cfd/cfd_common.h"
 #ifndef CFD_DISABLE_JSONAPI
-#include "cfd/cfd_json_mapping_api.h"
+#include "cfdjson/cfd_json_mapping_api.h"
 #endif  // CFD_DISABLE_JSONAPI
 #include "cfdc/cfdcapi_address.h"
 #include "cfdc/cfdcapi_common.h"

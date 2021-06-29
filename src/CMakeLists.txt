@@ -41,24 +41,14 @@ if(NOT CFD_SRC_ROOT_DIR)
 set(CFD_SRC_ROOT_DIR   ${CMAKE_SOURCE_DIR})
 endif()
 
-if(NOT ENABLE_CAPI)
-set(CFD_CAPI_USE   CFD_DISABLE_CAPI)
-message(STATUS "[cfd] disable CAPI")
-else()
-set(CFD_CAPI_USE   "")
-message(STATUS "[cfd] enable CAPI")
-endif()
-
-if(NOT ENABLE_JSONAPI)
-set(CFD_JSONAPI_USE   CFD_DISABLE_JSONAPI)
-else()
-set(CFD_JSONAPI_USE   "")
-endif()
-
 if(ENABLE_SHARED)
 set(CFD_CORE_SHARED_OPT  CFD_CORE_SHARED=1)  # msvc only
+set(CFD_SHARED_OPT  CFD_SHARED=1)  # msvc only
+set(CFDJSON_SHARED_OPT  CFDJSON_SHARED=1)  # msvc only
 else()
 set(CFD_CORE_SHARED_OPT  "")
+set(CFD_SHARED_OPT  "")
+set(CFDJSON_SHARED_OPT  "")
 endif()
 
 find_package(univalue QUIET CONFIG)
@@ -84,31 +74,10 @@ else()
 add_library(${PROJECT_NAME} STATIC)
 endif()
 
-if(NOT ENABLE_CAPI)
-if(NOT ENABLE_JSONAPI)
 target_sources(${PROJECT_NAME}
   PRIVATE
     ${CFD_SOURCES}
 )
-else()
-target_sources(${PROJECT_NAME}
-  PRIVATE
-    ${CFD_SOURCES} ${CFD_JSONAPI_SOURCES}
-)
-endif()
-else()
-if(NOT ENABLE_JSONAPI)
-target_sources(${PROJECT_NAME}
-  PRIVATE
-    ${CFD_SOURCES} ${CFD_CAPI_SOURCES}
-)
-else()
-target_sources(${PROJECT_NAME}
-  PRIVATE
-    ${CFD_SOURCES} ${CFD_JSONAPI_SOURCES} ${CFD_CAPI_SOURCES}
-)
-endif()
-endif()
 
 target_compile_options(${PROJECT_NAME}
   PRIVATE
@@ -126,8 +95,6 @@ target_compile_definitions(${PROJECT_NAME}
     CFD_BUILD=1
     ${ELEMENTS_COMP_OPT}
     ${CFD_ELEMENTS_USE}
-    ${CFD_CAPI_USE}
-    ${CFD_JSONAPI_USE}
     ${CFD_CORE_SHARED_OPT}
 )
 
@@ -138,8 +105,6 @@ target_include_directories(${PROJECT_NAME}
     $<INSTALL_INTERFACE:include>
   PRIVATE
     .
-    jsonapi
-    jsonapi/autogen
     ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
 )
 target_link_directories(${PROJECT_NAME}
@@ -154,8 +119,6 @@ target_include_directories(${PROJECT_NAME}
     $<INSTALL_INTERFACE:include>
   PRIVATE
     .
-    jsonapi
-    jsonapi/autogen
     ${cfdcore_DIR}/../include
     ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
 )
@@ -178,6 +141,208 @@ target_link_libraries(${PROJECT_NAME}
     ${GCOV_LIBRARY}
 )
 
+
+####################
+# cfdjson
+####################
+set(CFDJSON_LIBRARY cfdjson)
+
+if(NOT ENABLE_JSONAPI)
+set(CFD_JSONAPI_USE   CFD_DISABLE_JSONAPI)
+else()
+set(CFD_JSONAPI_USE   "")
+
+if(ENABLE_SHARED OR USE_CFD_SHARED)
+add_library(${CFDJSON_LIBRARY} SHARED)
+else()
+add_library(${CFDJSON_LIBRARY} STATIC)
+endif()
+
+target_sources(${CFDJSON_LIBRARY}
+  PRIVATE
+    ${CFD_JSONAPI_SOURCES}
+)
+
+target_compile_options(${CFDJSON_LIBRARY}
+  PRIVATE
+    $<IF:$<CXX_COMPILER_ID:MSVC>,
+      /LD /source-charset:utf-8 /Wall
+      /wd4061 /wd4244 /wd4251 /wd4365 /wd4464 /wd4514 /wd4571 /wd4574 /wd4623 /wd4625 /wd4626 /wd4710 /wd4711 /wd4774 /wd4820 /wd4946 /wd5026 /wd5027 /wd5039 /wd5045 /wd5052
+      ${STACK_PROTECTOR_OPT},
+      -Wall -Wextra ${PROFILE_ARCS_OPT} ${TEST_COVERAGE_OPT} ${EMSCRIPTEN_OPT}
+    >
+    $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:${STACK_PROTECTOR_OPT}>
+)
+#     -fstack-protector
+target_compile_definitions(${CFDJSON_LIBRARY}
+  PRIVATE
+    CFDJSON_BUILD=1
+    ${ELEMENTS_COMP_OPT}
+    ${CFD_ELEMENTS_USE}
+    ${CFD_JSONAPI_USE}
+    ${CFD_SHARED_OPT}
+    ${CFD_CORE_SHARED_OPT}
+)
+
+if((NOT cfdcore_FOUND) OR (NOT ${cfdcore_FOUND}))
+target_include_directories(${CFDJSON_LIBRARY}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    jsonapi
+    jsonapi/autogen
+    ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
+)
+target_link_directories(${CFDJSON_LIBRARY}
+  PRIVATE
+    ./
+)
+set(USE_INSTALLED_LIBRARY  FALSE)
+else()
+target_include_directories(${CFDJSON_LIBRARY}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    jsonapi
+    jsonapi/autogen
+    ${cfdcore_DIR}/../include
+    ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
+)
+target_link_directories(${CFDJSON_LIBRARY}
+  PRIVATE
+    ./
+    ${cfdcore_DIR}/../lib
+)
+set(USE_INSTALLED_LIBRARY  TRUE)
+endif()
+
+target_link_libraries(${CFDJSON_LIBRARY}
+  PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:-static-libgcc>
+  PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:-static-libstdc++>
+  PRIVATE $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:pthread>
+  PRIVATE
+    ${PROJECT_NAME}
+    ${CFDCORE_LIBRARY}
+    ${LIBWALLY_LIBRARY}
+    ${UNIVALUE_LIBRARY}
+    ${GCOV_LIBRARY}
+)
+endif(ENABLE_JSONAPI)
+
+
+####################
+# cfdc
+####################
+set(CFDC_LIBRARY cfdc)
+
+if(NOT ENABLE_CAPI)
+set(CFD_CAPI_USE   CFD_DISABLE_CAPI)
+message(STATUS "[cfd] disable CAPI")
+else()
+set(CFD_CAPI_USE   "")
+message(STATUS "[cfd] enable CAPI")
+
+if(ENABLE_SHARED OR USE_CFD_SHARED)
+add_library(${CFDC_LIBRARY} SHARED)
+else()
+add_library(${CFDC_LIBRARY} STATIC)
+endif()
+
+target_sources(${CFDC_LIBRARY}
+  PRIVATE
+    ${CFD_CAPI_SOURCES}
+)
+
+target_compile_options(${CFDC_LIBRARY}
+  PRIVATE
+    $<IF:$<CXX_COMPILER_ID:MSVC>,
+      /LD /source-charset:utf-8 /Wall
+      /wd4061 /wd4244 /wd4251 /wd4365 /wd4464 /wd4514 /wd4571 /wd4574 /wd4623 /wd4625 /wd4626 /wd4710 /wd4711 /wd4774 /wd4820 /wd4946 /wd5026 /wd5027 /wd5039 /wd5045 /wd5052
+      ${STACK_PROTECTOR_OPT},
+      -Wall -Wextra ${PROFILE_ARCS_OPT} ${TEST_COVERAGE_OPT} ${EMSCRIPTEN_OPT}
+    >
+    $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:${STACK_PROTECTOR_OPT}>
+)
+#     -fstack-protector
+target_compile_definitions(${CFDC_LIBRARY}
+  PRIVATE
+    CFDC_BUILD=1
+    ${ELEMENTS_COMP_OPT}
+    ${CFD_ELEMENTS_USE}
+    ${CFD_CAPI_USE}
+    ${CFD_JSONAPI_USE}
+    ${CFDJSON_SHARED_OPT}
+    ${CFD_SHARED_OPT}
+    ${CFD_CORE_SHARED_OPT}
+)
+
+if((NOT cfdcore_FOUND) OR (NOT ${cfdcore_FOUND}))
+target_include_directories(${CFDC_LIBRARY}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    .
+    ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
+)
+target_link_directories(${CFDC_LIBRARY}
+  PRIVATE
+    ./
+)
+set(USE_INSTALLED_LIBRARY  FALSE)
+else()
+target_include_directories(${CFDC_LIBRARY}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+    $<INSTALL_INTERFACE:include>
+  PRIVATE
+    .
+    ${cfdcore_DIR}/../include
+    ${CFD_SRC_ROOT_DIR}/external/cfd-core/src/include
+)
+target_link_directories(${CFDC_LIBRARY}
+  PRIVATE
+    ./
+    ${cfdcore_DIR}/../lib
+)
+set(USE_INSTALLED_LIBRARY  TRUE)
+endif()
+
+if(ENABLE_JSONAPI)
+target_link_libraries(${CFDC_LIBRARY}
+  PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:-static-libgcc>
+  PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:-static-libstdc++>
+  PRIVATE $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:pthread>
+  PRIVATE
+    ${CFDJSON_LIBRARY}
+    ${PROJECT_NAME}
+    ${CFDCORE_LIBRARY}
+    ${LIBWALLY_LIBRARY}
+    ${UNIVALUE_LIBRARY}
+    ${GCOV_LIBRARY}
+)
+else(ENABLE_JSONAPI)
+target_link_libraries(${CFDC_LIBRARY}
+  PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:-static-libgcc>
+  PRIVATE $<$<BOOL:$<CXX_COMPILER_ID:GNU>>:-static-libstdc++>
+  PRIVATE $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:pthread>
+  PRIVATE
+    ${PROJECT_NAME}
+    ${CFDCORE_LIBRARY}
+    ${LIBWALLY_LIBRARY}
+    ${UNIVALUE_LIBRARY}
+    ${GCOV_LIBRARY}
+)
+endif(ENABLE_JSONAPI)
+
+endif(ENABLE_CAPI)
+
+
+####################
+# post build
+####################
 
 if(USE_INSTALLED_LIBRARY)
 set(INSTALLED_LIBRARY_DIR  ${cfdcore_DIR}/../lib)
@@ -314,16 +479,40 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../include/cfd"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         FILES_MATCHING PATTERN "*.h")
 
-if(ENABLE_CAPI)
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../include/cfdc"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-        FILES_MATCHING PATTERN "*.h")
-endif()
-
 if(MSVC)
 install(DIRECTORY "${CFD_OBJ_BINARY_DIR}/"
         DESTINATION "${CMAKE_INSTALL_LIBDIR}"
         FILES_MATCHING PATTERN "cfd.exp")
+endif()
+
+if(ENABLE_JSONAPI)
+install(EXPORT ${CFDJSON_LIBRARY}-export
+        FILE ${CFDJSON_LIBRARY}-config.cmake
+        DESTINATION "cmake/"
+        EXPORT_LINK_INTERFACE_LIBRARIES)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../include/cfdjson"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        FILES_MATCHING PATTERN "*.h")
+if(MSVC)
+install(DIRECTORY "${CFD_OBJ_BINARY_DIR}/"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        FILES_MATCHING PATTERN "cfdjson.exp")
+endif()
+endif()
+
+if(ENABLE_CAPI)
+install(EXPORT ${CFDC_LIBRARY}-export
+        FILE ${CFDC_LIBRARY}-config.cmake
+        DESTINATION "cmake/"
+        EXPORT_LINK_INTERFACE_LIBRARIES)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../include/cfdc"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        FILES_MATCHING PATTERN "*.h")
+if(MSVC)
+install(DIRECTORY "${CFD_OBJ_BINARY_DIR}/"
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}"
+        FILES_MATCHING PATTERN "cfdc.exp")
+endif()
 endif()
 
 #export(TARGETS ${PROJECT_NAME}

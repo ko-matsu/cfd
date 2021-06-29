@@ -6,12 +6,12 @@
  *
  *Provides a JSON-formatted API.
  */
-#ifndef CFD_INCLUDE_CFD_CFD_JSON_MAPPING_API_H_
-#define CFD_INCLUDE_CFD_CFD_JSON_MAPPING_API_H_
+#ifndef CFD_INCLUDE_CFDJSON_CFD_JSON_MAPPING_API_H_
+#define CFD_INCLUDE_CFDJSON_CFD_JSON_MAPPING_API_H_
 
 #include <string>
 
-#include "cfd/cfd_common.h"
+#include "cfdjson/cfd_json_common.h"
 
 /**
  * @brief cfd::api::json namespace
@@ -23,7 +23,7 @@ namespace json {
 /**
  * @brief Json Information mapping API class.
  */
-class CFD_EXPORT JsonMappingApi {
+class CFDJSON_EXPORT JsonMappingApi {
  public:
   /**
    * @brief DecodeRawTransaction.
@@ -58,4 +58,4 @@ class CFD_EXPORT JsonMappingApi {
 }  // namespace api
 }  // namespace cfd
 
-#endif  // CFD_INCLUDE_CFD_CFD_JSON_MAPPING_API_H_
+#endif  // CFD_INCLUDE_CFDJSON_CFD_JSON_MAPPING_API_H_
