@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - features/sprint*
+    - feature/split-library
   pull_request:
     branches:
     - features/sprint*
