@@ -533,19 +533,19 @@ Privkey ElementsTransactionApi::GetIssuanceBlindingKey(
 Amount ElementsTransactionApi::EstimateFee(
     const std::string& tx_hex, const std::vector<ElementsUtxoAndOption>& utxos,
     const ConfidentialAssetId& fee_asset, Amount* txout_fee, Amount* utxo_fee,
-    bool is_blind, double effective_fee_rate, int exponent,
-    int minimum_bits) const {
+    bool is_blind, double effective_fee_rate, int exponent, int minimum_bits,
+    uint32_t* append_asset_count) const {
   uint64_t fee_rate = static_cast<uint64_t>(floor(effective_fee_rate * 1000));
   return EstimateFee(
       tx_hex, utxos, fee_asset, txout_fee, utxo_fee, is_blind, fee_rate,
-      exponent, minimum_bits);
+      exponent, minimum_bits, append_asset_count);
 }
 
 Amount ElementsTransactionApi::EstimateFee(
     const std::string& tx_hex, const std::vector<ElementsUtxoAndOption>& utxos,
     const ConfidentialAssetId& fee_asset, Amount* txout_fee, Amount* utxo_fee,
-    bool is_blind, uint64_t effective_fee_rate, int exponent,
-    int minimum_bits) const {
+    bool is_blind, uint64_t effective_fee_rate, int exponent, int minimum_bits,
+    uint32_t* append_asset_count) const {
   ConfidentialTransactionContext txc(tx_hex);
 
   if (fee_asset.IsEmpty()) {
@@ -683,6 +683,13 @@ Amount ElementsTransactionApi::EstimateFee(
 
   uint32_t tx_witness_size = 0;
   uint32_t tx_size = 0;
+  if (append_asset_count != nullptr) {
+    if ((asset_count + *append_asset_count) < 255) {
+      asset_count += *append_asset_count;
+    } else {
+      asset_count = 255;
+    }
+  }
   txc.GetSizeIgnoreTxIn(
       is_blind, &tx_witness_size, &tx_size, exponent, minimum_bits,
       asset_count);
@@ -974,6 +981,16 @@ void CalculateFeeAndFundTransaction(
       is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
       minimum_bits);
   fee_value = fee.GetSatoshiValue();
+  uint32_t append_utxo_count = static_cast<uint32_t>(utxo_list.size());
+  if (new_selected_utxos.size() > selected_txin_utxos.size()) {
+    auto diff_val = new_selected_utxos.size() - selected_txin_utxos.size();
+    append_utxo_count -= static_cast<uint32_t>(diff_val);
+  }
+  Amount max_fee = api.EstimateFee(
+      txc_dummy.GetHex(), new_selected_utxos, fee_asset, nullptr, nullptr,
+      is_blind_estimate_fee, option.GetEffectiveFeeBaserate(), exponent,
+      minimum_bits, &append_utxo_count);
+  fee_value = fee.GetSatoshiValue();
 
   int64_t dust_amount =
       option.GetConfidentialDustFeeAmount(address).GetSatoshiValue();
@@ -992,10 +1009,14 @@ void CalculateFeeAndFundTransaction(
       fee_asset_target_value = 0;
     } else {
       // If the surplus of txin does not meet the target, coin select the shortfall. // NOLINT
+      // FIXME max feeで再度fee_asset_target_valueを計算
+      fee_asset_target_value = target_value + max_fee.GetSatoshiValue();
       fee_asset_target_value -= diff_amount;
     }
   } else if (txin_amount < tx_amount) {
     // Select coins according to the shortage of txout.
+    // FIXME max feeで再度fee_asset_target_valueを計算
+    fee_asset_target_value = target_value + max_fee.GetSatoshiValue();
     fee_asset_target_value += tx_amount - txin_amount;
   }
 
@@ -1006,7 +1027,8 @@ void CalculateFeeAndFundTransaction(
   int64_t append_fee_asset_txout_value;
   if (fee_asset_target_value != 0) {
     CoinSelection coin_select;
-    Amount calc_fee = fee;
+    Amount calc_fee = max_fee;
+    fee_value = max_fee.GetSatoshiValue();
     Amount utxo_fee;
     std::map<std::string, int64_t> new_target_values;
     new_target_values.emplace(fee_asset_str, fee_asset_target_value);

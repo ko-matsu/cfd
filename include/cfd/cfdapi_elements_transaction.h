@@ -519,6 +519,7 @@ class CFD_EXPORT ElementsTransactionApi {
    *   -1 to 18. -1 is public value. 0 is most private.
    * @param[in] minimum_bits              rangeproof blinding bits.
    *   0 to 64. Number of bits of the value to keep private. 0 is auto.
+   * @param[in] append_asset_count  append asset count.
    * @return tx fee (contains utxo)
    */
   Amount EstimateFee(
@@ -527,7 +528,8 @@ class CFD_EXPORT ElementsTransactionApi {
       const ConfidentialAssetId& fee_asset, Amount* txout_fee = nullptr,
       Amount* utxo_fee = nullptr, bool is_blind = true,
       double effective_fee_rate = 1, int exponent = 0,
-      int minimum_bits = cfd::core::kDefaultBlindMinimumBits) const;
+      int minimum_bits = cfd::core::kDefaultBlindMinimumBits,
+      uint32_t* append_asset_count = nullptr) const;
 
   /**
    * @brief estimate a fee amount from transaction.
@@ -542,6 +544,7 @@ class CFD_EXPORT ElementsTransactionApi {
    *   -1 to 18. -1 is public value. 0 is most private.
    * @param[in] minimum_bits              rangeproof blinding bits.
    *   0 to 64. Number of bits of the value to keep private. 0 is auto.
+   * @param[in] append_asset_count  append asset count.
    * @return tx fee (contains utxo)
    */
   Amount EstimateFee(
@@ -550,7 +553,8 @@ class CFD_EXPORT ElementsTransactionApi {
       const ConfidentialAssetId& fee_asset, Amount* txout_fee = nullptr,
       Amount* utxo_fee = nullptr, bool is_blind = true,
       uint64_t effective_fee_rate = 1000, int exponent = 0,
-      int minimum_bits = cfd::core::kDefaultBlindMinimumBits) const;
+      int minimum_bits = cfd::core::kDefaultBlindMinimumBits,
+      uint32_t* append_asset_count = nullptr) const;
 
   /**
    * @brief calculate fund transaction.
