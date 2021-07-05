@@ -960,14 +960,15 @@ CFDC_API int CfdInitializeFundRawTx(
  * @param[in] is_blind_issuance  is utxo blind issuance input.
  * @param[in] is_pegin           is utxo pegin input.
  * @param[in] pegin_btc_tx_size  size of pegin transaction.
- * @param[in] fedpeg_script      utxo's unblind asset id.
+ * @param[in] claim_script       utxo's claim script.
  * @return CfdErrorCode
+ * @deprecated Please use CfdAddTxInputForFundRawTx
  */
 CFDC_API int CfdAddTxInForFundRawTx(
     void* handle, void* fund_handle, const char* txid, uint32_t vout,
     int64_t amount, const char* descriptor, const char* asset,
     bool is_issuance, bool is_blind_issuance, bool is_pegin,
-    uint32_t pegin_btc_tx_size, const char* fedpeg_script);
+    uint32_t pegin_btc_tx_size, const char* claim_script);
 
 /**
  * @brief Add transaction input's utxo for fundrawtransaction.
@@ -982,16 +983,42 @@ CFDC_API int CfdAddTxInForFundRawTx(
  * @param[in] is_blind_issuance   is utxo blind issuance input.
  * @param[in] is_pegin            is utxo pegin input.
  * @param[in] pegin_btc_tx_size   size of pegin transaction.
- * @param[in] fedpeg_script       utxo's unblind asset id.
+ * @param[in] claim_script       utxo's claim script.
  * @param[in] scriptsig_template  utxo's scriptsig template.
  * @return CfdErrorCode
+ * @deprecated Please use CfdAddTxInputForFundRawTx
  */
 CFDC_API int CfdAddTxInTemplateForFundRawTx(
     void* handle, void* fund_handle, const char* txid, uint32_t vout,
     int64_t amount, const char* descriptor, const char* asset,
     bool is_issuance, bool is_blind_issuance, bool is_pegin,
-    uint32_t pegin_btc_tx_size, const char* fedpeg_script,
+    uint32_t pegin_btc_tx_size, const char* claim_script,
     const char* scriptsig_template);
+
+/**
+ * @brief Add transaction input's utxo for fundrawtransaction.
+ * @param[in] handle              cfd handle.
+ * @param[in] fund_handle         handle for fundrawtransaction.
+ * @param[in] txid                input utxo's transaction id.
+ * @param[in] vout                input utxo's vout.
+ * @param[in] amount              input utxo's amount.
+ * @param[in] descriptor          the descriptor for creating locking_script.
+ * @param[in] asset               utxo's unblind asset id.
+ * @param[in] is_issuance         is utxo issuance input.
+ * @param[in] is_blind_issuance   is utxo blind issuance input.
+ * @param[in] is_pegin            is utxo pegin input.
+ * @param[in] claim_script              utxo's claim script.
+ * @param[in] pegin_btc_tx_size         size of pegin transaction.
+ * @param[in] pegin_txoutproof_size     size of pegin txoutproof.
+ * @param[in] scriptsig_template  utxo's scriptsig template.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdAddTxInputForFundRawTx(
+    void* handle, void* fund_handle, const char* txid, uint32_t vout,
+    int64_t amount, const char* descriptor, const char* asset,
+    bool is_issuance, bool is_blind_issuance, bool is_pegin,
+    const char* claim_script, uint32_t pegin_btc_tx_size,
+    uint32_t pegin_txoutproof_size, const char* scriptsig_template);
 
 /**
  * @brief Add utxo for fundrawtransaction.

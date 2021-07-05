@@ -191,12 +191,13 @@ struct IssuanceOutput {
  * @brief Using utxo and option data in elements
  */
 struct ElementsUtxoAndOption {
-  UtxoData utxo;                   //!< utxo
-  bool is_issuance = false;        //!< use issuance/reissuance
-  bool is_blind_issuance = false;  //!< use blind issuance/reissuance
-  bool is_pegin = false;           //!< use pegin
-  uint32_t pegin_btc_tx_size = 0;  //!< btc pegin tx size
-  Script fedpeg_script;            //!< fedpeg script for pegin
+  UtxoData utxo;                       //!< utxo
+  bool is_issuance = false;            //!< use issuance/reissuance
+  bool is_blind_issuance = false;      //!< use blind issuance/reissuance
+  bool is_pegin = false;               //!< use pegin
+  uint32_t pegin_btc_tx_size = 0;      //!< btc pegin tx size
+  Script claim_script;                 //!< claim script for pegin
+  uint32_t pegin_txoutproof_size = 0;  //!< btc pegin txoutproof size
 };
 
 /**

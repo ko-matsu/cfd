@@ -585,12 +585,14 @@ Amount ElementsTransactionApi::EstimateFee(
     ElementsAddressFactory factory(net_type);
 
     uint32_t pegin_btc_tx_size = 0;
+    uint32_t pegin_txoutproof_size = 0;
     txin_size = 0;
     wit_size = 0;
-    Script fedpeg_script;
+    Script claim_script;
     if (utxo.is_pegin) {
       pegin_btc_tx_size = utxo.pegin_btc_tx_size;
-      fedpeg_script = utxo.fedpeg_script;
+      pegin_txoutproof_size = utxo.pegin_txoutproof_size;
+      claim_script = utxo.claim_script;
     }
     // check descriptor
     std::string descriptor = utxo.utxo.descriptor;
@@ -637,19 +639,23 @@ Amount ElementsTransactionApi::EstimateFee(
           }
         }
       }
-      if ((!utxo.is_pegin) && (ref.GetPeginWitnessStackNum() >= 6)) {
+      if (ref.GetPeginWitnessStackNum() >= 6) {
         std::vector<ByteData> pegin_stack = ref.GetPeginWitness().GetWitness();
         pegin_btc_tx_size =
-            static_cast<uint32_t>(pegin_stack[4].GetSerializeSize());
-        fedpeg_script = Script(pegin_stack[3]);
+            static_cast<uint32_t>(pegin_stack[4].GetDataSize());
+        pegin_txoutproof_size =
+            static_cast<uint32_t>(pegin_stack[5].GetDataSize());
+        claim_script = Script(pegin_stack[3]);
       }
 
       if (utxo.is_issuance && ref.GetAssetEntropy().IsEmpty()) {
-        // unmatch pattern. (using utxo data)
+        // unmatch pattern. (using input utxo data)
+      } else if (utxo.is_pegin && (ref.GetPeginWitnessStackNum() < 6)) {
+        // unmatch pattern. (using input utxo data)
       } else {
         ref.EstimateTxInSize(
             addr_type, redeem_script, is_blind_issuance, exponent,
-            minimum_bits, fedpeg_script, scriptsig_template, &wit_size,
+            minimum_bits, claim_script, scriptsig_template, &wit_size,
             &txin_size);
       }
     } catch (const CfdException& except) {
@@ -664,9 +670,10 @@ Amount ElementsTransactionApi::EstimateFee(
     ++asset_count;
     if (txin_size == 0) {
       ConfidentialTxIn::EstimateTxInSize(
-          addr_type, redeem_script, pegin_btc_tx_size, fedpeg_script,
+          addr_type, redeem_script, pegin_btc_tx_size, claim_script,
           is_issuance, is_blind_issuance, &wit_size, &txin_size, is_reissuance,
-          scriptsig_template, exponent, minimum_bits, &rangeproof_size_cache);
+          scriptsig_template, exponent, minimum_bits, &rangeproof_size_cache,
+          pegin_txoutproof_size);
     }
     size += txin_size;
     witness_size += wit_size;
