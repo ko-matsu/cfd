@@ -348,13 +348,13 @@ TEST(cfdcapi_address, CfdParseDescriptorTest) {
   
     if (ret == kCfdSuccess) {
       assert_desc_root_data(handle, descriptor_handle,
-          kCfdDescriptorScriptTaproot, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt",
+          kCfdDescriptorScriptTaproot, "5120acb99cf4bb397c8aef2fca4f9201053526f5484174fef211ac6ac7fad0a38a48", "bc1p4jueea9m897g4me0ef8eyqg9x5n02jzpwnl0yydvdtrl459r3fyqg8wvnj",
           kCfdTaproot, "",
           kCfdDescriptorKeyBip32, "038c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "xpub6EKMC2gSMfKgSwn7V9VZn7x1MvoeeVzSmmtSJ4z2L2d6R4WxvdQMouokypZHVp4fgKycrrQnGr6WJ5ED5jG9Q9FiA1q5gKYUc8u6JHJhdo8",
           "", "8c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "",
           false, 0, 0);
       assert_desc_data(handle, descriptor_handle, 0, max_index, 0,
-          kCfdDescriptorScriptTaproot, "51208c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816", "bc1p33h4j4kre3e9r4yrl35rlgrtyt2w9hw8f94zty9vacmvfgcnlqtq0txdxt",
+          kCfdDescriptorScriptTaproot, "5120acb99cf4bb397c8aef2fca4f9201053526f5484174fef211ac6ac7fad0a38a48", "bc1p4jueea9m897g4me0ef8eyqg9x5n02jzpwnl0yydvdtrl459r3fyqg8wvnj",
           kCfdTaproot, "",
           kCfdDescriptorKeyBip32,
           "038c6f5956c3cc7251d483fc683fa06b22d4e2ddc7496a2590acee36c4a313f816",
