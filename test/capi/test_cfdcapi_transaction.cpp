@@ -2060,4 +2060,83 @@ TEST(cfdcapi_transaction, FundRawTransaction_PeginTx2) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_transaction, FundRawTransaction_PeginTx3) {
+  // signed pegin tx
+  const char* claim_script = "0014f3ea0aba73fdb23912ebd21f46e156cdd9e94280";
+  std::string btc_tx = "020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a9141500eb4946dee5979e708c8b2c6d090773f3b8d1870247304402204d9faa0b3b9c76b3ee875ae9205b50e05c2d0a8dff8e26d269f68eb72531af1402201f71d1e2bec6b7ea90d45dec158d3f85942e0fc09cfad29d917d3cbc6acd981d012103b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc00000000";
+  std::string txoutproof = "00000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105";
+
+  // 1 output data
+  static const char* const kTxData = "020000000101e39d023fdc7f61f607830d29f895c305e8cfdf83d58e260bb399d960e8d45f5e0000004000ffffffff010125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000000000036cfe9a680d17595b0008a959219817af1ed2dcc33cc6cbf472728d2b022b5567016a0000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014f3ea0aba73fdb23912ebd21f46e156cdd9e94280c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a9141500eb4946dee5979e708c8b2c6d090773f3b8d1870247304402204d9faa0b3b9c76b3ee875ae9205b50e05c2d0a8dff8e26d269f68eb72531af1402201f71d1e2bec6b7ea90d45dec158d3f85942e0fc09cfad29d917d3cbc6acd981d012103b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f301050000";
+  static const char* const kExpTxData = "020000000101e39d023fdc7f61f607830d29f895c305e8cfdf83d58e260bb399d960e8d45f5e0000004000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000000000000036cfe9a680d17595b0008a959219817af1ed2dcc33cc6cbf472728d2b022b5567016a0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000000c200000125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a010000000005f5de4a02fe5ec67a3f8f932a9c7b987e501f105362630fc2576d5174506dde5a94902dd7160014a7b2b1da77ffa99d565b00d9f7b1c2e44a6907a80000000000000006080cdff505000000002025b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f160014f3ea0aba73fdb23912ebd21f46e156cdd9e94280c0020000000001014cdeada737db97af334f0fa4e87432d6068759eea65a3067d1f14a979e5a9dea0000000000ffffffff010cdff5050000000017a9141500eb4946dee5979e708c8b2c6d090773f3b8d1870247304402204d9faa0b3b9c76b3ee875ae9205b50e05c2d0a8dff8e26d269f68eb72531af1402201f71d1e2bec6b7ea90d45dec158d3f85942e0fc09cfad29d917d3cbc6acd981d012103b64236b2c8f34a18e3a584fe0877fb944e2abb4544cb14bee5458bcc2480cefc000000009700000020fe3b574c1ce6d5cb68fc518e86f7976e599fafc0a2e5754aace7ca16d97a7c78ef9325b8d4f0a4921e060fc5e71435f46a18fa339688142cd4b028c8488c9f8dd1495b5dffff7f200200000002000000024a180a6822abffc3b1080c49016899c6dac25083936df14af12f58db11958ef27926299350fdc2f4d0da1d4f0fbbd3789d29f9dc016358ae42463c0cebf393f30105000000000000";
+  static const char* const kFeeAsset = "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225";
+
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  void* fund_handle = nullptr;
+  ret = CfdInitializeFundRawTx(
+    handle, kCfdNetworkElementsRegtest, 1, kFeeAsset, &fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  if (ret == kCfdSuccess) {
+    ret = CfdAddTxInputForFundRawTx(
+        handle, fund_handle,
+        "5e5fd4e860d999b30b268ed583dfcfe805c395f8290d8307f6617fdc3f029de3", 0,
+        99999500,
+        "wpkh(03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6)",
+        kFeeAsset,
+        false, false, true, claim_script,
+        btc_tx.length() / 2,
+        txoutproof.length() / 2, nullptr);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTargetAmountForFundRawTx(handle, fund_handle, 0,
+        1, kFeeAsset,
+        "el1qqtl9a3n6878ex25u0wv8u5qlzpfkycc0cftk65t52pkauk55jqka0fajk8d80lafn4t9kqxe77cu9ez2dyr6sq54lwy009uex");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxIsBlind,
+        0, 0, true);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle,
+        kCfdFundTxKnapsackMinChange, 0, 0, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle,
+        kCfdFundTxBlindMinimumBits, 36, 0, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    int64_t tx_fee;
+    char* output_tx_hex = nullptr;
+    uint32_t append_count = 0;
+    ret = CfdFinalizeFundRawTx(
+        handle, fund_handle, kTxData, 0.1, &tx_fee, &append_count,
+        &output_tx_hex);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_EQ(static_cast<int64_t>(194), tx_fee);
+      EXPECT_STREQ(kExpTxData, output_tx_hex);
+      CfdFreeStringBuffer(output_tx_hex);
+    }
+
+    ret = CfdFreeFundRawTxHandle(handle, fund_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 #endif  // CFD_DISABLE_ELEMENTS
