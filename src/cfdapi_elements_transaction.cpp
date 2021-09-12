@@ -887,7 +887,8 @@ void CalculateFeeAndFundTransaction(
     const std::vector<Utxo>& utxo_list,
     const std::map<std::string, int64_t>& utxo_fee_map,
     ConfidentialTransactionContext* ctxc,
-    std::vector<std::string>* append_txout_addresses, Amount* estimate_fee) {
+    std::vector<std::string>* append_txout_addresses, Amount* estimate_fee,
+    Amount* calculate_fee) {
   std::string fee_asset_str = fee_asset.GetHex();
   uint8_t fee_asset_bytes[33];
   memcpy(
@@ -1115,6 +1116,7 @@ void CalculateFeeAndFundTransaction(
   append_fee_asset_txout_value =
       fee_selected_value + txin_amount - tx_amount - fee.GetSatoshiValue();
 
+  if (calculate_fee != nullptr) *calculate_fee = fee;
   // If the output amount of the fee asset is less than the dust amount, set it to fee.  // NOLINT
   if (dust_amount > append_fee_asset_txout_value) {
     // Set all the remaining amount to Fee.
@@ -1153,7 +1155,8 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
     double effective_fee_rate, Amount* estimate_fee, const UtxoFilter* filter,
     const CoinSelectionOption* option_params,
     std::vector<std::string>* append_txout_addresses, NetType net_type,
-    const std::vector<AddressFormatData>* prefix_list) const {
+    const std::vector<AddressFormatData>* prefix_list,
+    Amount* calculate_fee) const {
   // set option
   CoinSelectionOption option;
   UtxoFilter utxo_filter;
@@ -1423,7 +1426,7 @@ ConfidentialTransactionController ElementsTransactionApi::FundRawTransaction(
         input_max_map, selected_coins, utxodata_list, fee_asset,
         selected_txin_utxos, reserve_txout_address, net_type,
         is_blind_estimate_fee, utxo_filter, option, utxo_list, utxo_fee_map,
-        &ctxc, append_txout_addresses, estimate_fee);
+        &ctxc, append_txout_addresses, estimate_fee, calculate_fee);
   }
 
   for (auto& utxo : selected_coins) {
