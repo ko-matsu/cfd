@@ -869,6 +869,7 @@ void CollectUtxoDataByFundRawTransaction(
  * @param[in,out] ctxc                  confidential transaction context
  * @param[out] append_txout_addresses   append txout address list
  * @param[out] estimate_fee             estimate fee
+ * @param[out] calculate_fee            calculate fee
  */
 void CalculateFeeAndFundTransaction(
     const ElementsTransactionApi& api,
