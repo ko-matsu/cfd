@@ -914,8 +914,8 @@ void CalculateFeeAndFundTransaction(
     //     "Failed to FundRawTransaction. fee reserve address not set.");
   } else {
     if (ElementsConfidentialAddress::IsConfidentialAddress(address_str)) {
-      address =
-          addr_factory.GetConfidentialAddress(address_str).GetUnblindedAddress();
+      address = addr_factory.GetConfidentialAddress(address_str)
+                    .GetUnblindedAddress();
     } else {
       address = addr_factory.GetAddress(address_str);
     }
