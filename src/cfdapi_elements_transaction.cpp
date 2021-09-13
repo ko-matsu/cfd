@@ -904,32 +904,33 @@ void CalculateFeeAndFundTransaction(
       reserve_txout_address.end()) {
     address_str = reserve_txout_address.at(fee_asset_str);
   }
+  Address address;
   if (address_str.empty()) {
     warn(
         CFD_LOG_SOURCE,
         "Failed to FundRawTransaction. fee reserve address not set.");
-    throw CfdException(
-        CfdError::kCfdIllegalArgumentError,
-        "Failed to FundRawTransaction. fee reserve address not set.");
-  }
-  Address address;
-  if (ElementsConfidentialAddress::IsConfidentialAddress(address_str)) {
-    address =
-        addr_factory.GetConfidentialAddress(address_str).GetUnblindedAddress();
+    // throw CfdException(
+    //     CfdError::kCfdIllegalArgumentError,
+    //     "Failed to FundRawTransaction. fee reserve address not set.");
   } else {
-    address = addr_factory.GetAddress(address_str);
-  }
-  if (!addr_factory.CheckAddressNetType(address, net_type)) {
-    warn(
-        CFD_LOG_SOURCE,
-        "Failed to FundRawTransaction. "
-        "Input address and network is unmatch."
-        ": address=[{}], input_net_type=[{}], parsed_net_type=[{}]",
-        address_str, net_type, address.GetNetType());
-    throw CfdException(
-        CfdError::kCfdIllegalArgumentError,
-        "Failed to FundRawTransaction. "
-        "Input address and network is unmatch.");
+    if (ElementsConfidentialAddress::IsConfidentialAddress(address_str)) {
+      address = addr_factory.GetConfidentialAddress(address_str)
+                    .GetUnblindedAddress();
+    } else {
+      address = addr_factory.GetAddress(address_str);
+    }
+    if (!addr_factory.CheckAddressNetType(address, net_type)) {
+      warn(
+          CFD_LOG_SOURCE,
+          "Failed to FundRawTransaction. "
+          "Input address and network is unmatch."
+          ": address=[{}], input_net_type=[{}], parsed_net_type=[{}]",
+          address_str, net_type, address.GetNetType());
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to FundRawTransaction. "
+          "Input address and network is unmatch.");
+    }
   }
 
   int64_t txin_amount = 0;
@@ -990,15 +991,18 @@ void CalculateFeeAndFundTransaction(
     dummy_sat = cfd::core::kMaxAmount;
   warn(CFD_LOG_SOURCE, "Set dummy_amount={}", dummy_sat);
 
-  int64_t dust_amount =
-      option.GetConfidentialDustFeeAmount(address).GetSatoshiValue();
-  Amount max_fee;
+  int64_t dust_amount = 0;
+  if (!address_str.empty()) {
+    dust_amount =
+        option.GetConfidentialDustFeeAmount(address).GetSatoshiValue();
+  }
+  Amount max_fee = min_fee_amount;
   volatile int64_t fee_value = 0;
   Amount fee;
   bool append_dummy_txout = false;
   uint64_t input_total = utxo_total_amount + txin_amount;
   uint64_t output_total = tx_amount + target_value + dust_amount;
-  if (input_total < output_total) {
+  if (address_str.empty() || (input_total < output_total)) {
     // do not add dummy amount
     max_fee = min_fee_amount;
     fee_value = min_fee;
