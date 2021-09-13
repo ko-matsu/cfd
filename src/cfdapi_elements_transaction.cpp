@@ -1119,7 +1119,7 @@ void CalculateFeeAndFundTransaction(
 
   if (calculate_fee != nullptr) *calculate_fee = fee;
   // If the output amount of the fee asset is less than the dust amount, set it to fee.  // NOLINT
-  if (dust_amount > append_fee_asset_txout_value) {
+  if ((!append_dummy_txout) || (dust_amount > append_fee_asset_txout_value)) {
     // Set all the remaining amount to Fee.
     fee += append_fee_asset_txout_value;
   } else if (append_fee_asset_txout_value > 0) {
