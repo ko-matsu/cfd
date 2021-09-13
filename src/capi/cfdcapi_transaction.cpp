@@ -3132,12 +3132,14 @@ int CfdAddTargetAmountForFundRawTx(
   try {
     cfd::Initialize();
     CheckBuffer(fund_handle, kPrefixFundRawTxData);
+    /*
     if (IsEmptyString(reserved_address)) {
       warn(CFD_LOG_SOURCE, "reserved_address is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. reserved_address is null.");
     }
+    */
 
     CfdCapiFundRawTxData* buffer =
         static_cast<CfdCapiFundRawTxData*>(fund_handle);
