@@ -2139,4 +2139,101 @@ TEST(cfdcapi_transaction, FundRawTransaction_PeginTx3) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_transaction, FundRawTransaction_PegoutTx1) {
+  // 2 output data
+  // fee: 190
+  static const char* const kTxData = "020000000000020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000000001d40200a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914844d3afb2081df687e6c0a83d2a5e0925c4fa01f88ac2102f6e02ce0c684096337672d7d72bc33c5129f9079c50447452aa7139ef3632f4e4101bf561427da009d383256e347ca4d3ea35908e3543412be2629bc565e7a1fbb349de22d51d66391a8281abcfa0d06c9eae6b6fe7156aba53f0865f4502f0201920125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000000000284fe98a24b72e327254ccbb6056de98bd48e43e7a536d213c110b90ca612fde5016a00000000";
+  // fee: 188
+  //static const char* const kTxData = "020000000000020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000000001d40400a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914844d3afb2081df687e6c0a83d2a5e0925c4fa01f88ac2102f6e02ce0c684096337672d7d72bc33c5129f9079c50447452aa7139ef3632f4e4101bf561427da009d383256e347ca4d3ea35908e3543412be2629bc565e7a1fbb349de22d51d66391a8281abcfa0d06c9eae6b6fe7156aba53f0865f4502f0201920125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000000000284fe98a24b72e327254ccbb6056de98bd48e43e7a536d213c110b90ca612fde5016a00000000";
+  // fee: 187 Failed to select coin. Not enough utxos
+  // static const char* const kTxData = "020000000000020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000000001d40500a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914844d3afb2081df687e6c0a83d2a5e0925c4fa01f88ac2102f6e02ce0c684096337672d7d72bc33c5129f9079c50447452aa7139ef3632f4e4101bf561427da009d383256e347ca4d3ea35908e3543412be2629bc565e7a1fbb349de22d51d66391a8281abcfa0d06c9eae6b6fe7156aba53f0865f4502f0201920125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000000000284fe98a24b72e327254ccbb6056de98bd48e43e7a536d213c110b90ca612fde5016a00000000";
+  static const char* const kExpTxData = "020000000002a38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0000000000ffffffffa38845c1a19b389f27217b91e2120273b447db3e595bba628f0be833f301a24a0100000000ffffffff030125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000000001d40200a06a2006226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f1976a914844d3afb2081df687e6c0a83d2a5e0925c4fa01f88ac2102f6e02ce0c684096337672d7d72bc33c5129f9079c50447452aa7139ef3632f4e4101bf561427da009d383256e347ca4d3ea35908e3543412be2629bc565e7a1fbb349de22d51d66391a8281abcfa0d06c9eae6b6fe7156aba53f0865f4502f0201920125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000000000284fe98a24b72e327254ccbb6056de98bd48e43e7a536d213c110b90ca612fde5016a0125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000000be000000000000";
+  static const char* const kFeeAsset = "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225";
+
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  void* fund_handle = nullptr;
+  ret = CfdInitializeFundRawTx(
+    handle, kCfdNetworkLiquidv1, 1, kFeeAsset, &fund_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  if (ret == kCfdSuccess) {
+    ret = CfdAddUtxoTemplateForFundRawTx(
+        handle, fund_handle,
+        "4aa201f333e80b8f62ba5b593edb47b4730212e2917b21279f389ba1c14588a3", 0,
+        60000,
+        "wpkh(03e68167b077f06fdcef2b1c4b914df53fcdc4ea2ed43852cc3c2abf2b7992b729)",
+        kFeeAsset,
+        nullptr);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddUtxoTemplateForFundRawTx(
+        handle, fund_handle,
+        "4aa201f333e80b8f62ba5b593edb47b4730212e2917b21279f389ba1c14588a3", 1,
+        60000,
+        "wpkh(03e68167b077f06fdcef2b1c4b914df53fcdc4ea2ed43852cc3c2abf2b7992b729)",
+        kFeeAsset,
+        nullptr);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTargetAmountForFundRawTx(handle, fund_handle, 0,
+        0, kFeeAsset,
+        "lq1qqwqawne0jyc2swqv9qp8fstrgxuux2824zxkqew9gdak4yudxvwhha0kwdv2p3j0lyekhchrzmuekp94fpfp6fkeggjkerfr8");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdSetOptionFundRawTx(handle, fund_handle, kCfdFundTxIsBlind,
+        0, 0, true);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle,
+        kCfdFundTxKnapsackMinChange, 0, 0, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle,
+        kCfdFundTxBlindMinimumBits, 36, 0, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle,
+        kCfdFundTxDustFeeRate, 0, 1.0, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdSetOptionFundRawTx(handle, fund_handle,
+        kCfdFundTxLongTermFeeRate, 0, 0.15, false);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    int64_t tx_fee;
+    char* output_tx_hex = nullptr;
+    uint32_t append_count = 0;
+    ret = CfdFinalizeFundRawTx(
+        handle, fund_handle, kTxData, 0.15, &tx_fee, &append_count,
+        &output_tx_hex);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_EQ(static_cast<int64_t>(190), tx_fee);
+      EXPECT_STREQ(kExpTxData, output_tx_hex);
+      CfdFreeStringBuffer(output_tx_hex);
+
+      int64_t calc_fee = 0;
+      ret = CfdGetCalculateFeeFundRawTx(handle, fund_handle, &calc_fee);
+      EXPECT_EQ(kCfdSuccess, ret);
+      EXPECT_EQ(static_cast<int64_t>(188), calc_fee);
+    }
+
+    ret = CfdFreeFundRawTxHandle(handle, fund_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 #endif  // CFD_DISABLE_ELEMENTS

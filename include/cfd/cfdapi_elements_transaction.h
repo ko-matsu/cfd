@@ -576,6 +576,7 @@ class CFD_EXPORT ElementsTransactionApi {
    * @param[out] append_txout_addresses  used txout additional address
    * @param[in] net_type                 network type
    * @param[in] prefix_list              address prefix list
+   * @param[out] calculate_fee           calculate fee (before add dust amount)
    * @return tx controller
    */
   ConfidentialTransactionController FundRawTransaction(
@@ -589,7 +590,8 @@ class CFD_EXPORT ElementsTransactionApi {
       const CoinSelectionOption* option_params = nullptr,
       std::vector<std::string>* append_txout_addresses = nullptr,
       NetType net_type = NetType::kLiquidV1,
-      const std::vector<AddressFormatData>* prefix_list = nullptr) const;
+      const std::vector<AddressFormatData>* prefix_list = nullptr,
+      Amount* calculate_fee = nullptr) const;
 
   // CreateDestroyAmountTransaction
   // see CreateRawTransaction and ConfidentialTxOut::CreateDestroyAmountTxOut

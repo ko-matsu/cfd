@@ -134,6 +134,8 @@ struct CfdCapiFundRawTxData {
   std::vector<std::string>* append_txout_addresses;
   //! target list
   std::vector<CfdCapiFundTargetAmount>* targets;  //!< target list
+  //! calculate fee (before add dust amount)
+  int64_t calculate_fee;
   /// use blind fee (bool)
   bool is_blind;
   /// dust fee rate (double)
@@ -3260,6 +3262,7 @@ int CfdFinalizeFundRawTx(
     Amount utxo_fee_value;
     UtxoFilter filter;
     Amount tx_fee_value;
+    Amount calc_fee;
     std::vector<Utxo> utxo_list;
     if (buffer->is_elements) {
 #ifndef CFD_DISABLE_ELEMENTS
@@ -3280,7 +3283,8 @@ int CfdFinalizeFundRawTx(
           tx_hex, *buffer->utxos, map_target_value,
           *buffer->input_elements_utxos, reserve_txout_address, fee_asset,
           buffer->is_blind, effective_fee_rate, &tx_fee_value, &filter,
-          &option_params, buffer->append_txout_addresses, buffer->net_type);
+          &option_params, buffer->append_txout_addresses, buffer->net_type,
+          nullptr, &calc_fee);
       if (output_tx_hex != nullptr) {
         *output_tx_hex = CreateString(ctxc.GetHex());
       }
@@ -3295,12 +3299,14 @@ int CfdFinalizeFundRawTx(
       TransactionController txc = api.FundRawTransaction(
           tx_hex, *buffer->utxos, target_value, *buffer->input_utxos,
           target.reserved_address, effective_fee_rate, &tx_fee_value, &filter,
-          &option_params, buffer->append_txout_addresses, buffer->net_type);
+          &option_params, buffer->append_txout_addresses, buffer->net_type,
+          nullptr, &calc_fee);
       if (output_tx_hex != nullptr) {
         *output_tx_hex = CreateString(txc.GetHex());
       }
     }
 
+    buffer->calculate_fee = calc_fee.GetSatoshiValue();
     if (tx_fee != nullptr) {
       *tx_fee = tx_fee_value.GetSatoshiValue();
     }
@@ -3345,6 +3351,40 @@ int CfdGetAppendTxOutFundRawTx(
     }
 
     *append_address = CreateString(buffer->append_txout_addresses->at(index));
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetCalculateFeeFundRawTx(
+    void* handle, void* fund_handle, int64_t* fee_amount) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(fund_handle, kPrefixFundRawTxData);
+    if (fee_amount == nullptr) {
+      warn(CFD_LOG_SOURCE, "fee_amount is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. fee_amount is null.");
+    }
+
+    CfdCapiFundRawTxData* buffer =
+        static_cast<CfdCapiFundRawTxData*>(fund_handle);
+    if (buffer->append_txout_addresses == nullptr) {
+      warn(CFD_LOG_SOURCE, "target addresses is maximum over.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError,
+          "Failed to parameter. target addresses is maximum over.");
+    }
+
+    *fee_amount = buffer->calculate_fee;
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);

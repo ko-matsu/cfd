@@ -1113,6 +1113,16 @@ CFDC_API int CfdGetAppendTxOutFundRawTx(
     void* handle, void* fund_handle, uint32_t index, char** append_address);
 
 /**
+ * @brief Get calculate fee amount for fundrawtransaction.
+ * @param[in] handle           cfd handle.
+ * @param[in] fund_handle      handle for fundrawtransaction.
+ * @param[out] fee_amount      calculate fee (before add dust amount)
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetCalculateFeeFundRawTx(
+    void* handle, void* fund_handle, int64_t* fee_amount);
+
+/**
  * @brief Free handle for  hex.
  * @param[in] handle        cfd handle.
  * @param[in] fund_handle   handle for fundrawtransaction.
