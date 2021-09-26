@@ -199,14 +199,14 @@ cmake version is 3.15 or higher: `cmake --install build`
 sudo ./tools/cleanup_install_files.sh
 
 (download)
-wget https://github.com/cryptogarageinc/cfd/releases/download/v0.1.12/cfd-v0.1.12-ubuntu1804-gcc-x86_64.zip
+wget https://github.com/cryptogarageinc/cfd/releases/download/v0.3.26/cfd-v0.3.26-ubuntu1804-gcc-x86_64.zip
 
 (unzip)
-sudo unzip -q cfd-v0.1.12-ubuntu1804-gcc-x86_64.zip -d /
+sudo unzip -q cfd-v0.3.26-ubuntu1804-gcc-x86_64.zip -d /
 ```
 
 - Windows
-  1. get releases asset. (ex. https://github.com/cryptogarageinc/cfd/releases/download/v0.1.12/cfd-v0.1.12-win-vs2019-x86_64.zip )
+  1. get releases asset. (ex. https://github.com/cryptogarageinc/cfd/releases/download/v0.3.26/cfd-v0.3.26-win-vs2019-x86_64.zip )
   2. Expand to PATH
 
 ### uninstall
