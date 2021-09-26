@@ -1371,8 +1371,9 @@ TEST(ElementsTransactionApi, FundRawTransaction_emptyUtxo) {
   ElementsUtxoAndOption utxo_data1;
   utxo_data1.utxo = utxo1;
   utxo_data1.is_pegin = true;
-  utxo_data1.fedpeg_script = claim_script;
+  utxo_data1.claim_script = claim_script;
   utxo_data1.pegin_btc_tx_size = tx.GetTotalSize();
+  utxo_data1.pegin_txoutproof_size = 250;  // dummy
   selected_txin_utxos.push_back(utxo_data1);
 
   try {
@@ -1590,6 +1591,91 @@ TEST(ElementsTransactionApi, FundRawTransaction_Check1) {
     EXPECT_STREQ("", except.what());
     return;
   }
+}
+
+TEST(ElementsTransactionApi, EstimateFee_PeginTx) {
+  // signed pegin tx
+  std::string pegin_tx_hex = "02000000010141fb1b60887f17a4d3351880635ff5e76e7941203348955d2675005892ca343b0000004000ffffffff02016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f010000000000005e7f001600149aa483fc0fd0b1806f25e57903e4cbefb19c20a1016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f01000000000000002900000000000000000247304402204c761ad9b55f2fd502d09551656c34f5e118220c286072c7408fe1b2d9eb033202201cb5fbbd90038d82fd21b686a23fa26ac20574da7f28a2afff5e958547ab72ef012102026e4a89b56f6f89de4f0c00d084eacb9dc310e387433049b55d7737fa2e04a70608a85e000000000000206d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f206fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000160014aab2ed7ac90f976a17ddb850c4a0c4e62db49b0753020000000123edd3be8309747693f42e5b6a0a0c57899fca7d6fb5a8d9c4f52fbf7398f03d00000000000000008001a85e00000000000017a914fdfbf873904e8276428aa892576acd028775fbda8700000000fdd9010400c0209ac0009d7289eb8e52ef1883501b35ec6ee8a5bfc83a09000000000000000000e157506b8e9b09bed1b9a9d6045fa26735547d696d9ce230c7f2003d09704594f558e160ce981317486c10c46e0600000c7eab9226e14b446023e58c32f677298a3a60448556b3b6dcf189ea680035de47fcd1a47ece1bda2de728f1ea7ca166338ddd0ab1ee2797c7cd2c9c5d5d07b055ed58f3b21f1324c98e1c09a8f4dd3a3f5b3a7ca8efc48fcbcb41cbf5476c40e9e3abc1c5d78e4b59dde0cfabf3c47d68f2f83893b19c0079b6902525c41e146ad09cb3859268063fd6e6b123036e6c65a975698553d701e04f0801752a4c454ff689b184b1c48c3fdfc33a7e25c2d96f8b9dfcbbb6b970f7da7ecbccd6f3d33141fb1b60887f17a4d3351880635ff5e76e7941203348955d2675005892ca343b04b0b4b9206faf789f1c0659f100a69eea88bfdc66a2b2382fe628fb159304ffd3f7ef70acc4e0438b1fb380da205c7ae0746dfbb451bb2110a9a25e224455719c6c22fa85161cb1df6fc4a870b337d2de35c7cc478c6658147ea8e1d64e7152d172e425e8e3ffd1cfae750d09193292f6e170a1fbfd65d8d43ecc3c5e0932fddf4b338fb84ae565a87fb78bc9d4d5d32ab8bf1fba7880c08c3a8a3a7e3aa22803bdd60200000000";
+
+  // Address1
+  UtxoData utxo1;
+  utxo1.block_height = 0;
+  utxo1.binary_data = nullptr;
+  utxo1.txid = Txid("3b34ca92580075265d9548332041796ee7f55f63801835d3a4177f88601bfb41");
+  utxo1.vout = 0;
+  utxo1.locking_script = Script("0014eb3c0d55b7098a4aef4a18ee1eebcb1ed924a82b");
+  utxo1.descriptor = "wpkh(03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6)";
+  utxo1.amount = Amount(int64_t{24232});
+  utxo1.address_type = AddressType::kP2wpkhAddress;
+  utxo1.asset = ConfidentialAssetId("6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d");
+  ElementsUtxoAndOption eutxo1;
+  eutxo1.utxo = utxo1;
+  std::vector<cfd::api::ElementsUtxoAndOption> utxos_and_options{
+      eutxo1
+  };
+
+  ConfidentialTransactionContext txc(pegin_tx_hex);
+
+  std::vector<cfd::UtxoData> utxos{utxo1};
+  EXPECT_NO_THROW(txc.CollectInputUtxo(utxos));
+
+  // check estimateFee
+  double effective_fee_rate = 0.1;
+  Amount calc_fee;
+  Amount utxo_fee;
+  Amount tx_fee;
+  ElementsTransactionApi api;
+  calc_fee = api.EstimateFee(txc.GetHex(), utxos_and_options, utxo1.asset,
+      &tx_fee, &utxo_fee, false, effective_fee_rate, 0, 0);
+  EXPECT_EQ(calc_fee.GetSatoshiValue(), 36);
+  EXPECT_EQ(tx_fee.GetSatoshiValue(), 13);
+  EXPECT_EQ(utxo_fee.GetSatoshiValue(), 24);
+}
+
+TEST(ElementsTransactionApi, EstimateFee_PeginTx2) {
+  // signed pegin tx
+  std::string pegin_tx_hex = "02000000000141fb1b60887f17a4d3351880635ff5e76e7941203348955d2675005892ca343b0000004000ffffffff02016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f010000000000005e7f001600149aa483fc0fd0b1806f25e57903e4cbefb19c20a1016d521c38ec1ea15734ae22b7c46064412829c0d0579f0a713d1c04ede979026f010000000000000029000000000000";
+  std::string claim_script = "0014aab2ed7ac90f976a17ddb850c4a0c4e62db49b07";
+  std::string btc_tx = "020000000123edd3be8309747693f42e5b6a0a0c57899fca7d6fb5a8d9c4f52fbf7398f03d00000000000000008001a85e00000000000017a914fdfbf873904e8276428aa892576acd028775fbda8700000000";
+  std::string txoutproof = "0400c0209ac0009d7289eb8e52ef1883501b35ec6ee8a5bfc83a09000000000000000000e157506b8e9b09bed1b9a9d6045fa26735547d696d9ce230c7f2003d09704594f558e160ce981317486c10c46e0600000c7eab9226e14b446023e58c32f677298a3a60448556b3b6dcf189ea680035de47fcd1a47ece1bda2de728f1ea7ca166338ddd0ab1ee2797c7cd2c9c5d5d07b055ed58f3b21f1324c98e1c09a8f4dd3a3f5b3a7ca8efc48fcbcb41cbf5476c40e9e3abc1c5d78e4b59dde0cfabf3c47d68f2f83893b19c0079b6902525c41e146ad09cb3859268063fd6e6b123036e6c65a975698553d701e04f0801752a4c454ff689b184b1c48c3fdfc33a7e25c2d96f8b9dfcbbb6b970f7da7ecbccd6f3d33141fb1b60887f17a4d3351880635ff5e76e7941203348955d2675005892ca343b04b0b4b9206faf789f1c0659f100a69eea88bfdc66a2b2382fe628fb159304ffd3f7ef70acc4e0438b1fb380da205c7ae0746dfbb451bb2110a9a25e224455719c6c22fa85161cb1df6fc4a870b337d2de35c7cc478c6658147ea8e1d64e7152d172e425e8e3ffd1cfae750d09193292f6e170a1fbfd65d8d43ecc3c5e0932fddf4b338fb84ae565a87fb78bc9d4d5d32ab8bf1fba7880c08c3a8a3a7e3aa22803bdd602";
+
+  // Address1
+  UtxoData utxo1;
+  utxo1.block_height = 0;
+  utxo1.binary_data = nullptr;
+  utxo1.txid = Txid("3b34ca92580075265d9548332041796ee7f55f63801835d3a4177f88601bfb41");
+  utxo1.vout = 0;
+  utxo1.locking_script = Script("0014eb3c0d55b7098a4aef4a18ee1eebcb1ed924a82b");
+  utxo1.descriptor = "wpkh(03f942716865bb9b62678d99aa34de4632249d066d99de2b5a2e542e54908450d6)";
+  utxo1.amount = Amount(int64_t{24232});
+  utxo1.address_type = AddressType::kP2wpkhAddress;
+  utxo1.asset = ConfidentialAssetId("6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d");
+  ElementsUtxoAndOption eutxo1;
+  eutxo1.utxo = utxo1;
+  eutxo1.is_pegin = true;
+  eutxo1.pegin_btc_tx_size = btc_tx.length() / 2;
+  eutxo1.pegin_txoutproof_size = txoutproof.length() / 2;
+  eutxo1.claim_script = Script(claim_script);
+  std::vector<cfd::api::ElementsUtxoAndOption> utxos_and_options{
+      eutxo1
+  };
+
+  ConfidentialTransactionContext txc(pegin_tx_hex);
+
+  std::vector<cfd::UtxoData> utxos{utxo1};
+  EXPECT_NO_THROW(txc.CollectInputUtxo(utxos));
+
+  // check estimateFee
+  double effective_fee_rate = 0.1;
+  Amount calc_fee;
+  Amount utxo_fee;
+  Amount tx_fee;
+  ElementsTransactionApi api;
+  calc_fee = api.EstimateFee(txc.GetHex(), utxos_and_options, utxo1.asset,
+      &tx_fee, &utxo_fee, false, effective_fee_rate, 0, 0);
+  EXPECT_EQ(calc_fee.GetSatoshiValue(), 36);
+  EXPECT_EQ(tx_fee.GetSatoshiValue(), 13);
+  EXPECT_EQ(utxo_fee.GetSatoshiValue(), 24);
 }
 
 #endif  // CFD_DISABLE_ELEMENTS

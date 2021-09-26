@@ -780,6 +780,18 @@ CFDC_API int CfdGetExtkeyInfo(
     int* network_type);
 
 /**
+ * @brief get mnemonic words.
+ * @param[in] handle            cfd handle.
+ * @param[in] language          language. (default: en)
+ * @param[out] mnemonic_words   mnemonic words. (split space)
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetMnemonicWords(
+    void* handle, const char* language, char** mnemonic_words);
+
+/**
  * @brief initialize getting mnemonic word list.
  * @param[in] handle            cfd handle.
  * @param[in] language          language. (default: en)

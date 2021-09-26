@@ -938,6 +938,15 @@ TEST(cfdcapi_key, MnemonicTest) {
     EXPECT_EQ(kCfdSuccess, ret);
   }
 
+  char* mnemonic_words = nullptr;
+  ret = CfdGetMnemonicWords(handle, "en", &mnemonic_words);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    auto words = StringUtil::Split(mnemonic_words, " ");
+    EXPECT_EQ("about", words[3]);
+    EXPECT_EQ(2048, words.size());
+  }
+
   char* seed = nullptr;
   char* entropy = nullptr;
   const char* test_mnemonic = "horn tenant knee talent sponsor spell gate clip pulse soap slush warm silver nephew swap uncle crack brave";

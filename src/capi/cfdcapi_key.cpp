@@ -2231,6 +2231,31 @@ int CfdGetExtkeyInfo(
   return result;
 }
 
+int CfdGetMnemonicWords(
+    void* handle, const char* language, char** mnemonic_words) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+
+    std::string lang;
+    if (!IsEmptyString(language)) {
+      lang = language;
+    }
+    HDWalletApi api;
+    std::vector<std::string> wordlist = api.GetMnemonicWordlist(lang);
+    auto words = StringUtil::Join(wordlist, " ");
+    *mnemonic_words = CreateString(words);
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
 int CfdInitializeMnemonicWordList(
     void* handle, const char* language, void** mnemonic_handle,
     uint32_t* max_index) {

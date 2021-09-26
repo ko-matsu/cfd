@@ -134,6 +134,8 @@ struct CfdCapiFundRawTxData {
   std::vector<std::string>* append_txout_addresses;
   //! target list
   std::vector<CfdCapiFundTargetAmount>* targets;  //!< target list
+  //! calculate fee (before add dust amount)
+  int64_t calculate_fee;
   /// use blind fee (bool)
   bool is_blind;
   /// dust fee rate (double)
@@ -2971,6 +2973,19 @@ int CfdAddTxInTemplateForFundRawTx(
     bool is_issuance, bool is_blind_issuance, bool is_pegin,
     uint32_t pegin_btc_tx_size, const char* fedpeg_script,
     const char* scriptsig_template) {
+  return CfdAddTxInputForFundRawTx(
+      handle, fund_handle, txid, vout, amount, descriptor, asset, is_issuance,
+      is_blind_issuance, is_pegin, fedpeg_script, pegin_btc_tx_size,
+      500,  // dummy
+      scriptsig_template);
+}
+
+int CfdAddTxInputForFundRawTx(
+    void* handle, void* fund_handle, const char* txid, uint32_t vout,
+    int64_t amount, const char* descriptor, const char* asset,
+    bool is_issuance, bool is_blind_issuance, bool is_pegin,
+    const char* claim_script, uint32_t pegin_btc_tx_size,
+    uint32_t pegin_txoutproof_size, const char* scriptsig_template) {
   try {
     cfd::Initialize();
     CheckBuffer(fund_handle, kPrefixFundRawTxData);
@@ -3016,17 +3031,19 @@ int CfdAddTxInTemplateForFundRawTx(
       param.is_blind_issuance = is_blind_issuance;
       param.is_pegin = is_pegin;
       param.pegin_btc_tx_size = pegin_btc_tx_size;
-      if (!IsEmptyString(fedpeg_script)) {
-        param.fedpeg_script = Script(fedpeg_script);
+      param.pegin_txoutproof_size = pegin_txoutproof_size;
+      if (!IsEmptyString(claim_script)) {
+        param.claim_script = Script(claim_script);
       }
       buffer->input_elements_utxos->push_back(param);
 #else
       info(
           CFD_LOG_SOURCE,
           "unuse parameters: [is_issuance={}, is_blind_issuance={}, "
-          "is_pegin={}, pegin_btc_tx_size={}, fedpeg_script={}]",
+          "is_pegin={}, pegin_btc_tx_size={}, pegin_txoutproof_size={}, "
+          "claim_script={}]",
           is_issuance, is_blind_issuance, is_pegin, pegin_btc_tx_size,
-          fedpeg_script);
+          pegin_txoutproof_size, claim_script);
 #endif  // CFD_DISABLE_ELEMENTS
     } else {
       buffer->input_utxos->push_back(utxo);
@@ -3115,12 +3132,14 @@ int CfdAddTargetAmountForFundRawTx(
   try {
     cfd::Initialize();
     CheckBuffer(fund_handle, kPrefixFundRawTxData);
+    /*
     if (IsEmptyString(reserved_address)) {
       warn(CFD_LOG_SOURCE, "reserved_address is null.");
       throw CfdException(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. reserved_address is null.");
     }
+    */
 
     CfdCapiFundRawTxData* buffer =
         static_cast<CfdCapiFundRawTxData*>(fund_handle);
@@ -3245,6 +3264,7 @@ int CfdFinalizeFundRawTx(
     Amount utxo_fee_value;
     UtxoFilter filter;
     Amount tx_fee_value;
+    Amount calc_fee;
     std::vector<Utxo> utxo_list;
     if (buffer->is_elements) {
 #ifndef CFD_DISABLE_ELEMENTS
@@ -3265,7 +3285,8 @@ int CfdFinalizeFundRawTx(
           tx_hex, *buffer->utxos, map_target_value,
           *buffer->input_elements_utxos, reserve_txout_address, fee_asset,
           buffer->is_blind, effective_fee_rate, &tx_fee_value, &filter,
-          &option_params, buffer->append_txout_addresses, buffer->net_type);
+          &option_params, buffer->append_txout_addresses, buffer->net_type,
+          nullptr, &calc_fee);
       if (output_tx_hex != nullptr) {
         *output_tx_hex = CreateString(ctxc.GetHex());
       }
@@ -3280,12 +3301,14 @@ int CfdFinalizeFundRawTx(
       TransactionController txc = api.FundRawTransaction(
           tx_hex, *buffer->utxos, target_value, *buffer->input_utxos,
           target.reserved_address, effective_fee_rate, &tx_fee_value, &filter,
-          &option_params, buffer->append_txout_addresses, buffer->net_type);
+          &option_params, buffer->append_txout_addresses, buffer->net_type,
+          nullptr, &calc_fee);
       if (output_tx_hex != nullptr) {
         *output_tx_hex = CreateString(txc.GetHex());
       }
     }
 
+    buffer->calculate_fee = calc_fee.GetSatoshiValue();
     if (tx_fee != nullptr) {
       *tx_fee = tx_fee_value.GetSatoshiValue();
     }
@@ -3330,6 +3353,40 @@ int CfdGetAppendTxOutFundRawTx(
     }
 
     *append_address = CreateString(buffer->append_txout_addresses->at(index));
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    result = SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+  }
+  return result;
+}
+
+int CfdGetCalculateFeeFundRawTx(
+    void* handle, void* fund_handle, int64_t* fee_amount) {
+  int result = CfdErrorCode::kCfdUnknownError;
+  try {
+    cfd::Initialize();
+    CheckBuffer(fund_handle, kPrefixFundRawTxData);
+    if (fee_amount == nullptr) {
+      warn(CFD_LOG_SOURCE, "fee_amount is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. fee_amount is null.");
+    }
+
+    CfdCapiFundRawTxData* buffer =
+        static_cast<CfdCapiFundRawTxData*>(fund_handle);
+    if (buffer->append_txout_addresses == nullptr) {
+      warn(CFD_LOG_SOURCE, "target addresses is maximum over.");
+      throw CfdException(
+          CfdError::kCfdOutOfRangeError,
+          "Failed to parameter. target addresses is maximum over.");
+    }
+
+    *fee_amount = buffer->calculate_fee;
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
