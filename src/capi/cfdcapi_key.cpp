@@ -13,6 +13,7 @@
 #include "capi/cfdc_internal.h"
 #include "cfd/cfd_common.h"
 #include "cfd/cfdapi_key.h"
+#include "cfd/cfdapi_hdwallet.h"
 #include "cfdc/cfdcapi_common.h"
 #include "cfdcore/cfdcore_common.h"
 #include "cfdcore/cfdcore_descriptor.h"
@@ -25,6 +26,7 @@
 #include "cfdcore/cfdcore_util.h"
 
 using cfd::api::KeyApi;
+using cfd::api::HDWalletApi;
 using cfd::core::AdaptorSignature;
 using cfd::core::ByteData;
 using cfd::core::ByteData256;
