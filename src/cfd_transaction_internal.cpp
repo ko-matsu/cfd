@@ -2,8 +2,7 @@
 /**
  * @file cfd_transaction_internal.cpp
  *
- * @brief \~english implementation of transaction utility class.
- *   \~japanese Transaction Utilityクラスの実装ファイル
+ * @brief implementation of transaction utility class.
  */
 #include "cfd_transaction_internal.h"  // NOLINT
 

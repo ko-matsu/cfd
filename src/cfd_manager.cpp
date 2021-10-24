@@ -2,7 +2,7 @@
 /**
  * @file cfd_manager.cpp
  *
- * @brief cfd管理クラス実装ファイルです。
+ * @brief definition file for cfd manager class
  *
  */
 #include "cfd_manager.h"  // NOLINT
@@ -21,7 +21,7 @@ using cfd::core::logger::info;
 // -----------------------------------------------------------------------------
 namespace cfd {
 
-/// cfdインスタンス
+/// cfd instance
 static CfdManager cfd_instance;
 
 void Initialize(void) { cfd_instance.Initialize(); }
@@ -42,7 +42,6 @@ void CfdManager::Initialize() {
   }
 
   if (!initialized_) {
-    // 初期化処理実施
     cfd::core::Initialize(&handle_);
     initialized_ = true;
     info(CFD_LOG_SOURCE, "cfd initialize.");
@@ -62,7 +61,7 @@ void CfdManager::Finalize(bool is_finish_process) {
 
 uint64_t CfdManager::GetSupportedFunction() {
   uint64_t support_function = 0;
-  // cfdcoreとcfdの両方でサポートしている必要がある。
+  // It must be supported by both cfdcore and cfd.
   uint64_t core_functions = cfd::core::GetSupportedFunction();
 
 #ifndef CFD_DISABLE_BITCOIN

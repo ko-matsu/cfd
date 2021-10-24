@@ -2,7 +2,7 @@
 /**
  * @file cfdcapi_key.cpp
  *
- * @brief cfd-capiで利用するKey操作の実装ファイル
+ * @brief Implementation files for Key operations used by cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #include "cfdc/cfdcapi_key.h"

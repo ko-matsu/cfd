@@ -2,8 +2,7 @@
 /**
  * @file cfd_transaction.cpp
  *
- * @brief \~english implementation of common classes related to transaction operation
- *   \~japanese Transaction操作共通の関連クラスの実装ファイル
+ * @brief implementation of common classes related to transaction operation
  */
 #include "cfd/cfd_transaction_common.h"
 
@@ -58,9 +57,9 @@ using cfd::core::ConfidentialTxIn;
 // -----------------------------------------------------------------------------
 // Define
 // -----------------------------------------------------------------------------
-/// シーケンス値(locktime有効)
+/// sequence number (enable locktime)
 constexpr uint32_t kSequenceEnableLockTimeMax = 0xfffffffeU;
-/// シーケンス値(locktime無効)
+/// sequence number (disable locktime)
 constexpr uint32_t kSequenceDisableLockTime = 0xffffffffU;
 
 // -----------------------------------------------------------------------------

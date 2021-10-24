@@ -2,7 +2,7 @@
 /**
  * @file cfdapi_coin.cpp
  *
- * @brief cfd-apiで利用するCoin関連の実装ファイル
+ * @brief Coin-related implementation files used by cfd-api
  */
 #include "cfd/cfdapi_coin.h"
 
@@ -48,12 +48,9 @@ void CoinApi::ConvertToUtxo(const UtxoData& utxo_data, Utxo* utxo) const {
       memcpy(utxo->txid, txid.GetBytes().data(), sizeof(utxo->txid));
     }
 
-    // descriptorがあれば、そこから変換
     std::vector<uint8_t> locking_script_bytes;
     if (!utxo_data.descriptor.empty()) {
-      // FIXME descriptor差し替え -> クラス自体廃止
-      // utxo->locking_script = utxo_data.descriptor;
-      // utxo->address_type = utxo_data.descriptor;
+      // FIXME abolish class itself
     } else if (!utxo_data.address.GetAddress().empty()) {
       locking_script_bytes =
           utxo_data.address.GetLockingScript().GetData().GetBytes();

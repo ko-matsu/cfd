@@ -2,8 +2,7 @@
 /**
  * @file cfdapi_address.cpp
  *
- * @brief \~english implementation of address operation that uses cfd-api
- *   \~japanese cfd-apiで利用するAddress操作の実装ファイル
+ * @brief implementation of address operation that uses cfd-api
  */
 #ifndef CFD_DISABLE_ELEMENTS
 #include "cfd/cfdapi_elements_address.h"

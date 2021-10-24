@@ -2,8 +2,7 @@
 /**
  * @file cfd_transaction_internal.h
  *
- * @brief \~english declaration of transaction utility class.
- *   \~japanese Transaction Utilityクラスの定義ファイル
+ * @brief declaration of transaction utility class.
  */
 #ifndef CFD_SRC_CFD_TRANSACTION_INTERNAL_H_
 #define CFD_SRC_CFD_TRANSACTION_INTERNAL_H_

@@ -2,8 +2,7 @@
 /**
  * @file cfdapi_key.cpp
  *
- * @brief \~english implementation file for key management that uses cfd-api
- * \~japanese cfd-apiで利用する鍵関連の実装ファイル
+ * @brief implementation file for key management that uses cfd-api
  */
 #include "cfd/cfdapi_key.h"
 

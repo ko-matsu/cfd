@@ -2,7 +2,7 @@
 /**
  * @file cfdcapi_common.cpp
  *
- * @brief cfd-capiで利用する共通処理の実装ファイル
+ * @brief Implementation files for common processing used by cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #include <exception>

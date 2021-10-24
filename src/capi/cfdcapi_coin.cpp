@@ -2,7 +2,7 @@
 /**
  * @file cfdcapi_coin.cpp
  *
- * @brief cfd-capiで利用するCoin操作の実装ファイル
+ * @brief Implementation files for Coin operations used by cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #include "cfdc/cfdcapi_coin.h"

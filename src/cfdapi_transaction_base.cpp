@@ -2,8 +2,7 @@
 /**
  * @file cfdapi_transaction_base.cpp
  *
- * @brief \~english implementation file for transaction operation that uses cfd-api
- *   \~japanese cfd-apiで利用するTransaction作成の実装ファイル
+ * @brief implementation file for transaction operation that uses cfd-api
  */
 #include "cfdapi_transaction_base.h"  // NOLINT
 
@@ -206,10 +205,8 @@ T TransactionApiBase::UpdateWitnessStack(
         CfdError::kCfdIllegalArgumentError, "Invalid hex string. empty data.");
   }
 
-  // TransactionController作成
   T txc = create_controller(tx_hex);
 
-  // Witnessの更新
   txc.SetWitnessStack(
       txid, vout, stack_index, update_sign_param.ConvertToSignature());
   return txc;
@@ -245,7 +242,6 @@ T TransactionApiBase::AddSign(
   }
 
   if (is_witness) {
-    // Witnessの追加
     if (clear_stack) {
       txc.RemoveWitnessStackAll(txid, vout);
     }

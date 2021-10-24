@@ -2,7 +2,7 @@
 /**
  * @file cfd_utxo.cpp
  *
- * @brief UTXO操作の関連クラスの実装ファイル
+ * @brief Implementation files for related classes of UTXO operations
  */
 #include "cfd/cfd_utxo.h"
 
@@ -59,13 +59,13 @@ using cfd::core::logger::warn;
 // -----------------------------------------------------------------------------
 // Inner definitions
 // -----------------------------------------------------------------------------
-//! SelectCoinsBnBの最大繰り返し回数
+//! Maximum number of iterations for SelectCoinsBnB
 static constexpr const size_t kBnBMaxTotalTries = 100000;
 
-//! KnapsackSolver ApproximateBestSubsetの繰り返し回数
+//! Number of iterations of KnapsackSolver ApproximateBestSubset
 static constexpr const int kApproximateBestSubsetIterations = 100000;
 
-//! Change最小値
+//! Change Minimum Value
 static constexpr const uint64_t kMinChange = 1000000;  // MIN_CHANGE
 
 //! LongTerm fee rate default (20.0)
@@ -174,7 +174,7 @@ void CoinSelectionOption::SetIgnoreFeeAsset(bool has_ignore_fee_asset) {
 }
 
 void CoinSelectionOption::InitializeTxSizeInfo() {
-  // wpkh想定
+  // wpkh
   Script wpkh_script("0014ffffffffffffffffffffffffffffffffffffffff");
   TxOut txout(Amount(), wpkh_script);
   TxOutReference txout_ref(txout);

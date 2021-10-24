@@ -2,7 +2,7 @@
 /**
  * @file cfdcapi_transaction.cpp
  *
- * @brief cfd-capiで利用するTransaction処理の実装ファイル
+ * @brief Implementation file of Transaction processing used by cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #include "cfdc/cfdcapi_transaction.h"

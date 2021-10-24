@@ -2,7 +2,8 @@
 /**
  * @file cfdcapi_elements_transaction.cpp
  *
- * @brief cfd-capiで利用するConfidentialTransaction処理の実装ファイル
+ * @brief Implementation file of the ConfidentialTransaction process
+ *  used by cfd-capi.
  */
 #ifndef CFD_DISABLE_CAPI
 #ifndef CFD_DISABLE_ELEMENTS
