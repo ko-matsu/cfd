@@ -357,7 +357,7 @@ DescriptorScriptData AddressFactory::ParseOutputDescriptor(
   result.key_type = DescriptorKeyType::kDescriptorKeyNull;  // dummy init
   result.address_type = AddressType::kP2shAddress;          // dummy init
   result.multisig_req_sig_num = 0;
-  Descriptor desc = Descriptor::Parse(descriptor, &prefix_list_);
+  Descriptor desc = Descriptor::Parse(descriptor, &prefix_list_, type_);
   std::vector<std::string> args;
   for (uint32_t index = 0; index < desc.GetNeedArgumentNum(); ++index) {
     args.push_back(bip32_derivation_path);
