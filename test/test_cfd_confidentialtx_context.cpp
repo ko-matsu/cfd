@@ -9,6 +9,7 @@
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_script.h"
+#include "cfdcore/cfdcore_taproot.h"
 #include "cfdcore/cfdcore_util.h"
 #include "cfd/cfd_address.h"
 #include "cfd/cfd_common.h"
@@ -40,6 +41,9 @@ using cfd::core::OutPoint;
 using cfd::core::Pubkey;
 using cfd::core::Privkey;
 using cfd::core::Txid;
+using cfd::core::SchnorrPubkey;
+using cfd::core::SchnorrSignature;
+using cfd::core::SchnorrUtil;
 using cfd::core::Script;
 using cfd::core::ScriptBuilder;
 using cfd::core::ScriptOperator;
@@ -47,6 +51,10 @@ using cfd::core::ScriptUtil;
 using cfd::core::SigHashAlgorithm;
 using cfd::core::SigHashType;
 using cfd::core::SignatureUtil;
+using cfd::core::TapBranch;
+using cfd::core::TaprootScriptTree;
+using cfd::core::TaprootUtil;
+using cfd::core::TapScriptData;
 using cfd::core::Transaction;
 using cfd::core::UnblindParameter;
 using cfd::core::WitnessVersion;
@@ -1015,6 +1023,83 @@ TEST(ConfidentialTransactionContext, PeginSequence)
     txc.Verify(outpoint1);
   } catch (const CfdException& except) {
     EXPECT_STREQ("", except.what());
+  }
+}
+
+TEST(ConfidentialTransactionContext, AddTapScriptSign) {
+  Privkey key("305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27");
+  Pubkey pubkey = key.GeneratePubkey();
+  bool is_parity = false;
+  SchnorrPubkey schnorr_pubkey = SchnorrPubkey::FromPubkey(pubkey, &is_parity);
+  EXPECT_EQ("1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
+      schnorr_pubkey.GetHex());
+  EXPECT_TRUE(is_parity);
+
+  Script redeem_script = (ScriptBuilder() << schnorr_pubkey.GetData()
+      << ScriptOperator::OP_CHECKSIG).Build();
+  std::vector<ByteData256> nodes = {
+    ByteData256("4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d"),
+    ByteData256("dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54")
+  };
+  NetType net_type = NetType::kElementsRegtest;
+  TaprootScriptTree tree(redeem_script, net_type);
+  tree.AddBranch(nodes[0]);
+  tree.AddBranch(SchnorrPubkey(nodes[1]));
+  Script locking_script;
+  SchnorrPubkey pk0;
+  auto taproot_control = TaprootUtil::CreateTapScriptControl(
+      schnorr_pubkey, tree, &pk0, &locking_script);
+
+  try {
+    SigHashType sighash_type;
+    ConfidentialAssetId asset("5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225");
+    ElementsAddressFactory addr_factory(NetType::kElementsRegtest);
+    BlockHash genesis_block_hash(
+      "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f");
+    OutPoint out_point(Txid(
+      "9ac3cfc55c5bab621d71e7132b06f60dafc7a5cc340cbcacc7d1d573bb938f64"), 0);
+    UtxoData utxo;
+    utxo.txid = out_point.GetTxid();
+    utxo.vout = out_point.GetVout();
+    utxo.locking_script = Script(
+      "5120874c7545f839a7565d553ae29d1eba93cf3bee27685f570c6de5b05add657e2b");
+    utxo.address = addr_factory.GetAddress(
+      "ert1psax8230c8xn4vh248t3f6846j08nhm38dp04wrrdukc94ht90c4skyhl4r");
+    utxo.amount = Amount(2499999000LL);
+    utxo.address_type = AddressType::kTaprootAddress;
+    utxo.asset = asset;
+    ScriptBuilder build;
+    build.AppendData(ByteData("411e73828840df9d2ec76b938af654c9c32e5e2ef4a97531ced1e2a20fc7fcc89a821ea823f38e4d592fddbd929374d116d1c49596bc6dc02b365d455c98223cb00122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54"));
+    utxo.scriptsig_template = build.Build();
+
+    ConfidentialTransactionContext tx2(2, 0);
+    tx2.SetGenesisBlockHash(genesis_block_hash);
+    tx2.AddInput(utxo);
+    Amount amt2(int64_t{2499998000});
+    Address addr2 = addr_factory.GetAddress("ert1qze8fshg0eykfy7nxcr96778xagufv2w4j3mct0");
+    Amount fee_amt = utxo.amount - amt2;
+    tx2.AddTxOut(addr2, amt2, asset);
+    tx2.AddTxOutFee(fee_amt, asset);
+
+    auto tap_leaf_hash = tree.GetTapLeafHash();
+    EXPECT_EQ("56bf7b05d6a4a76be602450e00086dc79db2a46e17df6bbe2a9ac3d127213624",
+      tap_leaf_hash.GetHex());
+    auto sighash2 = tx2.CreateSignatureHashByTaproot(
+      out_point, sighash_type, &tap_leaf_hash);
+    EXPECT_EQ("c3f788643ce43074dee15890bccb6e77bbb5481ab9b3443b7041699a0758de02",
+      sighash2.GetHex());
+    auto sig2 = SchnorrUtil::Sign(sighash2, key);
+    EXPECT_EQ("c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae034", sig2.GetHex());
+    sig2.SetSigHashType(sighash_type);
+    std::vector<SignParameter> sign_params;
+    sign_params.emplace_back(sig2);
+    tx2.AddTapScriptSign(out_point, tree, schnorr_pubkey, sign_params);
+
+    EXPECT_EQ("020000000101648f93bb73d5d1c7acbc0c34cca5c7af0df6062b13e7711d62ab5b5cc5cfc39a0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f13000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000341c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae0340122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d540000000000", tx2.GetHex());
+
+    EXPECT_TRUE(schnorr_pubkey.Verify(sig2, sighash2));
+  } catch (CfdException e) {
+    EXPECT_STREQ("", e.what());
   }
 }
 

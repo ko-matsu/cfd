@@ -147,6 +147,8 @@ static Script GetLockingScriptFromUtxoData(const UtxoData& utxo) {
 // -----------------------------------------------------------------------------
 // ConfidentialTransactionContext
 // -----------------------------------------------------------------------------
+BlockHash ConfidentialTransactionContext::default_genesis_block_hash_;
+
 ConfidentialTransactionContext::ConfidentialTransactionContext() {}
 
 ConfidentialTransactionContext::ConfidentialTransactionContext(
@@ -901,8 +903,8 @@ void ConfidentialTransactionContext::BlindIssuance(
 
 void ConfidentialTransactionContext::SignWithKey(
     const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
-    SigHashType sighash_type, bool has_grind_r,
-    const ByteData256* aux_rand, const ByteData* annex) {
+    SigHashType sighash_type, bool has_grind_r, const ByteData256* aux_rand,
+    const ByteData* annex) {
   UtxoData utxo;
   if (!IsFindUtxoMap(outpoint, &utxo)) {
     throw CfdException(
@@ -912,7 +914,8 @@ void ConfidentialTransactionContext::SignWithKey(
   if (utxo.locking_script.IsTaprootScript()) {
     SignWithSchnorrPrivkeySimple(
         outpoint, privkey, sighash_type, aux_rand, annex);
-  } else if (utxo.amount_blind_factor.IsEmpty() &&
+  } else if (
+      utxo.amount_blind_factor.IsEmpty() &&
       (!utxo.value_commitment.HasBlinding())) {
     SignWithPrivkeySimple(
         outpoint, pubkey, privkey, sighash_type, utxo.amount,
@@ -998,8 +1001,7 @@ ByteData ConfidentialTransactionContext::CreateSignatureHash(
 
 ByteData256 ConfidentialTransactionContext::CreateSignatureHashByTaproot(
     const OutPoint& outpoint, const SigHashType& sighash_type,
-    const ByteData256* tap_leaf_hash,
-    const uint32_t* code_separator_position,
+    const ByteData256* tap_leaf_hash, const uint32_t* code_separator_position,
     const ByteData* annex) const {
   UtxoData utxo;
   std::vector<ConfidentialTxOut> utxos;
@@ -1011,29 +1013,32 @@ ByteData256 ConfidentialTransactionContext::CreateSignatureHashByTaproot(
           CfdError::kCfdIllegalStateError,
           "Utxo is not found. CreateSignatureHashByTaproot fail.");
     }
-    utxo.locking_script = GetLockingScriptFromUtxoData(utxo);
+    Script locking_script = GetLockingScriptFromUtxoData(utxo);
     ConfidentialValue value(utxo.amount);
     ConfidentialAssetId asset = utxo.asset;
     if (utxo.value_commitment.HasBlinding()) {
       value = utxo.value_commitment;
       if (asset.HasBlinding()) {
         // fall-through
-      } else if (utxo.asset_blind_factor.IsEmpty() ||
+      } else if (utxo.asset_commitment.HasBlinding()) {
+        asset = utxo.asset_commitment;
+      } else if (
+          utxo.asset_blind_factor.IsEmpty() ||
           utxo.amount_blind_factor.IsEmpty()) {
         throw CfdException(
             CfdError::kCfdIllegalStateError,
-            "Utxo asset and blindFactor is unmatch. CreateSignatureHashByTaproot fail."); // NOLINT
+            "Utxo asset and blindFactor is unmatch. "
+            "CreateSignatureHashByTaproot fail.");  // NOLINT
       } else {
-        asset = ConfidentialAssetId::GetCommitment(
-          asset, utxo.asset_blind_factor);
+        asset =
+            ConfidentialAssetId::GetCommitment(asset, utxo.asset_blind_factor);
       }
     } else if (asset.HasBlinding()) {
       throw CfdException(
           CfdError::kCfdIllegalStateError,
           "Utxo asset is unmatch. CreateSignatureHashByTaproot fail.");
     }
-    utxos.emplace_back(ConfidentialTxOut(
-      utxo.locking_script, utxo.asset, utxo.value_commitment));
+    utxos.emplace_back(ConfidentialTxOut(locking_script, asset, value));
   }
   BlockHash genesis_blockhash = GetGenesisBlockHash();
 
@@ -1080,8 +1085,8 @@ void ConfidentialTransactionContext::SignWithPrivkeySimple(
 
 void ConfidentialTransactionContext::SignWithSchnorrPrivkeySimple(
     const OutPoint& outpoint, const Privkey& privkey,
-    const SigHashType& sighash_type,
-    const ByteData256* aux_rand, const ByteData* annex) {
+    const SigHashType& sighash_type, const ByteData256* aux_rand,
+    const ByteData* annex) {
   auto sighash =
       CreateSignatureHashByTaproot(outpoint, sighash_type, nullptr, 0, annex);
   SchnorrSignature signature;
@@ -1135,8 +1140,7 @@ void ConfidentialTransactionContext::AddSchnorrSign(
 void ConfidentialTransactionContext::AddTapScriptSign(
     const OutPoint& outpoint, const TaprootScriptTree& tree,
     const SchnorrPubkey& internal_pubkey,
-    const std::vector<SignParameter>& sign_data_list,
-    const ByteData* annex) {
+    const std::vector<SignParameter>& sign_data_list, const ByteData* annex) {
   std::vector<SignParameter> sign_params = sign_data_list;
   auto control = TaprootUtil::CreateTapScriptControl(internal_pubkey, tree);
   auto script = tree.GetScript();
@@ -1230,7 +1234,6 @@ BlockHash ConfidentialTransactionContext::GetGenesisBlockHash() const {
   throw CfdException(
       CfdError::kCfdIllegalStateError, "Genesis blockHash is empty.");
 }
-
 
 // -----------------------------------------------------------------------------
 // ConfidentialTransactionController

@@ -36,6 +36,15 @@ enum CfdBlindOption {
 };
 
 /**
+ * @brief set genesis block hash for global.
+ * @param[in] handle                cfd handle.
+ * @param[in] genesis_block_hash    genesis block hash.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetGenesisBlockHashGlobal(
+    void* handle, const char* genesis_block_hash);
+
+/**
  * @brief create initialized elements transaction.
  * @param[in] handle        cfd handle.
  * @param[in] version       transaction version.
@@ -457,6 +466,43 @@ CFDC_API int CfdGetConfidentialTxOutByHandle(
     void* handle, void* tx_data_handle, uint32_t index, char** asset_string,
     int64_t* value_satoshi, char** value_commitment, char** nonce,
     char** locking_script, char** surjection_proof, char** rangeproof);
+
+/**
+ * @brief set utxo data on transaction input.
+ * @details for calculate schnorr sighature.
+ * @param[in] handle            cfd handle.
+ * @param[in] create_handle     create transaction handle.
+ * @param[in] txid              utxo txid.
+ * @param[in] vout              utxo vout.
+ * @param[in] amount            utxo amount
+ * @param[in] commitment        utxo amount commitment
+ * @param[in] descriptor        utxo descriptor
+ * @param[in] address           utxo address
+ * @param[in] asset             utxo asset
+ * @param[in] asset_commitment      utxo asset commitment
+ * @param[in] asset_blinder         utxo asset blinder
+ * @param[in] amount_blinder        utxo amount blinder
+ * @param[in] scriptsig_template    utxo scriptsig template
+ * @param[in] can_insert        insert mode
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetConfidentialTxUtxoDataByHandle(
+    void* handle, void* create_handle, const char* txid, uint32_t vout,
+    int64_t amount, const char* commitment, const char* descriptor,
+    const char* address, const char* asset, const char* asset_commitment,
+    const char* asset_blinder, const char* amount_blinder,
+    const char* scriptsig_template, bool can_insert);
+
+/**
+ * @brief set genesis block hash for confidential transaction.
+ * @details for calculate schnorr sighature.
+ * @param[in] handle                cfd handle.
+ * @param[in] create_handle         create transaction handle.
+ * @param[in] genesis_block_hash    genesis block hash.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSetConfidentialTxGenesisBlockHashByHandle(
+    void* handle, void* create_handle, const char* genesis_block_hash);
 
 /**
  * @brief set reissue transaction data.

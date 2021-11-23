@@ -80,6 +80,7 @@ TEST(cfdcapi_coin, EstimateFeeTest) {
       BlindFactor(),
       BlindFactor(),
       ConfidentialValue(),
+      ConfidentialAssetId(),
 #endif  // CFD_DISABLE_ELEMENTS
       Script()
     },
@@ -101,6 +102,7 @@ TEST(cfdcapi_coin, EstimateFeeTest) {
       BlindFactor(),
       BlindFactor(),
       ConfidentialValue(),
+      ConfidentialAssetId(),
 #else
       nullptr,
 #endif  // CFD_DISABLE_ELEMENTS
@@ -180,6 +182,7 @@ TEST(cfdcapi_coin, EstimateFeeBySchnorr) {
       BlindFactor(),
       BlindFactor(),
       ConfidentialValue(),
+      ConfidentialAssetId(),
 #else
       nullptr,
 #endif  // CFD_DISABLE_ELEMENTS
@@ -264,6 +267,7 @@ TEST(cfdcapi_coin, EstimateFeeByTapscript) {
       BlindFactor(),
       BlindFactor(),
       ConfidentialValue(),
+      ConfidentialAssetId(),
 #else
       nullptr,
 #endif  // CFD_DISABLE_ELEMENTS
@@ -907,6 +911,7 @@ TEST(cfdcapi_coin, EstimateFeeElementsTest) {
       BlindFactor(),
       BlindFactor(),
       ConfidentialValue(),
+      ConfidentialAssetId(),
       Script()
     },
     UtxoData{
@@ -926,6 +931,7 @@ TEST(cfdcapi_coin, EstimateFeeElementsTest) {
       BlindFactor(),
       BlindFactor(),
       ConfidentialValue(),
+      ConfidentialAssetId(),
       Script()
     }
   };

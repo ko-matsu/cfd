@@ -84,6 +84,8 @@ struct CfdCapiTapscriptTree {
   std::vector<TaprootScriptTree>* tree_buffer;
   //! branch container
   std::vector<TapBranch>* branch_buffer;
+  //! network type
+  NetType net_type;
 };
 
 }  // namespace capi
@@ -98,6 +100,7 @@ using cfd::capi::CfdCapiScriptItemHandleData;
 using cfd::capi::CfdCapiTapscriptTree;
 using cfd::capi::CheckBuffer;
 using cfd::capi::ConvertHashToAddressType;
+using cfd::capi::ConvertNetType;
 using cfd::capi::CreateString;
 using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
@@ -457,6 +460,12 @@ int CfdFreeMultisigScriptSigHandle(void* handle, void* multisig_handle) {
 }
 
 int CfdInitializeTaprootScriptTree(void* handle, void** tree_handle) {
+  return CfdInitializeTaprootScriptTreeWithNetwork(
+      handle, kCfdNetworkMainnet, tree_handle);
+}
+
+int CfdInitializeTaprootScriptTreeWithNetwork(
+    void* handle, int network_type, void** tree_handle) {
   int result = CfdErrorCode::kCfdUnknownError;
   CfdCapiTapscriptTree* buffer = nullptr;
   try {
@@ -467,11 +476,13 @@ int CfdInitializeTaprootScriptTree(void* handle, void** tree_handle) {
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. tree_handle is null.");
     }
+    NetType net_type = ConvertNetType(network_type, nullptr);
 
     buffer = static_cast<CfdCapiTapscriptTree*>(
         AllocBuffer(kPrefixTapscriptTree, sizeof(CfdCapiTapscriptTree)));
     buffer->tree_buffer = new std::vector<TaprootScriptTree>(1);
     buffer->branch_buffer = new std::vector<TapBranch>(1);
+    buffer->net_type = net_type;
     *tree_handle = buffer;
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
@@ -502,7 +513,7 @@ int CfdSetInitialTapLeaf(
         static_cast<CfdCapiTapscriptTree*>(tree_handle);
     auto& tree = buffer->tree_buffer->at(0);
 
-    TaprootScriptTree leaf(leaf_version, Script(tapscript));
+    TaprootScriptTree leaf(leaf_version, Script(tapscript), buffer->net_type);
     tree = leaf;
     buffer->branch_buffer->clear();
     return CfdErrorCode::kCfdSuccess;
@@ -527,11 +538,13 @@ int CfdSetInitialTapBranchByHash(
     auto& tree = buffer->tree_buffer->at(0);
     buffer->branch_buffer->clear();
 
-    TapBranch branch;
-    if (!IsEmptyString(hash)) branch = TapBranch(ByteData256(hash));
+    TapBranch branch(buffer->net_type);
+    if (!IsEmptyString(hash)) {
+      branch = TapBranch(ByteData256(hash), buffer->net_type);
+    }
     buffer->branch_buffer->emplace_back(branch);
 
-    tree = TaprootScriptTree();  // clear
+    tree = TaprootScriptTree(buffer->net_type);  // clear
     return CfdErrorCode::kCfdSuccess;
   } catch (const CfdException& except) {
     result = SetLastError(handle, except);
@@ -597,7 +610,7 @@ int CfdSetScriptTreeFromString(
       }
 
       tree = TaprootScriptTree::FromString(
-          tree_string, tapscript_obj, target_nodes);
+          tree_string, tapscript_obj, target_nodes, buffer->net_type);
       buffer->branch_buffer->clear();
     }
     return CfdErrorCode::kCfdSuccess;
@@ -645,7 +658,7 @@ int CfdSetTapScriptByWitnessStack(
     TaprootUtil::ParseTaprootSignData(
         witness_stack, nullptr, nullptr, &leaf_version, &internal_pubkey_obj,
         &nodes, &tapscript_obj);
-    TaprootScriptTree new_tree(leaf_version, tapscript_obj);
+    TaprootScriptTree new_tree(leaf_version, tapscript_obj, buffer->net_type);
     for (const auto& node : nodes) new_tree.AddBranch(node);
 
     if (internal_pubkey != nullptr) {
@@ -760,7 +773,8 @@ int CfdAddTapBranchByScriptTreeString(
     CfdCapiTapscriptTree* buffer =
         static_cast<CfdCapiTapscriptTree*>(tree_handle);
 
-    TapBranch add_branch = TapBranch::FromString(tree_string);
+    TapBranch add_branch =
+        TapBranch::FromString(tree_string, buffer->net_type);
     if (!buffer->branch_buffer->empty()) {
       auto& branch = buffer->branch_buffer->at(0);
       if (branch.ToString().empty()) {
@@ -798,7 +812,7 @@ int CfdAddTapBranchByTapLeaf(
     }
     CfdCapiTapscriptTree* buffer =
         static_cast<CfdCapiTapscriptTree*>(tree_handle);
-    TaprootScriptTree leaf(leaf_version, Script(tapscript));
+    TaprootScriptTree leaf(leaf_version, Script(tapscript), buffer->net_type);
     if (!buffer->branch_buffer->empty()) {
       auto& branch = buffer->branch_buffer->at(0);
       if (branch.ToString().empty()) {

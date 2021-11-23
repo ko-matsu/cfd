@@ -84,7 +84,7 @@ TEST(cfdcapi_elements_transaction, CreateRawTransaction) {
       handle, tx_string, "1497e1f146bc5fe00b6268ea16a7069ecb90a2a41a183446d5df8965d2356dc1", 1,
       &index);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(1, index);
+    EXPECT_EQ((uint32_t)1, index);
   }
 
   if (ret == kCfdSuccess) {
@@ -135,14 +135,14 @@ TEST(cfdcapi_elements_transaction, CreateRawTransaction) {
       handle, tx_string, "CTEw7oSCUWDfmfhCEdsB3gsG7D9b4xLCZEq71H8JxRFeBu7yQN3CbSF6qT6J4F7qji4bq1jVSdVcqvRJ", NULL,
       &index);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(0, index);
+    EXPECT_EQ((uint32_t)0, index);
   }
 
   if (ret == kCfdSuccess) {
     ret = CfdGetConfidentialTxOutIndex(
       handle, tx_string, "", "76a914d08f5ba8874d36cf97d19379b370f1f23ba36d5888ac", &index);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(0, index);
+    EXPECT_EQ((uint32_t)0, index);
   }
 
   if (ret == kCfdSuccess) {
@@ -150,21 +150,21 @@ TEST(cfdcapi_elements_transaction, CreateRawTransaction) {
       handle, tx_string, "2dxZw5iVZ6Pmqoc5Vn8gkUWDGB5dXuMBCmM", NULL,
       &index);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(1, index);
+    EXPECT_EQ((uint32_t)1, index);
   }
 
   if (ret == kCfdSuccess) {
     ret = CfdGetConfidentialTxOutIndex(
       handle, tx_string, "", "76a914fdd725970db682de970e7669646ed7afb8348ea188ac", &index);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(1, index);
+    EXPECT_EQ((uint32_t)1, index);
   }
 
   if (ret == kCfdSuccess) {
     ret = CfdGetConfidentialTxOutIndex(
       handle, tx_string, NULL, NULL, &index);
     EXPECT_EQ(kCfdSuccess, ret);
-    EXPECT_EQ(2, index);
+    EXPECT_EQ((uint32_t)2, index);
   }
 
   if (ret == kCfdSuccess) {
@@ -2326,6 +2326,124 @@ TEST(cfdcapi_elements_transaction, CfdUnblindTxOutData) {
     EXPECT_STREQ("", str_buffer);
     CfdFreeStringBuffer(str_buffer);
     str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
+TEST(cfdcapi_elements_transaction, AddTapScriptSign) {
+  const char* privkey =
+    "305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27";
+  // const char* pubkey = "031777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb";
+  // bool is_parity = true;
+  const char* schnorr_pubkey = "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb";
+
+  const char* redeem_script =
+    "201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac";
+  // const char* const nodes[] = {
+  //   "4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d",
+  //   "dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54"
+  // };
+
+  // see: TapscriptTreeElements
+  // const char* witness_program = "874c7545f839a7565d553ae29d1eba93cf3bee27685f570c6de5b05add657e2b";
+  // const char* locking_script = "5120" "874c7545f839a7565d553ae29d1eba93cf3bee27685f570c6de5b05add657e2b";
+  const char* address = "ert1psax8230c8xn4vh248t3f6846j08nhm38dp04wrrdukc94ht90c4skyhl4r";
+  const char* tap_leaf_hash = "56bf7b05d6a4a76be602450e00086dc79db2a46e17df6bbe2a9ac3d127213624";
+  const char* control_block = "c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54";
+
+  int net_type = kCfdNetworkElementsRegtest;
+  int sighash_type = kCfdSigHashAll;
+  const char* asset = "5ac9f65c0efcc4775e0baec4ec03abdde22473cd3cf33c0419ca290e0751b225";
+  const char* genesis_block_hash = "06226e46111a0b59caaf126043eb5bbf28c34f3a5e332a1fc7b2b73cf188910f";
+  const char* out_point_txid = "9ac3cfc55c5bab621d71e7132b06f60dafc7a5cc340cbcacc7d1d573bb938f64";
+  uint32_t out_point_vout = 0;
+
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  void* tx_handle = nullptr;
+  ret = CfdInitializeTransaction(handle, net_type, 2, 0, "", &tx_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == tx_handle));
+  if (ret == kCfdSuccess) {
+    ret = CfdSetConfidentialTxGenesisBlockHashByHandle(
+      handle, tx_handle, genesis_block_hash);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    int64_t amount = 2499999000;
+    int64_t amount2 = 2499998000;
+    int64_t fee_amount = amount - amount2;
+    ret = CfdAddConfidentialTxOutput(handle, tx_handle, amount2,
+      "ert1qze8fshg0eykfy7nxcr96778xagufv2w4j3mct0", "", asset, "");
+    EXPECT_EQ(kCfdSuccess, ret);
+    ret = CfdAddConfidentialTxOutput(handle, tx_handle, fee_amount,
+      "", "", asset, "");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    const char* scriptsig_template = "4cc7" "411e73828840df9d2ec76b938af654c9c32e5e2ef4a97531ced1e2a20fc7fcc89a821ea823f38e4d592fddbd929374d116d1c49596bc6dc02b365d455c98223cb00122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54";
+    ret = CfdSetConfidentialTxUtxoDataByHandle(handle, tx_handle,
+      out_point_txid, out_point_vout, amount, "", "",
+      address, asset, "", "", "", scriptsig_template, true);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    char* sighash = NULL;
+    const char* exp_sighash = "c3f788643ce43074dee15890bccb6e77bbb5481ab9b3443b7041699a0758de02";
+    ret = CfdCreateSighashByHandle(handle, tx_handle,
+      out_point_txid, out_point_vout, sighash_type, false, "",
+      "", tap_leaf_hash, kCfdCodeSeparatorPositionDefault,
+      "", &sighash);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ(exp_sighash, sighash);
+    CfdFreeStringBuffer(sighash);
+    {
+      char* tx_string1 = NULL;
+      ret = CfdFinalizeTransaction(handle, tx_handle, &tx_string1);
+      EXPECT_EQ(kCfdSuccess, ret);
+      if (ret == kCfdSuccess) {
+        EXPECT_STREQ("020000000001648f93bb73d5d1c7acbc0c34cca5c7af0df6062b13e7711d62ab5b5cc5cfc39a0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f13000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e8000000000000", tx_string1);
+        CfdFreeStringBuffer(tx_string1);
+      }
+    }
+
+    char* schnorr_signature = NULL;
+    if (ret == kCfdSuccess) {
+      ret = CfdSignSchnorr(handle, exp_sighash, privkey, "", &schnorr_signature);
+      EXPECT_EQ(kCfdSuccess, ret);
+      EXPECT_STREQ("c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae034", schnorr_signature);
+
+      ret = CfdVerifySchnorr(handle, schnorr_signature, exp_sighash, schnorr_pubkey);
+      EXPECT_EQ(kCfdSuccess, ret);
+
+      CfdFreeStringBuffer(schnorr_signature);
+    }
+
+    // add witness stack
+    ret = CfdAddTxSignByHandle(handle, tx_handle,
+      out_point_txid, out_point_vout,
+      kCfdTaproot,
+      "c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae034" "01",
+      false, sighash_type, false, true);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTaprootSignByHandle(handle, tx_handle,
+      out_point_txid, out_point_vout,
+      "", redeem_script, control_block, "");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    char* tx_string = NULL;
+    ret = CfdFinalizeTransaction(handle, tx_handle, &tx_string);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("020000000101648f93bb73d5d1c7acbc0c34cca5c7af0df6062b13e7711d62ab5b5cc5cfc39a0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f13000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000341c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae0340122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d540000000000", tx_string);
+      CfdFreeStringBuffer(tx_string);
+    }
+
+    ret = CfdFreeTransactionHandle(handle, tx_handle);
+    EXPECT_EQ(kCfdSuccess, ret);
   }
 
   ret = CfdFreeHandle(handle);

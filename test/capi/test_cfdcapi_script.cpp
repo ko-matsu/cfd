@@ -384,6 +384,120 @@ TEST(cfdcapi_script, TapscriptTree) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+#ifndef CFD_DISABLE_ELEMENTS
+TEST(cfdcapi_script, TapscriptTreeElements) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  void* tree_handle = nullptr;
+  ret = CfdInitializeTaprootScriptTreeWithNetwork(
+    handle, kCfdNetworkElementsRegtest, &tree_handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    ret = CfdSetInitialTapLeaf(handle, tree_handle,
+        "201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac",
+        0xc0);
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTapBranchByHash(handle, tree_handle,
+        "4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdAddTapBranchByHash(handle, tree_handle,
+        "dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54");
+    EXPECT_EQ(kCfdSuccess, ret);
+
+    uint32_t branch_count = 0;
+    ret = CfdGetTapBranchCount(handle, tree_handle, &branch_count);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_EQ(2, branch_count);
+
+    uint8_t depth = 0;
+    char* branch_hash = nullptr;
+    ret = CfdGetTapBranchData(handle, tree_handle,
+        1, false, &branch_hash, nullptr, nullptr, &depth);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_EQ(0, depth);
+      EXPECT_STREQ(
+        "dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54",
+        branch_hash);
+      CfdFreeStringBuffer(branch_hash);
+      branch_hash = nullptr;
+    }
+
+    char* witness_program = nullptr;
+    char* leaf_hash = nullptr;
+    char* control_block = nullptr;
+    ret = CfdGetTaprootScriptTreeHash(handle, tree_handle,
+        "1777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb",
+        &witness_program,
+        &leaf_hash,
+        &control_block);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(
+        "874c7545f839a7565d553ae29d1eba93cf3bee27685f570c6de5b05add657e2b",
+        witness_program);
+      EXPECT_STREQ(
+        "56bf7b05d6a4a76be602450e00086dc79db2a46e17df6bbe2a9ac3d127213624",
+        leaf_hash);
+      EXPECT_STREQ(
+        "c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54",
+        control_block);
+      CfdFreeStringBuffer(witness_program);
+      witness_program = nullptr;
+      CfdFreeStringBuffer(leaf_hash);
+      leaf_hash = nullptr;
+      CfdFreeStringBuffer(control_block);
+      control_block = nullptr;
+    }
+
+    char* tweaked_privkey = nullptr;
+    ret = CfdGetTaprootTweakedPrivkey(handle, tree_handle,
+        "305e293b010d29bf3c888b617763a438fee9054c8cab66eb12ad078f819d9f27",
+        &tweaked_privkey);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(
+          "190b4a756d6231d3d9f08a92efb6fee8bdaa84b04e67b754ec0b9bccbdc240a3",
+          tweaked_privkey);
+      CfdFreeStringBuffer(tweaked_privkey);
+      tweaked_privkey = nullptr;
+    }
+
+    char* tree_str = nullptr;
+    ret = CfdGetTaprootScriptTreeSrting(handle, tree_handle, &tree_str);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ(
+        "{{4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6d,tl(201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac)},dc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d54}",
+        tree_str);
+      CfdFreeStringBuffer(tree_str);
+      tree_str = nullptr;
+    }
+
+    int tmp_ret = CfdFreeTaprootScriptTreeHandle(handle, tree_handle);
+    EXPECT_EQ(kCfdSuccess, tmp_ret);
+  }
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+#endif  // CFD_DISABLE_ELEMENTS
+
 TEST(cfdcapi_script, TapscriptTreeFromWitness) {
   void* handle = NULL;
   int ret = CfdCreateHandle(&handle);
