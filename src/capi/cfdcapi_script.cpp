@@ -568,7 +568,7 @@ int CfdSetScriptTreeFromString(
     auto& tree = buffer->tree_buffer->at(0);
 
     if (IsEmptyString(tapscript)) {
-      TapBranch branch;
+      TapBranch branch(buffer->net_type);
       if (!IsEmptyString(tree_string)) {
         branch = TapBranch::FromString(tree_string);
       }
@@ -933,7 +933,7 @@ int CfdGetTapBranchData(
     }
 
     ByteData256 hash_obj;
-    TapBranch branch_data;
+    TapBranch branch_data(buffer->net_type);
     bool has_leaf = false;
     uint8_t branch_count = 0;
     auto branches = branch->GetBranchList();
