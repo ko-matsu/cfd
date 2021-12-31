@@ -574,7 +574,7 @@ int CfdSetScriptTreeFromString(
       }
       buffer->branch_buffer->clear();
       buffer->branch_buffer->emplace_back(branch);
-      tree = TaprootScriptTree();
+      tree = TaprootScriptTree(buffer->net_type);
     } else if (IsEmptyString(tree_string)) {
       warn(CFD_LOG_SOURCE, "tree_string is null or empty.");
       throw CfdException(
@@ -698,7 +698,7 @@ int CfdAddTapBranchByHash(
     if (!buffer->branch_buffer->empty()) {
       auto& branch = buffer->branch_buffer->at(0);
       if (branch.ToString().empty()) {
-        branch = TapBranch(hash);  // override
+        branch = TapBranch(hash, buffer->net_type);  // override
       } else {
         branch.AddBranch(hash);
       }
