@@ -131,7 +131,6 @@ CFDC_API int CfdFreeMultisigScriptSigHandle(
  * CfdSetTapScriptByWitnessStack().
  * @deprecated Please use CfdInitializeTaprootScriptTreeWithNetwork.
  * @param[in] handle            cfd handle.
- * @param[in] network_type      network type.
  * @param[out] tree_handle      taproot script tree handle.
  *   Call 'CfdFreeTaprootScriptTreeHandle' after you are finished using it.
  * @return CfdErrorCode
