@@ -99,11 +99,13 @@ using cfd::capi::CfdCapiMultisigScriptSigData;
 using cfd::capi::CfdCapiScriptItemHandleData;
 using cfd::capi::CfdCapiTapscriptTree;
 using cfd::capi::CheckBuffer;
+using cfd::capi::ConvertFromCfdNetType;
 using cfd::capi::ConvertHashToAddressType;
 using cfd::capi::ConvertNetType;
 using cfd::capi::CreateString;
 using cfd::capi::FreeBuffer;
 using cfd::capi::FreeBufferOnError;
+using cfd::capi::IsElementsNetType;
 using cfd::capi::IsEmptyString;
 using cfd::capi::kMultisigMaxKeyNum;
 using cfd::capi::kPrefixMultisigScriptSig;
@@ -581,7 +583,13 @@ int CfdSetScriptTreeFromString(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. tree_string is null or empty.");
     } else {
-      if (leaf_version != TaprootScriptTree::kTapScriptLeafVersion) {
+      bool is_elements =
+          IsElementsNetType(ConvertFromCfdNetType(buffer->net_type));
+      if ((!is_elements &&
+           (leaf_version != TaprootScriptTree::kTapScriptLeafVersion)) &&
+          (is_elements &&
+           (leaf_version !=
+            TaprootScriptTree::kElementsTapScriptLeafVersion))) {  // NOLINT
         // TODO(k-matsuzawa): Support in the future.
         throw CfdException(
             CfdError::kCfdIllegalArgumentError,
