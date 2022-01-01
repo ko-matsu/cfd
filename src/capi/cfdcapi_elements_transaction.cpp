@@ -66,6 +66,7 @@ using cfd::core::ConfidentialTxInReference;
 using cfd::core::ConfidentialTxOut;
 using cfd::core::ConfidentialTxOutReference;
 using cfd::core::ConfidentialValue;
+using cfd::core::Descriptor;
 using cfd::core::ElementsConfidentialAddress;
 using cfd::core::HashType;
 using cfd::core::IssuanceBlindingKeyPair;
@@ -2765,6 +2766,11 @@ int CfdSetConfidentialTxUtxoDataByHandle(
         utxo.address = factory.GetAddress(address);
       }
       utxo.address_type = utxo.address.GetAddressType();
+    } else if (!IsEmptyString(descriptor)) {
+      Descriptor desc = Descriptor::ParseElements(utxo.descriptor);
+      auto ref = desc.GetReference();
+      auto addr = ref.GenerateAddress(NetType::kLiquidV1);
+      utxo.address_type = addr.GetAddressType();
     }
     if (!IsEmptyString(asset_blinder)) {
       utxo.asset_blind_factor = BlindFactor(asset_blinder);
