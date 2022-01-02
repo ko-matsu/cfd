@@ -626,7 +626,7 @@ Amount ElementsTransactionApi::EstimateFee(
           is_reissuance = true;
         }
       } else if ((!utxo.is_issuance) && (!utxo.is_blind_issuance)) {  // init
-        if (!ref.GetAssetEntropy().IsEmpty()) {
+        if (!ref.GetIssuanceAmount().IsEmpty()) {
           is_issuance = true;
           is_blind_issuance = is_blind;
           if (!ref.GetBlindingNonce().IsEmpty()) {
@@ -644,7 +644,7 @@ Amount ElementsTransactionApi::EstimateFee(
         claim_script = Script(pegin_stack[3]);
       }
 
-      if (utxo.is_issuance && ref.GetAssetEntropy().IsEmpty()) {
+      if (utxo.is_issuance && ref.GetIssuanceAmount().IsEmpty()) {
         // unmatch pattern. (using input utxo data)
       } else if (utxo.is_pegin && (ref.GetPeginWitnessStackNum() < 6)) {
         // unmatch pattern. (using input utxo data)
@@ -785,8 +785,7 @@ void CollectUtxoDataByFundRawTransaction(
 
   // append issuance txin data.
   for (const auto& txin : txin_list) {
-    if (!txin.GetBlindingNonce().IsEmpty() ||
-        !txin.GetAssetEntropy().IsEmpty()) {
+    if (!txin.GetIssuanceAmount().IsEmpty()) {
       BlindFactor asset_entropy;
       std::string token;
       if (txin.GetBlindingNonce().IsEmpty()) {

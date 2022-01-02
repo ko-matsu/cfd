@@ -338,7 +338,7 @@ uint32_t ConfidentialTransactionContext::GetSizeIgnoreTxIn(
   // search vin from issue/reissue
   if (temp_asset_count == 0) {
     for (const auto& txin : vin_) {
-      if (!txin.GetAssetEntropy().IsEmpty()) {
+      if (!txin.GetIssuanceAmount().IsEmpty()) {
         ++temp_asset_count;
         if (!txin.GetBlindingNonce().IsEmpty()) {
           // reissuance
@@ -1590,7 +1590,7 @@ uint32_t ConfidentialTransactionController::GetSizeIgnoreTxIn(
 
   // search vin from issue/reissue
   for (const auto& txin : txins) {
-    if (!txin.GetAssetEntropy().IsEmpty()) {
+    if (!txin.GetIssuanceAmount().IsEmpty()) {
       ++temp_asset_count;
       if (!txin.GetBlindingNonce().IsEmpty()) {
         // reissuance
