@@ -138,7 +138,7 @@ static Script GetLockingScriptFromUtxoData(const UtxoData& utxo) {
   if (!utxo.address.GetAddress().empty()) {
     locking_script = utxo.address.GetLockingScript();
   } else if (!utxo.descriptor.empty()) {
-    auto desc = Descriptor::Parse(utxo.descriptor);
+    auto desc = Descriptor::ParseElements(utxo.descriptor);
     locking_script = desc.GetLockingScript();
   }
   return locking_script;
