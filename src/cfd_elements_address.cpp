@@ -152,16 +152,6 @@ Address ElementsAddressFactory::CreatePegOutAddress(
         CfdError::kCfdIllegalArgumentError,
         "Failed to elements network type. invalid value.");
   }
-  bool is_mainnet = (mainchain_network == NetType::kMainnet);
-  if ((address_type == AddressType::kP2pkhAddress) ||
-      ((!is_mainnet) && (address_type == AddressType::kP2shP2wpkhAddress)) ||
-      ((!is_mainnet) && (address_type == AddressType::kP2wpkhAddress))) {
-    // do nothing
-  } else {
-    throw CfdException(
-        CfdError::kCfdIllegalArgumentError,
-        "Invalid address type. This address type is not support on pegout.");
-  }
 
   std::string descriptor = descriptor_or_xpub;
   if (descriptor_or_xpub.find("(") == std::string::npos) {
