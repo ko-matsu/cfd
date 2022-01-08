@@ -91,6 +91,8 @@ using cfd::core::logger::warn;
  * @param[in] pubkey          pubkey on pubkey hash.
  * @param[in] redeem_script   redeem script on script hash.
  * @param[in] version         witness version.
+ * @param[in] annex           annex data.
+ * @param[in] script_tree     script tree.
  * @return signature hash.
  */
 static ByteData256 CreateConfidentialTxSighash(

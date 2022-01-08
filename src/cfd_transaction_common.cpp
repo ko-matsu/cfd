@@ -231,8 +231,8 @@ void UtxoUtil::ConvertToUtxo(
         net_type = utxo_data.address.GetNetType();
       }
 
-      Descriptor desc = Descriptor::Parse(
-        utxo_data.descriptor, &addr_prefixes, net_type);
+      Descriptor desc =
+          Descriptor::Parse(utxo_data.descriptor, &addr_prefixes, net_type);
       if (desc.GetNeedArgumentNum() == 0) {
         std::vector<DescriptorScriptReference> ref_list =
             desc.GetReferenceAll();
