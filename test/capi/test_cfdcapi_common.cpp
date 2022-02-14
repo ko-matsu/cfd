@@ -7,6 +7,7 @@
 #include "cfdc/cfdcapi_common.h"
 #include "capi/cfdc_internal.h"
 #include "cfdcore/cfdcore_exception.h"
+#include "cfdcore/cfdcore_hdwallet.h"
 
 /**
  * @brief testing class.

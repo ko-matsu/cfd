@@ -583,8 +583,12 @@ int CfdSetScriptTreeFromString(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. tree_string is null or empty.");
     } else {
+#ifndef CFD_DISABLE_ELEMENTS
       bool is_elements =
           IsElementsNetType(ConvertFromCfdNetType(buffer->net_type));
+#else
+      bool is_elements = false;
+#endif  // CFD_DISABLE_ELEMENTS
       if ((!is_elements &&
            (leaf_version != TaprootScriptTree::kTapScriptLeafVersion)) &&
           (is_elements &&

@@ -1065,7 +1065,7 @@ TEST(ConfidentialTransactionContext, AddTapScriptSign) {
       "5120874c7545f839a7565d553ae29d1eba93cf3bee27685f570c6de5b05add657e2b");
     utxo.address = addr_factory.GetAddress(
       "ert1psax8230c8xn4vh248t3f6846j08nhm38dp04wrrdukc94ht90c4skyhl4r");
-    utxo.amount = Amount(2499999000LL);
+    utxo.amount = Amount(int64_t{2499999000});
     utxo.address_type = AddressType::kTaprootAddress;
     utxo.asset = asset;
     ScriptBuilder build;
