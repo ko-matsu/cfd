@@ -461,6 +461,50 @@ TEST(cfdcapi_address, CfdParseDescriptorTest) {
     }
   }
 
+#ifndef CFD_DISABLE_ELEMENTS
+  {
+    // taproot single descriptor
+    SCOPED_TRACE("taproot single descriptor");
+    const char* descriptor = "tr(ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a)";
+    int net_type = kCfdNetworkElementsRegtest;
+    void* descriptor_handle = nullptr;
+    uint32_t max_index = 0;
+  
+    ret = CfdParseDescriptor(handle, descriptor, net_type, "", &descriptor_handle, &max_index);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_FALSE((nullptr == descriptor_handle));
+    EXPECT_EQ(0, max_index);
+  
+    if (ret == kCfdSuccess) {
+      assert_desc_root_data(handle, descriptor_handle,
+          kCfdDescriptorScriptTaproot, "5120a7f4a1a59f5e63d3223dcf341789d300f4feb418aabd2b0bcf875a232e4d2797", "ert1p5l62rfvlte3axg3aeu6p0zwnqr60adqc427jkz70sadzxtjdy7tshjlu6s",
+          kCfdTaproot, "",
+          kCfdDescriptorKeySchnorr, "", "",
+          "", "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a", "",
+          false, 0, 0);
+      assert_desc_data(handle, descriptor_handle, 0, max_index, 0,
+          kCfdDescriptorScriptTaproot, "5120a7f4a1a59f5e63d3223dcf341789d300f4feb418aabd2b0bcf875a232e4d2797", "ert1p5l62rfvlte3axg3aeu6p0zwnqr60adqc427jkz70sadzxtjdy7tshjlu6s",
+          kCfdTaproot, "",
+          kCfdDescriptorKeySchnorr,
+          "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a",
+          "", "",
+          false, 0, 0);
+    }
+    ret = CfdFreeDescriptorHandle(handle, descriptor_handle);
+    ASSERT_EQ(ret, kCfdSuccess);
+
+    ret = CfdGetLastErrorCode(handle);
+    if (ret != kCfdSuccess) {
+      char* str_buffer = NULL;
+      ret = CfdGetLastErrorMessage(handle, &str_buffer);
+      EXPECT_EQ(kCfdSuccess, ret);
+      EXPECT_STREQ("", str_buffer);
+      CfdFreeStringBuffer(str_buffer);
+      str_buffer = NULL;
+    }
+  }
+#endif  // CFD_DISABLE_ELEMENTS
+
   ret = CfdFreeHandle(handle);
   EXPECT_EQ(kCfdSuccess, ret);
 }

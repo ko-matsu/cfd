@@ -54,8 +54,11 @@ using cfd::core::NetType;
 using cfd::core::OutPoint;
 using cfd::core::Privkey;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrPubkey;
+using cfd::core::SchnorrSignature;
 using cfd::core::Script;
 using cfd::core::SigHashType;
+using cfd::core::TaprootScriptTree;
 using cfd::core::Txid;
 using cfd::core::UnblindParameter;
 using cfd::core::WitnessVersion;
@@ -606,10 +609,13 @@ class CFD_EXPORT ConfidentialTransactionContext
    * @param[in] privkey       private key.
    * @param[in] sighash_type  sighash type.
    * @param[in] has_grind_r   calcurate signature glind-r flag. (default:true)
+   * @param[in] aux_rand        auxiliary random data used to create the nonce.
+   * @param[in] annex           annex byte data.
    */
   void SignWithKey(
       const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
-      SigHashType sighash_type = SigHashType(), bool has_grind_r = true);
+      SigHashType sighash_type = SigHashType(), bool has_grind_r = true,
+      const ByteData256* aux_rand = nullptr, const ByteData* annex = nullptr);
 
   /**
    * @brief set ignore verify target.
@@ -686,6 +692,27 @@ class CFD_EXPORT ConfidentialTransactionContext
       WitnessVersion version) const;
 
   /**
+   * @brief Calculate Taproot Signature Hash.
+   * @details It is necessary to set UTXO of all Inputs in advance. \
+   *   and necessary to set genesis block hash.
+   * @param[in] outpoint        target outpoint
+   * @param[in] sighash_type    sighash type
+   * @param[in] tap_leaf_hash   tapleaf hash.
+   * @param[in] code_separator_position     OP_CODESEPARATOR position.
+   * @param[in] annex           annex byte data.
+   * @return Signature hash
+   * @see SetGenesisBlockHash
+   * @see AddInput
+   * @see AddInputs
+   * @see CollectInputUtxo
+   */
+  ByteData256 CreateSignatureHashByTaproot(
+      const OutPoint& outpoint, const SigHashType& sighash_type,
+      const ByteData256* tap_leaf_hash = nullptr,
+      const uint32_t* code_separator_position = nullptr,
+      const ByteData* annex = nullptr) const;
+
+  /**
    * @brief Sign the specified TxIn with pubkey hash.
    * @param[in] outpoint        outpoint
    * @param[in] pubkey          Public key
@@ -716,6 +743,25 @@ class CFD_EXPORT ConfidentialTransactionContext
       SigHashType sighash_type, const ConfidentialValue& value,
       AddressType address_type = AddressType::kP2wpkhAddress,
       bool has_grind_r = true);
+
+  /**
+   * @brief Sign the specified TxIn with Taproot.
+   * @details It is necessary to set UTXO of all Inputs in advance. \
+   *   and necessary to set genesis block hash.
+   * @param[in] outpoint        outpoint
+   * @param[in] privkey         private key for schnorr pubkey
+   * @param[in] sighash_type    SigHashType
+   * @param[in] aux_rand        auxiliary random data used to create the nonce.
+   * @param[in] annex           annex byte data.
+   * @see SetGenesisBlockHash
+   * @see AddInput
+   * @see AddInputs
+   * @see CollectInputUtxo
+   */
+  void SignWithSchnorrPrivkeySimple(
+      const OutPoint& outpoint, const Privkey& privkey,
+      const SigHashType& sighash_type = SigHashType(),
+      const ByteData256* aux_rand = nullptr, const ByteData* annex = nullptr);
 
   /**
    * @brief add pubkey-hash sign data to target outpoint.
@@ -757,6 +803,30 @@ class CFD_EXPORT ConfidentialTransactionContext
   void AddMultisigSign(
       const OutPoint& outpoint, const std::vector<SignParameter>& signatures,
       const Script& redeem_script, AddressType hash_type);
+
+  /**
+   * @brief add schnorr-taproot sign data to target outpoint.
+   * @param[in] outpoint        TxIn outpoint
+   * @param[in] signature       signature
+   * @param[in] annex           annex
+   */
+  void AddSchnorrSign(
+      const OutPoint& outpoint, const SchnorrSignature& signature,
+      const ByteData* annex = nullptr);
+
+  /**
+   * @brief add schnorr-taproot sign data to target outpoint.
+   * @param[in] outpoint            xIn outpoint
+   * @param[in] tree                script tree
+   * @param[in] internal_pubkey     internal schnorr pubkey
+   * @param[in] sign_data_list      sign data list
+   * @param[in] annex               annex
+   */
+  void AddTapScriptSign(
+      const OutPoint& outpoint, const TaprootScriptTree& tree,
+      const SchnorrPubkey& internal_pubkey,
+      const std::vector<SignParameter>& sign_data_list,
+      const ByteData* annex = nullptr);
 
   /**
    * @brief add sign data to target outpoint.
@@ -817,6 +887,12 @@ class CFD_EXPORT ConfidentialTransactionContext
   uint32_t GetDefaultSequence() const;
 
   /**
+   * @brief Get the genesis block hash.
+   * @param[in] block_hash      genesis block hash
+   */
+  void SetGenesisBlockHash(const BlockHash& block_hash);
+
+  /**
    * @brief Get the default sequence number from the lock time.
    * @retval 0xffffffff     locktime disable
    */
@@ -831,6 +907,12 @@ class CFD_EXPORT ConfidentialTransactionContext
   static std::vector<SignParameter> CheckMultisig(
       const std::vector<SignParameter>& sign_list,
       const Script& redeem_script);
+
+  /**
+   * @brief Get the genesis block hash by default.
+   * @param[in] block_hash      genesis block hash
+   */
+  static void SetDefaultGenesisBlockHash(const BlockHash& block_hash);
 
  protected:
   /**
@@ -858,6 +940,12 @@ class CFD_EXPORT ConfidentialTransactionContext
   bool IsFindOutPoint(
       const std::vector<OutPoint>& list, const OutPoint& outpoint) const;
 
+  /**
+   * @brief Get the genesis block hash.
+   * @return genesis block hash
+   */
+  BlockHash GetGenesisBlockHash() const;
+
  private:
   /**
    * @brief utxo map.
@@ -875,6 +963,15 @@ class CFD_EXPORT ConfidentialTransactionContext
    * @brief utxo verify ignore map. (outpoint)
    */
   std::vector<OutPoint> verify_ignore_map_;
+  /**
+   * @brief genesis block hash
+   */
+  BlockHash genesis_block_hash_;
+
+  /**
+   * @brief default genesis block hash
+   */
+  static BlockHash default_genesis_block_hash_;
 };
 
 // ----------------------------------------------------------------------------

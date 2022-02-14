@@ -75,7 +75,7 @@ using cfd::core::logger::info;
 using cfd::core::logger::warn;
 
 // -----------------------------------------------------------------------------
-// ファイル内関数
+// internal-file function
 // -----------------------------------------------------------------------------
 
 /**
@@ -123,11 +123,10 @@ ConfidentialTransactionController ElementsTransactionApi::AddRawTransaction(
     std::map<std::string, Amount>* pegout_addresses) const {
   ConfidentialTransactionController ctxc(tx_hex);
 
-  // TxInの追加
   const uint32_t kLockTimeDisabledSequence =
       ctxc.GetLockTimeDisabledSequence();
   for (const auto& txin : txins) {
-    // TxInのunlocking_scriptは空で作成
+    // Create TxIn's unlocking_script as empty.
     if (kLockTimeDisabledSequence == txin.GetSequence()) {
       ctxc.AddTxIn(txin.GetTxid(), txin.GetVout(), ctxc.GetDefaultSequence());
     } else {
@@ -142,7 +141,6 @@ ConfidentialTransactionController ElementsTransactionApi::AddRawTransaction(
         pegin_data.mainchain_raw_tx, pegin_data.mainchain_txoutproof);
   }
 
-  // TxOutの追加
   for (const auto& txout : txouts) {
     ctxc.AddTxOut(
         txout.GetLockingScript(), txout.GetConfidentialValue().GetAmount(),
@@ -171,7 +169,7 @@ ConfidentialTransactionController ElementsTransactionApi::AddRawTransaction(
     }
   }
 
-  // amountが0のfeeは無効と判定
+  // A fee with an amount of 0 is considered invalid.
   if (txout_fee.GetConfidentialValue().GetAmount() != 0) {
     ctxc.AddTxOutFee(
         txout_fee.GetConfidentialValue().GetAmount(), txout_fee.GetAsset());
@@ -320,7 +318,6 @@ ConfidentialTransactionController ElementsTransactionApi::BlindTransaction(
     issuance_blinding_keys.resize(txin_count);
   }
 
-  // TxInのBlind情報設定
   for (TxInBlindParameters txin_key : txin_blind_keys) {
     uint32_t index =
         txc.GetTransaction().GetTxInIndex(txin_key.txid, txin_key.vout);
@@ -336,7 +333,6 @@ ConfidentialTransactionController ElementsTransactionApi::BlindTransaction(
     }
   }
 
-  // TxOutのBlind情報設定
   for (TxOutBlindKeys txout_key : txout_blind_keys) {
     if (txout_key.index < txout_count) {
       if (txout_key.confidential_key.IsValid()) {
@@ -370,7 +366,7 @@ ConfidentialTransactionController ElementsTransactionApi::UnblindTransaction(
   if (!txout_unblind_keys.empty() && blind_outputs != nullptr) {
     UnblindParameter unblind_param;
     for (const auto& txout : txout_unblind_keys) {
-      // TxOutをUnblind
+      // Unblind TxOut
       const Privkey blinding_key(txout.blinding_key);
       unblind_param = ctxc.UnblindTxOut(txout.index, blinding_key);
 
@@ -513,7 +509,7 @@ ElementsTransactionApi::CreateRawPegoutTransaction(
         pegout_data.btc_address);
   }
 
-  // amountが0のfeeは無効と判定
+  // A fee with an amount of 0 is considered invalid.
   if (txout_fee.GetConfidentialValue().GetAmount() != 0) {
     ctxc.AddTxOutFee(
         txout_fee.GetConfidentialValue().GetAmount(), txout_fee.GetAsset());
@@ -630,7 +626,7 @@ Amount ElementsTransactionApi::EstimateFee(
           is_reissuance = true;
         }
       } else if ((!utxo.is_issuance) && (!utxo.is_blind_issuance)) {  // init
-        if (!ref.GetAssetEntropy().IsEmpty()) {
+        if (!ref.GetIssuanceAmount().IsEmpty()) {
           is_issuance = true;
           is_blind_issuance = is_blind;
           if (!ref.GetBlindingNonce().IsEmpty()) {
@@ -648,7 +644,7 @@ Amount ElementsTransactionApi::EstimateFee(
         claim_script = Script(pegin_stack[3]);
       }
 
-      if (utxo.is_issuance && ref.GetAssetEntropy().IsEmpty()) {
+      if (utxo.is_issuance && ref.GetIssuanceAmount().IsEmpty()) {
         // unmatch pattern. (using input utxo data)
       } else if (utxo.is_pegin && (ref.GetPeginWitnessStackNum() < 6)) {
         // unmatch pattern. (using input utxo data)
@@ -789,8 +785,7 @@ void CollectUtxoDataByFundRawTransaction(
 
   // append issuance txin data.
   for (const auto& txin : txin_list) {
-    if (!txin.GetBlindingNonce().IsEmpty() ||
-        !txin.GetAssetEntropy().IsEmpty()) {
+    if (!txin.GetIssuanceAmount().IsEmpty()) {
       BlindFactor asset_entropy;
       std::string token;
       if (txin.GetBlindingNonce().IsEmpty()) {

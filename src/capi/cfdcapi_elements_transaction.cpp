@@ -2,7 +2,8 @@
 /**
  * @file cfdcapi_elements_transaction.cpp
  *
- * @brief cfd-capiで利用するConfidentialTransaction処理の実装ファイル
+ * @brief Implementation file of the ConfidentialTransaction process
+ *  used by cfd-capi.
  */
 #ifndef CFD_DISABLE_CAPI
 #ifndef CFD_DISABLE_ELEMENTS
@@ -65,6 +66,7 @@ using cfd::core::ConfidentialTxInReference;
 using cfd::core::ConfidentialTxOut;
 using cfd::core::ConfidentialTxOutReference;
 using cfd::core::ConfidentialValue;
+using cfd::core::Descriptor;
 using cfd::core::ElementsConfidentialAddress;
 using cfd::core::HashType;
 using cfd::core::IssuanceBlindingKeyPair;
@@ -168,6 +170,31 @@ using cfd::capi::SetLastFatalError;
 
 // API
 extern "C" {
+
+int CfdSetGenesisBlockHashGlobal(
+    void* handle, const char* genesis_block_hash) {
+  try {
+    cfd::Initialize();
+    if (IsEmptyString(genesis_block_hash)) {
+      warn(CFD_LOG_SOURCE, "genesis_block_hash is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. genesis_block_hash is null or empty.");
+    }
+
+    BlockHash block_hash(genesis_block_hash);
+    ConfidentialTransactionContext::SetDefaultGenesisBlockHash(block_hash);
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
 
 int CfdInitializeConfidentialTx(
     void* handle, uint32_t version, uint32_t locktime, char** tx_string) {
@@ -2672,6 +2699,144 @@ int CfdGetConfidentialTxOutByHandle(
     FreeBufferOnError(
         &work_asset_string, &work_value_commitment, &work_nonce,
         &work_locking_script, &work_surjection_proof, &work_rangeproof);
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdSetConfidentialTxUtxoDataByHandle(
+    void* handle, void* create_handle, const char* txid, uint32_t vout,
+    int64_t amount, const char* commitment, const char* descriptor,
+    const char* address, const char* asset, const char* asset_commitment,
+    const char* asset_blinder, const char* amount_blinder,
+    const char* scriptsig_template, bool can_insert) {
+  try {
+    cfd::Initialize();
+    CheckBuffer(create_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(create_handle);
+    if (IsEmptyString(txid)) {
+      warn(CFD_LOG_SOURCE, "txid is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. txid is null or empty.");
+    }
+
+    bool is_bitcoin = false;
+    NetType network = ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (is_bitcoin) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Invalid handle state. this api support is elements only.");
+    } else if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    }
+
+    UtxoData utxo;
+    utxo.address_type = AddressType::kP2shAddress;
+    utxo.binary_data = nullptr;
+    utxo.vout = vout;
+    utxo.txid = Txid(txid);
+    OutPoint outpoint(utxo.txid, utxo.vout);
+    utxo.amount = Amount(amount);
+    if (!IsEmptyString(scriptsig_template)) {
+      utxo.scriptsig_template = Script(scriptsig_template);
+    }
+    if (!IsEmptyString(descriptor)) {
+      utxo.descriptor = std::string(descriptor);
+    }
+
+    ElementsAddressFactory factory(network);
+    if (!IsEmptyString(asset)) {
+      utxo.asset = ConfidentialAssetId(asset);
+    }
+    if (!IsEmptyString(asset_commitment)) {
+      utxo.asset_commitment = ConfidentialAssetId(asset_commitment);
+    }
+    if (!IsEmptyString(commitment)) {
+      utxo.value_commitment = ConfidentialValue(commitment);
+    }
+    if (!IsEmptyString(address)) {
+      if (ElementsConfidentialAddress::IsConfidentialAddress(address)) {
+        ElementsConfidentialAddress confidential_addr(address);
+        utxo.confidential_address = confidential_addr;
+        utxo.address = confidential_addr.GetUnblindedAddress();
+      } else {
+        utxo.address = factory.GetAddress(address);
+      }
+      utxo.address_type = utxo.address.GetAddressType();
+    } else if (!IsEmptyString(descriptor)) {
+      Descriptor desc = Descriptor::ParseElements(utxo.descriptor);
+      auto ref = desc.GetReference();
+      auto addr = ref.GenerateAddress(NetType::kLiquidV1);
+      utxo.address_type = addr.GetAddressType();
+    }
+    if (!IsEmptyString(asset_blinder)) {
+      utxo.asset_blind_factor = BlindFactor(asset_blinder);
+    }
+    if (!IsEmptyString(amount_blinder)) {
+      utxo.asset_blind_factor = BlindFactor(amount_blinder);
+    }
+
+    ConfidentialTransactionContext* tx =
+        static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+    if (can_insert && !tx->IsFindTxIn(outpoint)) {
+      tx->AddInput(utxo);
+    } else {
+      tx->CollectInputUtxo({utxo});
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdSetConfidentialTxGenesisBlockHashByHandle(
+    void* handle, void* create_handle, const char* genesis_block_hash) {
+  try {
+    cfd::Initialize();
+    CheckBuffer(create_handle, kPrefixTransactionData);
+    CfdCapiTransactionData* tx_data =
+        static_cast<CfdCapiTransactionData*>(create_handle);
+    if (IsEmptyString(genesis_block_hash)) {
+      warn(CFD_LOG_SOURCE, "genesis_block_hash is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. genesis_block_hash is null or empty.");
+    }
+
+    BlockHash block_hash(genesis_block_hash);
+
+    bool is_bitcoin = false;
+    ConvertNetType(tx_data->net_type, &is_bitcoin);
+    if (is_bitcoin) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Invalid handle state. this api support is elements only.");
+    } else if (tx_data->tx_obj == nullptr) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError, "Invalid handle state. tx is null");
+    }
+
+    ConfidentialTransactionContext* tx =
+        static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+    tx->SetGenesisBlockHash(block_hash);
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
     SetLastFatalError(handle, "unknown error.");
     return CfdErrorCode::kCfdUnknownError;
   }

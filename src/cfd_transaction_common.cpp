@@ -2,8 +2,7 @@
 /**
  * @file cfd_transaction.cpp
  *
- * @brief \~english implementation of common classes related to transaction operation
- *   \~japanese Transaction操作共通の関連クラスの実装ファイル
+ * @brief implementation of common classes related to transaction operation
  */
 #include "cfd/cfd_transaction_common.h"
 
@@ -21,6 +20,7 @@
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_logger.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 #include "cfdcore/cfdcore_script.h"
 #include "cfdcore/cfdcore_transaction.h"
 
@@ -41,6 +41,7 @@ using cfd::core::DescriptorScriptType;
 using cfd::core::HashType;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrSignature;
 using cfd::core::Script;
 using cfd::core::ScriptBuilder;
 using cfd::core::ScriptOperator;
@@ -58,9 +59,9 @@ using cfd::core::ConfidentialTxIn;
 // -----------------------------------------------------------------------------
 // Define
 // -----------------------------------------------------------------------------
-/// シーケンス値(locktime有効)
+/// sequence number (enable locktime)
 constexpr uint32_t kSequenceEnableLockTimeMax = 0xfffffffeU;
-/// シーケンス値(locktime無効)
+/// sequence number (disable locktime)
 constexpr uint32_t kSequenceDisableLockTime = 0xffffffffU;
 
 // -----------------------------------------------------------------------------
@@ -81,6 +82,7 @@ UtxoData::UtxoData(
     const BlindFactor& asset_blind_factor,
     const BlindFactor& amount_blind_factor,
     const ConfidentialValue& value_commitment,
+    const ConfidentialAssetId& asset_commitment,
     const Script& scriptsig_template)
     : block_height(block_height),
       block_hash(block_hash),
@@ -98,6 +100,7 @@ UtxoData::UtxoData(
       asset_blind_factor(asset_blind_factor),
       amount_blind_factor(amount_blind_factor),
       value_commitment(value_commitment),
+      asset_commitment(asset_commitment),
       scriptsig_template(scriptsig_template) {
   // do nothing
 }
@@ -142,6 +145,7 @@ UtxoData::UtxoData(const UtxoData& object) {
   asset_blind_factor = object.asset_blind_factor;
   amount_blind_factor = object.amount_blind_factor;
   value_commitment = object.value_commitment;
+  asset_commitment = object.asset_commitment;
 #endif  // CFD_DISABLE_ELEMENTS
   scriptsig_template = object.scriptsig_template;
 }
@@ -165,6 +169,7 @@ UtxoData& UtxoData::operator=(const UtxoData& object) & {
     asset_blind_factor = object.asset_blind_factor;
     amount_blind_factor = object.amount_blind_factor;
     value_commitment = object.value_commitment;
+    asset_commitment = object.asset_commitment;
 #endif  // CFD_DISABLE_ELEMENTS
     scriptsig_template = object.scriptsig_template;
   }
@@ -227,7 +232,7 @@ void UtxoUtil::ConvertToUtxo(
       }
 
       Descriptor desc =
-          Descriptor::Parse(utxo_data.descriptor, &addr_prefixes);
+          Descriptor::Parse(utxo_data.descriptor, &addr_prefixes, net_type);
       if (desc.GetNeedArgumentNum() == 0) {
         std::vector<DescriptorScriptReference> ref_list =
             desc.GetReferenceAll();
@@ -418,6 +423,16 @@ SignParameter::SignParameter(const ScriptOperator& op_code)
   std::vector<uint8_t> list(1);
   list[0] = static_cast<uint8_t>(op_code_.GetDataType());
   data_ = ByteData(list);
+}
+
+SignParameter::SignParameter(const SchnorrSignature& schnorr_signature)
+    : data_(schnorr_signature.GetData(true)),
+      data_type_(SignDataType::kBinary),
+      related_pubkey_(),
+      der_encode_(false),
+      sighash_type_(),
+      op_code_(ScriptOperator::OP_INVALIDOPCODE) {
+  // do nothing
 }
 
 SignParameter::SignParameter(const SignParameter& sign_parameter) {

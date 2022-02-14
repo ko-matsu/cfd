@@ -2,8 +2,7 @@
 /**
  * @file cfdapi_hdwallet.cpp
  *
- * @brief \~english implementation of HDWallet API class that uses cfd-api
- *   \~japanese cfd-apiで利用するHDWallet APIクラスの実装
+ * @brief implementation of HDWallet API class that uses cfd-api
  */
 #include "cfd/cfdapi_hdwallet.h"
 
@@ -33,9 +32,10 @@ using cfd::core::Pubkey;
 using cfd::core::logger::warn;
 
 /// base58 error message
-static constexpr const char* kBase58Error = " base58 decode error.";
+static constexpr const char* kBase58Error = "Decode base58 error.";
 /// key type error message
-static constexpr const char* kKeyTypeError = " keytype error.";
+static constexpr const char* kKeyTypeError =
+    "Invalid serialize data. this data is ExtPubkey data.";
 
 std::vector<std::string> HDWalletApi::GetMnemonicWordlist(
     const std::string& language) const {
@@ -221,7 +221,7 @@ std::string HDWalletApi::CreateExtkeyFromPathString(
   uint32_t check_version;
   uint32_t version;
 
-  // TODO(k-matsuzawa): child_number_listの方とロジック同じなので統合したい
+  // TODO(k-matsuzawa): I want to integrate it with child_number_list because it has the same logic. // NOLINT
   ExtPrivkey privkey;
   try {
     privkey = ExtPrivkey(extkey);

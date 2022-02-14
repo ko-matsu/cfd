@@ -2,7 +2,7 @@
 /**
  * @file cfdcapi_common.cpp
  *
- * @brief cfd-capiで利用する共通処理の実装ファイル
+ * @brief Implementation files for common processing used by cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #include <exception>
@@ -16,6 +16,7 @@
 #endif  // CFD_DISABLE_JSONAPI
 #include "cfdc/cfdcapi_address.h"
 #include "cfdc/cfdcapi_common.h"
+#include "cfdc/cfdcapi_key.h"
 #include "cfdcore/cfdcore_address.h"
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
@@ -23,6 +24,7 @@
 #include "cfdcore/cfdcore_util.h"
 
 using cfd::core::AddressType;
+using cfd::core::Bip32FormatType;
 using cfd::core::CfdError;
 using cfd::core::CfdException;
 using cfd::core::NetType;
@@ -229,6 +231,26 @@ cfd::core::AddressType ConvertAddressType(int address_type) {
           CfdError::kCfdIllegalArgumentError, "Illegal address type.");
   }
   return addr_type;
+}
+
+cfd::core::Bip32FormatType ConvertToBip32Format(int format_type) {
+  Bip32FormatType bip32_format;
+  switch (format_type) {
+    case kCfdBip32FormatTypeNormal:
+      bip32_format = Bip32FormatType::kNormal;
+      break;
+    case kCfdBip32FormatTypeBip49:
+      bip32_format = Bip32FormatType::kBip49;
+      break;
+    case kCfdBip32FormatTypeBip84:
+      bip32_format = Bip32FormatType::kBip84;
+      break;
+    default:
+      warn(CFD_LOG_SOURCE, "Illegal bip32 format type.({})", format_type);
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError, "Illegal bip32 format type.");
+  }
+  return bip32_format;
 }
 
 cfd::core::WitnessVersion GetWitnessVersion(int hash_type) {
@@ -660,6 +682,10 @@ extern "C" int CfdRequestExecuteJson(
       result = JsonMappingApi::DecodeRawTransaction(std::string(json_string));
     } else if (command == "DecodePsbt") {
       result = JsonMappingApi::DecodePsbt(std::string(json_string));
+    } else if (command == "SetCustomPrefix") {
+      result = JsonMappingApi::SetCustomPrefix(std::string(json_string));
+    } else if (command == "ClearCustomPrefix") {
+      result = JsonMappingApi::ClearCustomPrefix();
     } else {
       throw CfdException(
           CfdError::kCfdIllegalArgumentError, "unknown request name.");

@@ -129,12 +129,27 @@ CFDC_API int CfdFreeMultisigScriptSigHandle(
  * 
  * Next call is CfdSetInitialTapLeaf() or
  * CfdSetTapScriptByWitnessStack().
+ * @deprecated Please use CfdInitializeTaprootScriptTreeWithNetwork.
  * @param[in] handle            cfd handle.
  * @param[out] tree_handle      taproot script tree handle.
  *   Call 'CfdFreeTaprootScriptTreeHandle' after you are finished using it.
  * @return CfdErrorCode
  */
 CFDC_API int CfdInitializeTaprootScriptTree(void* handle, void** tree_handle);
+
+/**
+ * @brief initialized for taproot script tree.
+ * 
+ * Next call is CfdSetInitialTapLeaf() or
+ * CfdSetTapScriptByWitnessStack().
+ * @param[in] handle            cfd handle.
+ * @param[in] network_type      network type.
+ * @param[out] tree_handle      taproot script tree handle.
+ *   Call 'CfdFreeTaprootScriptTreeHandle' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdInitializeTaprootScriptTreeWithNetwork(
+    void* handle, int network_type, void** tree_handle);
 
 /**
  * @brief Set a initial tapleaf.

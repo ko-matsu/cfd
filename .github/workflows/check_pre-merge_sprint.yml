@@ -14,11 +14,19 @@ env:
 jobs:
   cmake-win:
     name: cmake build-win
-    runs-on: windows-2019
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        generator: ['Visual Studio 16 2019', 'MSYS Makefiles']
+        os: [windows-2019, windows-2022]
+        generator: ['MSYS Makefiles']
         shared: [on]
+        include:
+          - os: windows-2019
+            shared: [on]
+            generator: 'Visual Studio 16 2019'
+          - os: windows-2022
+            shared: [on]
+            generator: 'Visual Studio 17 2022'
 
     steps:
     - uses: actions/checkout@v2
@@ -38,11 +46,23 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-10.15]
-        #os: [macos-10.15, macos-11.0]
+        # os: [macos-10.15]
+        os: [macos-10.15, macos-11]
+        xcode_version: ['11.7']
+        include:
+          - os: macos-10.15
+            xcode_version: '12.4'
+          - os: macos-11
+            xcode_version: '12.5.1'
+          - os: macos-11
+            xcode_version: '13.2.1'
 
     steps:
     - uses: actions/checkout@v2
+    - name: Select Xcode version
+      run: sudo xcode-select -s '/Applications/Xcode_${{matrix.xcode_version}}.app/Contents/Developer'
+    - name: Show Xcode version
+      run: xcodebuild -version
     - name: cmake_version
       run: cmake --version
     - name: cmake_generage-macos

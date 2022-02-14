@@ -24,7 +24,9 @@
 #include "cfdcore/cfdcore_exception.h"
 #include "cfdcore/cfdcore_key.h"
 #include "cfdcore/cfdcore_logger.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 #include "cfdcore/cfdcore_script.h"
+#include "cfdcore/cfdcore_taproot.h"
 #include "cfdcore/cfdcore_transaction.h"
 #include "cfdcore/cfdcore_transaction_common.h"
 #include "cfdcore/cfdcore_util.h"
@@ -45,6 +47,7 @@ using cfd::core::ConfidentialAssetId;
 using cfd::core::ConfidentialNonce;
 using cfd::core::ConfidentialTransaction;
 using cfd::core::ConfidentialTxInReference;
+using cfd::core::ConfidentialTxOut;
 using cfd::core::ConfidentialTxOutReference;
 using cfd::core::ConfidentialValue;
 using cfd::core::CryptoUtil;
@@ -56,6 +59,7 @@ using cfd::core::NetType;
 using cfd::core::PegoutKeyData;
 using cfd::core::Privkey;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrUtil;
 using cfd::core::Script;
 using cfd::core::ScriptBuilder;
 using cfd::core::ScriptElement;
@@ -64,6 +68,9 @@ using cfd::core::ScriptUtil;
 using cfd::core::ScriptWitness;
 using cfd::core::SigHashType;
 using cfd::core::SignatureUtil;
+using cfd::core::TaprootScriptTree;
+using cfd::core::TaprootUtil;
+using cfd::core::TapScriptData;
 using cfd::core::Txid;
 using cfd::core::UnblindParameter;
 using cfd::core::logger::warn;
@@ -84,14 +91,16 @@ using cfd::core::logger::warn;
  * @param[in] pubkey          pubkey on pubkey hash.
  * @param[in] redeem_script   redeem script on script hash.
  * @param[in] version         witness version.
+ * @param[in] annex           annex data.
+ * @param[in] script_tree     script tree.
  * @return signature hash.
  */
 static ByteData256 CreateConfidentialTxSighash(
     const ConfidentialTransactionContext* transaction,
     const OutPoint& outpoint, const UtxoData& utxo,
     const SigHashType& sighash_type, const Pubkey& pubkey,
-    const Script& redeem_script, WitnessVersion version, const ByteData*,
-    const TaprootScriptTree*) {
+    const Script& redeem_script, WitnessVersion version, const ByteData* annex,
+    const TaprootScriptTree* script_tree) {
   ConfidentialValue value;
   if (utxo.value_commitment.IsEmpty()) {
     value = ConfidentialValue(utxo.amount);
@@ -99,7 +108,14 @@ static ByteData256 CreateConfidentialTxSighash(
     value = utxo.value_commitment;
   }
   ByteData sig;
-  if (redeem_script.IsEmpty()) {
+
+  if (version == WitnessVersion::kVersion1) {
+    ByteData256 tapleaf_hash;
+    if (script_tree != nullptr) tapleaf_hash = script_tree->GetTapLeafHash();
+    return transaction->CreateSignatureHashByTaproot(
+        outpoint, sighash_type,
+        (script_tree != nullptr) ? &tapleaf_hash : nullptr, 0, annex);
+  } else if (redeem_script.IsEmpty()) {
     sig = transaction->CreateSignatureHash(
         outpoint, pubkey, sighash_type, value, version);
   } else {
@@ -114,9 +130,27 @@ static ByteData256 CreateConfidentialTxSighash(
     const Script&, WitnessVersion)> create_sighash_func;
 */
 
+/**
+ * @brief Get locking script from utxo.
+ * @param[in] utxo    utxo data.
+ * @return locking script
+ */
+static Script GetLockingScriptFromUtxoData(const UtxoData& utxo) {
+  Script locking_script = utxo.locking_script;
+  if (!utxo.address.GetAddress().empty()) {
+    locking_script = utxo.address.GetLockingScript();
+  } else if (!utxo.descriptor.empty()) {
+    auto desc = Descriptor::ParseElements(utxo.descriptor);
+    locking_script = desc.GetLockingScript();
+  }
+  return locking_script;
+}
+
 // -----------------------------------------------------------------------------
 // ConfidentialTransactionContext
 // -----------------------------------------------------------------------------
+BlockHash ConfidentialTransactionContext::default_genesis_block_hash_;
+
 ConfidentialTransactionContext::ConfidentialTransactionContext() {}
 
 ConfidentialTransactionContext::ConfidentialTransactionContext(
@@ -306,7 +340,7 @@ uint32_t ConfidentialTransactionContext::GetSizeIgnoreTxIn(
   // search vin from issue/reissue
   if (temp_asset_count == 0) {
     for (const auto& txin : vin_) {
-      if (!txin.GetAssetEntropy().IsEmpty()) {
+      if (!txin.GetIssuanceAmount().IsEmpty()) {
         ++temp_asset_count;
         if (!txin.GetBlindingNonce().IsEmpty()) {
           // reissuance
@@ -871,14 +905,19 @@ void ConfidentialTransactionContext::BlindIssuance(
 
 void ConfidentialTransactionContext::SignWithKey(
     const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
-    SigHashType sighash_type, bool has_grind_r) {
+    SigHashType sighash_type, bool has_grind_r, const ByteData256* aux_rand,
+    const ByteData* annex) {
   UtxoData utxo;
   if (!IsFindUtxoMap(outpoint, &utxo)) {
     throw CfdException(
         CfdError::kCfdIllegalStateError, "Utxo is not found. sign fail.");
   }
 
-  if (utxo.amount_blind_factor.IsEmpty() &&
+  if (utxo.locking_script.IsTaprootScript()) {
+    SignWithSchnorrPrivkeySimple(
+        outpoint, privkey, sighash_type, aux_rand, annex);
+  } else if (
+      utxo.amount_blind_factor.IsEmpty() &&
       (!utxo.value_commitment.HasBlinding())) {
     SignWithPrivkeySimple(
         outpoint, pubkey, privkey, sighash_type, utxo.amount,
@@ -962,6 +1001,65 @@ ByteData ConfidentialTransactionContext::CreateSignatureHash(
   return ByteData(sighash.GetBytes());
 }
 
+ByteData256 ConfidentialTransactionContext::CreateSignatureHashByTaproot(
+    const OutPoint& outpoint, const SigHashType& sighash_type,
+    const ByteData256* tap_leaf_hash, const uint32_t* code_separator_position,
+    const ByteData* annex) const {
+  UtxoData utxo;
+  std::vector<ConfidentialTxOut> utxos;
+  for (size_t index = 0; index < vin_.size(); ++index) {
+    const auto& txin_ref = vin_[index];
+    OutPoint target_outpoint(txin_ref.GetTxid(), txin_ref.GetVout());
+    if (!IsFindUtxoMap(target_outpoint, &utxo)) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Utxo is not found. CreateSignatureHashByTaproot fail.");
+    }
+    Script locking_script = GetLockingScriptFromUtxoData(utxo);
+    ConfidentialValue value(utxo.amount);
+    ConfidentialAssetId asset = utxo.asset;
+    if (utxo.value_commitment.HasBlinding()) {
+      value = utxo.value_commitment;
+      if (asset.HasBlinding()) {
+        // fall-through
+      } else if (utxo.asset_commitment.HasBlinding()) {
+        asset = utxo.asset_commitment;
+      } else if (
+          utxo.asset_blind_factor.IsEmpty() ||
+          utxo.amount_blind_factor.IsEmpty()) {
+        throw CfdException(
+            CfdError::kCfdIllegalStateError,
+            "Utxo asset and blindFactor is unmatch. "
+            "CreateSignatureHashByTaproot fail.");  // NOLINT
+      } else {
+        asset =
+            ConfidentialAssetId::GetCommitment(asset, utxo.asset_blind_factor);
+      }
+    } else if (asset.HasBlinding()) {
+      throw CfdException(
+          CfdError::kCfdIllegalStateError,
+          "Utxo asset is unmatch. CreateSignatureHashByTaproot fail.");
+    }
+    utxos.emplace_back(ConfidentialTxOut(locking_script, asset, value));
+  }
+  BlockHash genesis_blockhash = GetGenesisBlockHash();
+
+  uint32_t txin_index = GetTxInIndex(outpoint);
+  ByteData annex_data;
+  if (annex != nullptr) annex_data = *annex;
+  TapScriptData script_data;
+  if (tap_leaf_hash != nullptr) {
+    script_data.tap_leaf_hash = *tap_leaf_hash;
+    if (code_separator_position != nullptr) {
+      script_data.code_separator_position = *code_separator_position;
+    }
+  }
+
+  return GetElementsSchnorrSignatureHash(
+      txin_index, sighash_type, genesis_blockhash, utxos,
+      (tap_leaf_hash != nullptr) ? &script_data : nullptr, annex_data);
+}
+
 void ConfidentialTransactionContext::SignWithPrivkeySimple(
     const OutPoint& outpoint, const Pubkey& pubkey, const Privkey& privkey,
     SigHashType sighash_type, const Amount& value, AddressType address_type,
@@ -985,6 +1083,22 @@ void ConfidentialTransactionContext::SignWithPrivkeySimple(
   SignParameter sign(signature, true, sighash_type);
 
   AddPubkeyHashSign(outpoint, sign, pubkey, address_type);
+}
+
+void ConfidentialTransactionContext::SignWithSchnorrPrivkeySimple(
+    const OutPoint& outpoint, const Privkey& privkey,
+    const SigHashType& sighash_type, const ByteData256* aux_rand,
+    const ByteData* annex) {
+  auto sighash =
+      CreateSignatureHashByTaproot(outpoint, sighash_type, nullptr, 0, annex);
+  SchnorrSignature signature;
+  if (aux_rand != nullptr) {
+    signature = SchnorrUtil::Sign(sighash, privkey, *aux_rand);
+  } else {
+    signature = SchnorrUtil::Sign(sighash, privkey);
+  }
+  signature.SetSigHashType(sighash_type);
+  AddSchnorrSign(outpoint, signature, annex);
 }
 
 void ConfidentialTransactionContext::AddPubkeyHashSign(
@@ -1013,6 +1127,29 @@ void ConfidentialTransactionContext::AddMultisigSign(
   std::vector<SignParameter> sign_list =
       TransactionContext::CheckMultisig(signatures, redeem_script);
   AddScriptHashSign(outpoint, sign_list, redeem_script, address_type, true);
+}
+
+void ConfidentialTransactionContext::AddSchnorrSign(
+    const OutPoint& outpoint, const SchnorrSignature& signature,
+    const ByteData* annex) {
+  std::vector<SignParameter> sign_params = {
+      SignParameter(signature.GetData(true))};
+  if (annex != nullptr) sign_params.emplace_back(*annex);
+  AddSign(outpoint, sign_params, true, true);
+  signed_map_.emplace(outpoint, signature.GetSigHashType());
+}
+
+void ConfidentialTransactionContext::AddTapScriptSign(
+    const OutPoint& outpoint, const TaprootScriptTree& tree,
+    const SchnorrPubkey& internal_pubkey,
+    const std::vector<SignParameter>& sign_data_list, const ByteData* annex) {
+  std::vector<SignParameter> sign_params = sign_data_list;
+  auto control = TaprootUtil::CreateTapScriptControl(internal_pubkey, tree);
+  auto script = tree.GetScript();
+  sign_params.emplace_back(script);
+  sign_params.emplace_back(control);
+  if (annex != nullptr) sign_params.emplace_back(*annex);
+  AddSign(outpoint, sign_params, true, true);
 }
 
 void ConfidentialTransactionContext::AddSign(
@@ -1078,6 +1215,26 @@ bool ConfidentialTransactionContext::IsFindOutPoint(
     if (outpoint == target) return true;
   }
   return false;
+}
+
+void ConfidentialTransactionContext::SetGenesisBlockHash(
+    const BlockHash& block_hash) {
+  genesis_block_hash_ = block_hash;
+}
+
+void ConfidentialTransactionContext::SetDefaultGenesisBlockHash(
+    const BlockHash& block_hash) {
+  default_genesis_block_hash_ = block_hash;
+}
+
+BlockHash ConfidentialTransactionContext::GetGenesisBlockHash() const {
+  if (genesis_block_hash_.IsValid()) {
+    return genesis_block_hash_;
+  } else if (default_genesis_block_hash_.IsValid()) {
+    return default_genesis_block_hash_;
+  }
+  throw CfdException(
+      CfdError::kCfdIllegalStateError, "Genesis blockHash is empty.");
 }
 
 // -----------------------------------------------------------------------------
@@ -1435,7 +1592,7 @@ uint32_t ConfidentialTransactionController::GetSizeIgnoreTxIn(
 
   // search vin from issue/reissue
   for (const auto& txin : txins) {
-    if (!txin.GetAssetEntropy().IsEmpty()) {
+    if (!txin.GetIssuanceAmount().IsEmpty()) {
       ++temp_asset_count;
       if (!txin.GetBlindingNonce().IsEmpty()) {
         // reissuance

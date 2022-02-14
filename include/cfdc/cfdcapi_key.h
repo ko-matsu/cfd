@@ -30,6 +30,18 @@ enum CfdExtKeyType {
 };
 
 /**
+ * @brief bip32 format type.
+ */
+enum CfdBip32FormatType {
+  /** format: normal(bip32) */
+  kCfdBip32FormatTypeNormal = 0,
+  /** format: bip49 */
+  kCfdBip32FormatTypeBip49,
+  /** format: bip84 */
+  kCfdBip32FormatTypeBip84,
+};
+
+/**
  * @brief calcurate ec signature.
  * @param[in] handle        cfd handle.
  * @param[in] sighash       sighash.
@@ -60,19 +72,18 @@ CFDC_API int CfdVerifyEcSignature(
 
 /**
  * @brief Create an adaptor signature over the given message using the given
- * private key. Returns an AdaptorPair of the adaptor signature and its proof.
+ * private key. Return the adaptor signature.
  *
  * @param[in] handle cfd handle.
  * @param[in] msg the message to create the signature for.
  * @param[in] sk the secret key to create the signature with.
- * @param[in] adaptor the adaptor to adapt the signature with.
- * @param[out] adaptor_signature the adaptor signature
- * @param[out] adaptor_proof the adaptor proof
+ * @param[in] encryption_key the encryption key to adapt the signature with.
+ * @param[out] adaptor_signature the adaptor signature and proof.
  * @return CfdErrorCode
  */
-CFDC_API int CfdSignEcdsaAdaptor(
-    void* handle, const char* msg, const char* sk, const char* adaptor,
-    char** adaptor_signature, char** adaptor_proof);
+CFDC_API int CfdEncryptEcdsaAdaptor(
+    void* handle, const char* msg, const char* sk, const char* encryption_key,
+    char** adaptor_signature);
 
 /**
  * @brief "Decrypt" an adaptor signature using the provided secret, returning
@@ -84,7 +95,7 @@ CFDC_API int CfdSignEcdsaAdaptor(
  * @param[out] signature the ECDSA signature
  * @return CfdErrorCode
  */
-CFDC_API int CfdAdaptEcdsaAdaptor(
+CFDC_API int CfdDecryptEcdsaAdaptor(
     void* handle, const char* adaptor_signature, const char* adaptor_secret,
     char** signature);
 
@@ -95,13 +106,13 @@ CFDC_API int CfdAdaptEcdsaAdaptor(
  * @param[in] handle cfd handle.
  * @param[in] adaptor_signature the adaptor signature
  * @param[in] signature the ECDSA signature
- * @param[in] adaptor the adaptor for the signature
+ * @param[in] encryption_key the adaptor for the signature
  * @param[out] adaptor_secret the secret
  * @return CfdErrorCode
  */
-CFDC_API int CfdExtractEcdsaAdaptorSecret(
+CFDC_API int CfdRecoverEcdsaAdaptor(
     void* handle, const char* adaptor_signature, const char* signature,
-    const char* adaptor, char** adaptor_secret);
+    const char* encryption_key, char** adaptor_secret);
 
 /**
  * @brief Verify that an adaptor proof is valid with respect to a given
@@ -109,15 +120,14 @@ CFDC_API int CfdExtractEcdsaAdaptorSecret(
  *
  * @param[in] handle cfd handle.
  * @param[in] adaptor_signature the adaptor signature
- * @param[in] proof the adaptor proof
- * @param[in] adaptor the adaptor for the signature
  * @param[in] msg the message to create the signature for.
  * @param[in] pubkey the public key
+ * @param[in] encryption_key the adaptor for the signature
  * @return CfdErrorCode
  */
 CFDC_API int CfdVerifyEcdsaAdaptor(
-    void* handle, const char* adaptor_signature, const char* proof,
-    const char* adaptor, const char* msg, const char* pubkey);
+    void* handle, const char* adaptor_signature, const char* msg,
+    const char* pubkey, const char* encryption_key);
 
 /**
  * @brief Get a schnorr public key from a private key.
@@ -571,6 +581,22 @@ CFDC_API int CfdCreateExtkeyFromSeed(
     char** extkey);
 
 /**
+ * @brief create extkey from seed.
+ * @param[in] handle          cfd handle.
+ * @param[in] seed_hex        seed data(hex).
+ * @param[in] network_type    network type.
+ * @param[in] key_type        extkey type.
+ * @param[in] format_type     bip32 format type.
+ * @param[out] extkey         extkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCreateExtkeyByFormatFromSeed(
+    void* handle, const char* seed_hex, int network_type, int key_type,
+    int format_type, char** extkey);
+
+/**
  * @brief create extkey from direct info.
  * @param[in] handle          cfd handle.
  * @param[in] network_type    network type.
@@ -590,6 +616,29 @@ CFDC_API int CfdCreateExtkey(
     void* handle, int network_type, int key_type, const char* parent_key,
     const char* fingerprint, const char* key, const char* chain_code,
     unsigned char depth, uint32_t child_number, char** extkey);
+
+/**
+ * @brief create extkey from direct info.
+ * @param[in] handle          cfd handle.
+ * @param[in] network_type    network type.
+ * @param[in] key_type        extkey type.
+ * @param[in] parent_key      parent key. (If there is no fingerprint)
+ * @param[in] fingerprint     fingerprint.
+ * @param[in] key             public or private key.
+ * @param[in] chain_code      chain code.
+ * @param[in] depth           depth.
+ * @param[in] child_number    child key number.
+ * @param[in] format_type     bip32 format type.
+ * @param[out] extkey         extkey.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdCreateExtkeyByFormat(
+    void* handle, int network_type, int key_type, const char* parent_key,
+    const char* fingerprint, const char* key, const char* chain_code,
+    unsigned char depth, uint32_t child_number, int format_type,
+    char** extkey);
 
 /**
  * @brief derive extkey from number.

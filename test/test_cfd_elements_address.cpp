@@ -15,12 +15,15 @@ using cfd::core::ByteData160;
 using cfd::core::CfdException;
 using cfd::core::ConfidentialKey;
 using cfd::core::Descriptor;
+using cfd::core::DescriptorKeyType;
+using cfd::core::DescriptorScriptType;
 using cfd::core::GetElementsAddressFormatList;
 using cfd::core::GetBitcoinAddressFormatList;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
 using cfd::core::Script;
 using cfd::core::WitnessVersion;
+using cfd::DescriptorScriptData;
 using cfd::ElementsAddressFactory;
 using cfd::core::ElementsConfidentialAddress;
 
@@ -424,6 +427,66 @@ TEST(ElementsAddressFactory, CreatePegOutAddress)
     "tpubDASgDECJvTMzUgS7GkSCxQAAWPveW7BeTPSvbi1wpUe1Mq1v743FRw1i7vTavjAb3D3Y8geCTYw2ezgiVS7SFXDXS6NpZmvr6XPjPvg632y", 0, AddressType::kP2pkhAddress, &desc);
   EXPECT_EQ(pegout_addr.GetAddress(), "n3Na7mek1zAStRxvt7RPrNCpZhDErMPkGw");
   EXPECT_EQ(desc.ToString(false), "pkh(tpubDASgDECJvTMzUgS7GkSCxQAAWPveW7BeTPSvbi1wpUe1Mq1v743FRw1i7vTavjAb3D3Y8geCTYw2ezgiVS7SFXDXS6NpZmvr6XPjPvg632y)");
+}
+
+struct TestCfdElementsAddressFactoryDescriptorData {
+  std::string descriptor;
+  NetType net_type;
+  DescriptorScriptType type;
+  std::string locking_script;
+  uint32_t depth;
+  std::string address;
+  AddressType address_type;
+  std::string redeem_script;
+  DescriptorKeyType key_type;
+  std::string key;
+  std::string tree_string;
+  uint32_t multisig_req_sig_num;
+};
+
+TEST(ElementsAddressFactory, ParseOutputDescriptor) {
+  std::vector<TestCfdElementsAddressFactoryDescriptorData>
+  g_test_cfd_descriptor_data {
+    {
+      "tr(ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a)",
+      NetType::kElementsRegtest,
+      DescriptorScriptType::kDescriptorScriptTaproot,
+      "5120a7f4a1a59f5e63d3223dcf341789d300f4feb418aabd2b0bcf875a232e4d2797",
+      0,
+      "ert1p5l62rfvlte3axg3aeu6p0zwnqr60adqc427jkz70sadzxtjdy7tshjlu6s",
+      AddressType::kTaprootAddress,
+      "",
+      DescriptorKeyType::kDescriptorKeySchnorr,
+      "ef514f1aeb14baa6cc57ab3268fb329ca540c48454f7f46771ed731e34ba521a",
+      "",
+      0
+    },
+  };
+
+  DescriptorScriptData data;
+  for (auto test_data : g_test_cfd_descriptor_data) {
+    try {
+      ElementsAddressFactory factory(test_data.net_type);
+      data = factory.ParseOutputDescriptor(test_data.descriptor);
+      EXPECT_EQ(test_data.type, data.type);
+      EXPECT_EQ(test_data.locking_script, data.locking_script.GetHex());
+      EXPECT_EQ(test_data.depth, data.depth);
+      EXPECT_EQ(test_data.address, data.address.GetAddress());
+      EXPECT_EQ(test_data.address_type, data.address_type);
+      EXPECT_EQ(test_data.redeem_script, data.redeem_script.GetHex());
+      EXPECT_EQ(test_data.key_type, data.key_type);
+      EXPECT_EQ(test_data.key, data.key);
+      EXPECT_EQ(test_data.multisig_req_sig_num, data.multisig_req_sig_num);
+      if (test_data.tree_string.empty()) {
+        EXPECT_FALSE(data.tree.IsValid());
+      } else {
+        EXPECT_EQ(test_data.tree_string, data.tree.ToString());
+      }
+    } catch (const std::exception& e) {
+      EXPECT_STREQ("", e.what());
+      EXPECT_STREQ("", test_data.descriptor.c_str());
+    }
+  }
 }
 
 #endif

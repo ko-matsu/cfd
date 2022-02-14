@@ -12,6 +12,7 @@
 #include "jsonapi/cfd_json_transaction.h"           // NOLINT
 #include "jsonapi/cfd_json_psbt.h"                  // NOLINT
 #include "jsonapi/cfd_json_elements_transaction.h"  // NOLINT
+#include "jsonapi/cfd_json_utility.h"               // NOLINT
 
 // using
 using cfd::core::CfdError;
@@ -112,6 +113,18 @@ std::string JsonMappingApi::DecodePsbt(
     const std::string &request_message) {
   return ExecuteDirectApi<DecodePsbtRequest, DecodePsbtResponse>(
       request_message, PsbtJsonApi::DecodePsbt);
+}
+
+std::string JsonMappingApi::SetCustomPrefix(
+    const std::string &request_message) {
+  return ExecuteDirectApi<SetCustomPrefixRequest, VoidFunctionResponse>(
+      request_message, JsonUtilApi::SetCustomPrefix);
+}
+
+std::string JsonMappingApi::ClearCustomPrefix() {
+  VoidFunctionResponse response;
+  JsonUtilApi::ClearCustomPrefix(&response);
+  return response.Serialize();
 }
 
 #ifndef CFD_DISABLE_ELEMENTS

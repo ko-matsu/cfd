@@ -2,7 +2,7 @@
 /**
  * @file cfdcapi_transaction.cpp
  *
- * @brief cfd-capiで利用するTransaction処理の実装ファイル
+ * @brief Implementation file of Transaction processing used by cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #include "cfdc/cfdcapi_transaction.h"
@@ -975,13 +975,14 @@ int CfdCreateSighashByHandle(
         if (has_tapscript) {
           tapleaf_hash_obj = ByteData256(tapleaf_hash);
         }
-        if (!IsEmptyString(annex)) annex_data = ByteData(annex);
+        bool has_annex = !IsEmptyString(annex);
+        if (has_annex) annex_data = ByteData(annex);
         sighash_bytes =
             tx->CreateSignatureHashByTaproot(
                   outpoint, sighashtype,
                   (has_tapscript) ? &tapleaf_hash_obj : nullptr,
                   (has_tapscript) ? &code_separator_position : nullptr,
-                  &annex_data)
+                  (has_annex) ? &annex_data : nullptr)
                 .GetData();
       } else {
         WitnessVersion version = WitnessVersion::kVersionNone;
@@ -1013,16 +1014,28 @@ int CfdCreateSighashByHandle(
       ConfidentialTransactionContext* tx =
           static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
       auto utxo = tx->GetTxInUtxoData(outpoint);
-      ConfidentialValue value;
-      auto utxo_value = utxo.value_commitment;
-      if (!utxo_value.HasBlinding()) {
-        utxo_value = ConfidentialValue(utxo.amount);
-      }
       if (utxo.address_type == AddressType::kTaprootAddress) {
-        throw CfdException(
-            CfdError::kCfdIllegalStateError,
-            "Failed to parameter. unsupported type.");
+        ByteData256 tapleaf_hash_obj;
+        ByteData annex_data;
+        bool has_tapscript = !IsEmptyString(tapleaf_hash);
+        if (has_tapscript) {
+          tapleaf_hash_obj = ByteData256(tapleaf_hash);
+        }
+        bool has_annex = !IsEmptyString(annex);
+        if (has_annex) annex_data = ByteData(annex);
+        sighash_bytes =
+            tx->CreateSignatureHashByTaproot(
+                  outpoint, sighashtype,
+                  (has_tapscript) ? &tapleaf_hash_obj : nullptr,
+                  (has_tapscript) ? &code_separator_position : nullptr,
+                  (has_annex) ? &annex_data : nullptr)
+                .GetData();
       } else {
+        ConfidentialValue value;
+        auto utxo_value = utxo.value_commitment;
+        if (!utxo_value.HasBlinding()) {
+          utxo_value = ConfidentialValue(utxo.amount);
+        }
         WitnessVersion version = WitnessVersion::kVersionNone;
         Pubkey pubkey_obj;
         Script script;
@@ -1336,9 +1349,20 @@ int CfdAddTaprootSignByHandle(
       }
     } else {
 #ifndef CFD_DISABLE_ELEMENTS
-      throw CfdException(
-          CfdError::kCfdIllegalArgumentError,
-          "Elements is not supported yet.");
+      ConfidentialTransactionContext* tx =
+          static_cast<ConfidentialTransactionContext*>(tx_data->tx_obj);
+      if (!IsEmptyString(signature)) {
+        SchnorrSignature sig(signature);
+        tx->AddSchnorrSign(outpoint, sig, (has_annex) ? &annex_data : nullptr);
+      } else {
+        Script tapscript_obj(tapscript);
+        ByteData control_obj(control_block);
+        std::vector<SignParameter> sign_params;
+        sign_params.emplace_back(tapscript_obj.GetData());
+        sign_params.emplace_back(control_obj);
+        if (has_annex) sign_params.emplace_back(annex_data);
+        tx->AddSign(outpoint, sign_params, true, false);
+      }
 #else
       throw CfdException(
           CfdError::kCfdIllegalArgumentError, "Elements is not supported.");

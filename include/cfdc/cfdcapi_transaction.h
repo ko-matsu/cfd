@@ -54,6 +54,9 @@ enum CfdFundTxOption {
   kCfdFundTxBlindMinimumBits = 6,
 };
 
+/** code separator default value */
+const uint32_t kCfdCodeSeparatorPositionDefault = 0xffffffffU;
+
 /**
  * @brief create initialized transaction.
  * @param[in] handle          cfd handle.

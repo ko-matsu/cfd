@@ -2,7 +2,7 @@
 /**
  * @file cfdcapi_address.cpp
  *
- * @brief cfd-capiで利用するElements Address操作の実装ファイル
+ * @brief Implementation files for Elements Address operation used by cfd-capi
  */
 #ifndef CFD_DISABLE_CAPI
 #ifndef CFD_DISABLE_ELEMENTS

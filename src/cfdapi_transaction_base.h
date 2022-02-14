@@ -2,9 +2,7 @@
 /**
  * @file cfdapi_transaction_base.h
  *
- * @brief cfd-apiで利用するTransaction作成のクラス定義
- *
- * JSON形式のAPIを提供する.
+ * @brief implementation file for transaction operation that uses cfd-api
  */
 #ifndef CFD_SRC_CFDAPI_TRANSACTION_BASE_H_
 #define CFD_SRC_CFDAPI_TRANSACTION_BASE_H_

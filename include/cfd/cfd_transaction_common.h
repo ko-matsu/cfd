@@ -18,6 +18,7 @@
 #include "cfdcore/cfdcore_elements_address.h"
 #include "cfdcore/cfdcore_elements_transaction.h"
 #include "cfdcore/cfdcore_key.h"
+#include "cfdcore/cfdcore_schnorrsig.h"
 #include "cfdcore/cfdcore_script.h"
 #include "cfdcore/cfdcore_transaction_common.h"
 #include "cfdcore/cfdcore_util.h"
@@ -32,6 +33,7 @@ using cfd::core::BlockHash;
 using cfd::core::ByteData;
 using cfd::core::NetType;
 using cfd::core::Pubkey;
+using cfd::core::SchnorrSignature;
 using cfd::core::Script;
 using cfd::core::ScriptOperator;
 using cfd::core::SigHashAlgorithm;
@@ -76,12 +78,13 @@ struct CFD_EXPORT UtxoData {
   //! binary data option
   void* binary_data = nullptr;
 #ifndef CFD_DISABLE_ELEMENTS
-  ConfidentialAssetId asset;  //!< asset
+  ConfidentialAssetId asset;  //!< asset (normal or commitment)
   // elements
   ElementsConfidentialAddress confidential_address;  //!< Confidential address
   BlindFactor asset_blind_factor;                    //!< asset blind factor
   BlindFactor amount_blind_factor;                   //!< blind vactor
   ConfidentialValue value_commitment;                //!< value commitment
+  ConfidentialAssetId asset_commitment;              //!< asset commitment
 #endif                                               // CFD_DISABLE_ELEMENTS
   Script scriptsig_template;                         //!< scriptsig template
 
@@ -109,6 +112,7 @@ struct CFD_EXPORT UtxoData {
    * @param[in] asset_blind_factor    asset_blind_factor
    * @param[in] amount_blind_factor    amount_blind_factor
    * @param[in] value_commitment    value_commitment
+   * @param[in] asset_commitment    asset commitment
    * @param[in] scriptsig_template    scriptsig_template
    */
   explicit UtxoData(
@@ -121,6 +125,7 @@ struct CFD_EXPORT UtxoData {
       const BlindFactor& asset_blind_factor,
       const BlindFactor& amount_blind_factor,
       const ConfidentialValue& value_commitment,
+      const ConfidentialAssetId& asset_commitment,
       const Script& scriptsig_template);
 #else
   /**
@@ -234,6 +239,11 @@ class CFD_EXPORT SignParameter {
    * @param[in] op_code  op code
    */
   explicit SignParameter(const ScriptOperator& op_code);
+  /**
+   * @brief constructor(Type: SchnorrSignature)
+   * @param[in] schnorr_signature  schnorr signature
+   */
+  explicit SignParameter(const SchnorrSignature& schnorr_signature);
   /**
    * @brief copy constructor.
    * @param[in] sign_parameter     object

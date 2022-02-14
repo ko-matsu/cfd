@@ -44,24 +44,36 @@ jobs:
   upload-object-windows:
     name: upload-object-win
     needs: create_releases
-    runs-on: windows-2019
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        bin: [vs2019, vs2019-static, gcc, gcc-static]
+        bin: [vs2022, vs2022-static, vs2019, vs2019-static, gcc, gcc-static]
         include:
+          - bin: vs2022
+            shared: on
+            generator: Visual Studio 17 2022
+            os: windows-2022
+          - bin: vs2022-static
+            shared: off
+            generator: Visual Studio 17 2022
+            os: windows-2022
           - bin: vs2019
             shared: on
             generator: Visual Studio 16 2019
+            os: windows-2019
           - bin: vs2019-static
             shared: off
             generator: Visual Studio 16 2019
+            os: windows-2019
           - bin: gcc
             shared: on
             generator: MSYS Makefiles
+            os: windows-2019
           - bin: gcc-static
             shared: off
             generator: MSYS Makefiles
+            os: windows-2019
 
     steps:
     - name: checkout
@@ -173,7 +185,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        alpine: ['3.10', '3.12', '3.13']
+        alpine: ['3.10', '3.12', '3.13', '3.14', '3.15']
 
     steps:
     - name: checkout
@@ -196,6 +208,16 @@ jobs:
     - name: docker setup 3.13
       if: matrix.alpine == '3.13'
       uses: docker://alpine:3.13
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: docker setup 3.14
+      if: matrix.alpine == '3.14'
+      uses: docker://alpine:3.14
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: docker setup 3.15
+      if: matrix.alpine == '3.15'
+      uses: docker://alpine:3.15
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
     - name: create archive file
@@ -231,17 +253,27 @@ jobs:
   upload-object-macos:
     name: upload-object-macos
     needs: create_releases
-    runs-on: macos-10.15
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        xcode: [10.3, 11.7, 12.4]
+        xcode: ['10.3', '11.7', '12.4', '12.5.1', '13.2.1']
         shared: [on, off]
         include:
+          - xcode: '10.3'
+            os: macos-10.15
+          - xcode: '11.7'
+            os: macos-10.15
+          - xcode: '12.4'
+            os: macos-10.15
+          - xcode: '12.5.1'
+            os: macos-11
+          - xcode: '13.2.1'
+            os: macos-11
           - shared: on
-            suffix:
+            suffix: ''
           - shared: off
-            suffix: -static
+            suffix: '-static'
 
     steps:
     - name: checkout
