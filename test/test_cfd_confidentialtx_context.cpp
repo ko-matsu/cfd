@@ -1082,20 +1082,20 @@ TEST(ConfidentialTransactionContext, AddTapScriptSign) {
     tx2.AddTxOutFee(fee_amt, asset);
 
     auto tap_leaf_hash = tree.GetTapLeafHash();
-    EXPECT_EQ("56bf7b05d6a4a76be602450e00086dc79db2a46e17df6bbe2a9ac3d127213624",
+    EXPECT_EQ("37aa146298e467d6a9dd4d8f9d0663fa5000cf7ccc05ede81d1f926a94e8a0d1",
       tap_leaf_hash.GetHex());
     auto sighash2 = tx2.CreateSignatureHashByTaproot(
       out_point, sighash_type, &tap_leaf_hash);
-    EXPECT_EQ("c3f788643ce43074dee15890bccb6e77bbb5481ab9b3443b7041699a0758de02",
+    EXPECT_EQ("f08e44a1208a0c448e1aa51ae050da308621556a78faf3a9f5194cd23c7e062a",
       sighash2.GetHex());
     auto sig2 = SchnorrUtil::Sign(sighash2, key);
-    EXPECT_EQ("c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae034", sig2.GetHex());
+    EXPECT_EQ("b0c6bc52963bceef083ec0613e232bf05a50dd3574a038c8c19ee28708b51d5111c582c5e81276a923f797274d608fe803539fb0652a9650d09838719bba6a06", sig2.GetHex());
     sig2.SetSigHashType(sighash_type);
     std::vector<SignParameter> sign_params;
     sign_params.emplace_back(sig2);
     tx2.AddTapScriptSign(out_point, tree, schnorr_pubkey, sign_params);
 
-    EXPECT_EQ("020000000101648f93bb73d5d1c7acbc0c34cca5c7af0df6062b13e7711d62ab5b5cc5cfc39a0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f13000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000341c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae0340122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d540000000000", tx2.GetHex());
+    EXPECT_EQ("020000000101648f93bb73d5d1c7acbc0c34cca5c7af0df6062b13e7711d62ab5b5cc5cfc39a0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f13000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000341b0c6bc52963bceef083ec0613e232bf05a50dd3574a038c8c19ee28708b51d5111c582c5e81276a923f797274d608fe803539fb0652a9650d09838719bba6a060122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c51777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d540000000000", tx2.GetHex());
 
     EXPECT_TRUE(schnorr_pubkey.Verify(sig2, sighash2));
   } catch (CfdException e) {
