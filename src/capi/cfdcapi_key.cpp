@@ -1650,6 +1650,117 @@ int CfdNegatePrivkey(void* handle, const char* privkey, char** output) {
   }
 }
 
+int CfdSignMessage(
+    void* handle, const char* privkey, const char* message, const char* magic,
+    bool is_output_base64, char** signature) {
+  try {
+    cfd::Initialize();
+    if (signature == nullptr) {
+      warn(CFD_LOG_SOURCE, "signature is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. signature is null.");
+    }
+    if (IsEmptyString(privkey)) {
+      warn(CFD_LOG_SOURCE, "privkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. privkey is null or empty.");
+    }
+    if (IsEmptyString(message)) {
+      warn(CFD_LOG_SOURCE, "message is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. message is null or empty.");
+    }
+    Privkey sk;
+    if (Privkey::HasWif(privkey)) {
+      sk = Privkey::FromWif(privkey);
+    } else {
+      sk = Privkey(privkey);
+    }
+
+    ByteData sig;
+    if (IsEmptyString(magic)) {
+      sig = sk.SignBitcoinMessage(message);
+    } else {
+      sig = sk.SignMessage(message, magic);
+    }
+    if (is_output_base64) {
+      *signature = CreateString(CryptoUtil::EncodeBase64(sig));
+    } else {
+      *signature = CreateString(sig.GetHex());
+    }
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
+int CfdVerifyMessage(
+    void* handle, const char* signature, const char* pubkey,
+    const char* message, const char* magic, char** recovered_pubkey) {
+  try {
+    cfd::Initialize();
+    if (IsEmptyString(signature)) {
+      warn(CFD_LOG_SOURCE, "signature is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. signature is null or empty.");
+    }
+    if (IsEmptyString(pubkey)) {
+      warn(CFD_LOG_SOURCE, "pubkey is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. pubkey is null or empty.");
+    }
+    if (IsEmptyString(message)) {
+      warn(CFD_LOG_SOURCE, "message is null or empty.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parameter. message is null or empty.");
+    }
+    Pubkey pubkey_obj(pubkey);
+    ByteData signature_obj;
+    if (strnlen(signature, 132) == 130) {
+      signature_obj = ByteData(signature);
+    } else {
+      signature_obj = CryptoUtil::DecodeBase64(signature);
+    }
+
+    Pubkey recoverable_pubkey;
+    bool is_success = false;
+    if (IsEmptyString(magic)) {
+      is_success = pubkey_obj.VerifyBitcoinMessage(
+          signature_obj, message, &recoverable_pubkey);
+    } else {
+      is_success = pubkey_obj.VerifyMessage(
+          signature_obj, message, magic, &recoverable_pubkey);
+    }
+    if ((recovered_pubkey != nullptr) && recoverable_pubkey.IsValid()) {
+      *recovered_pubkey = CreateString(recoverable_pubkey.GetHex());
+    }
+
+    if (!is_success) return CfdErrorCode::kCfdSignVerificationError;
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
 int CfdCreateExtkeyFromSeed(
     void* handle, const char* seed_hex, int network_type, int key_type,
     char** extkey) {

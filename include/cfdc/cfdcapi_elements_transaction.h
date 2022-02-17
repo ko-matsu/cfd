@@ -469,7 +469,7 @@ CFDC_API int CfdGetConfidentialTxOutByHandle(
 
 /**
  * @brief set utxo data on transaction input.
- * @details for calculate schnorr sighature.
+ * @details for calculate schnorr signature.
  * @param[in] handle            cfd handle.
  * @param[in] create_handle     create transaction handle.
  * @param[in] txid              utxo txid.
@@ -495,7 +495,7 @@ CFDC_API int CfdSetConfidentialTxUtxoDataByHandle(
 
 /**
  * @brief set genesis block hash for confidential transaction.
- * @details for calculate schnorr sighature.
+ * @details for calculate schnorr signature.
  * @param[in] handle                cfd handle.
  * @param[in] create_handle         create transaction handle.
  * @param[in] genesis_block_hash    genesis block hash.
@@ -657,7 +657,7 @@ CFDC_API int CfdFinalizeBlindTx(
  * @param[out] issuance_txid        issuance utxo txid.
  *   If 'CfdFreeStringBuffer' is implemented,
  *   Call 'CfdFreeStringBuffer' after you are finished using it.
- * @param[out] issuance_vout        issuance utxo vount.
+ * @param[out] issuance_vout        issuance utxo vout.
  * @param[out] is_issuance_asset    issuance asset.
  * @param[out] is_issuance_token    issuance token.
  * @return CfdErrorCode
