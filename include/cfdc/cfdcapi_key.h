@@ -566,6 +566,40 @@ CFDC_API int CfdNegatePrivkey(
     void* handle, const char* privkey, char** output);
 
 /**
+ * @brief Negate privkey.
+ * @param[in] handle            cfd handle.
+ * @param[in] privkey           privkey(hex or wif).
+ * @param[in] message           message.
+ * @param[in] magic             message magic word.
+ *   default is bitcoin magic word.
+ * @param[in] is_output_base64  output signature is base64.
+ * @param[out] signature        message signature (hex or base64).
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdSignMessage(
+    void* handle, const char* privkey, const char* message, const char* magic,
+    bool is_output_base64, char** signature);
+
+/**
+ * @brief Verify message.
+ * @param[in] handle            cfd handle.
+ * @param[in] signature         message signature (hex or base64).
+ * @param[in] pubkey            pubkey.
+ * @param[in] message           message.
+ * @param[in] magic             message magic word.
+ *   default is bitcoin magic word.
+ * @param[out] recovered_pubkey     recoverable pubkey from signature.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdVerifyMessage(
+    void* handle, const char* signature, const char* pubkey,
+    const char* message, const char* magic, char** recovered_pubkey);
+
+/**
  * @brief create extkey from seed.
  * @param[in] handle          cfd handle.
  * @param[in] seed_hex        seed data(hex).

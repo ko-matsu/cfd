@@ -991,6 +991,80 @@ TEST(cfdcapi_key, MnemonicTest) {
   EXPECT_EQ(kCfdSuccess, ret);
 }
 
+TEST(cfdcapi_key, MessageSignTest) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  const char* exp_sig_b64 = "H9Dk+Y13ybD+hH7okYJemWs0N9cIJ23Zn5T+lDFo+ZO3G9QSb6Qla2TATXFji29uip6vKsi8TJRZQHbCTu85/74=";
+  const char* exp_sig_hex = "1fd0e4f98d77c9b0fe847ee891825e996b3437d708276dd99f94fe943168f993b71bd4126fa4256b64c04d71638b6f6e8a9eaf2ac8bc4c94594076c24eef39ffbe";
+  const char* privkey_wif = "cUUuHBXPzhaFnny2gCBzZZzYtFyps9B1sDJbtJMC8ssjUhNMq9xk";
+  const char* privkey_hex = "cde0d924f9ffaa23951d86160329630261e68eaa62b8b389735b42238618c50e";
+  const char* pubkey = "0278bfaa4e045cc450ce9397136ac9bac1914147d85945dd9c8c3b2edc0108249d";
+  const char* pubkey2 = "0378bfaa4e045cc450ce9397136ac9bac1914147d85945dd9c8c3b2edc0108249d";
+  const char* msg = "This is just a test message";
+  char* signature = NULL;
+  char* recovered_pubkey = NULL;
+
+  ret = CfdSignMessage(handle, privkey_wif, msg, NULL, true,
+      &signature);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp_sig_b64, signature);
+    CfdFreeStringBuffer(signature);
+    signature = NULL;
+  }
+
+  ret = CfdVerifyMessage(handle, exp_sig_b64, pubkey, msg, NULL,
+      &recovered_pubkey);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(pubkey, recovered_pubkey);
+    CfdFreeStringBuffer(recovered_pubkey);
+    recovered_pubkey = NULL;
+  }
+
+  ret = CfdSignMessage(handle, privkey_hex, msg, NULL, false,
+      &signature);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(exp_sig_hex, signature);
+    CfdFreeStringBuffer(signature);
+    signature = NULL;
+  }
+
+  ret = CfdVerifyMessage(handle, exp_sig_hex, pubkey, msg, NULL,
+      &recovered_pubkey);
+  EXPECT_EQ(kCfdSuccess, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(pubkey, recovered_pubkey);
+    CfdFreeStringBuffer(recovered_pubkey);
+    recovered_pubkey = NULL;
+  }
+
+  // verify error
+  ret = CfdVerifyMessage(handle, exp_sig_hex, pubkey, "This is just a test message2", NULL,
+      &recovered_pubkey);
+  EXPECT_EQ(kCfdSignVerificationError, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STRNE(pubkey, recovered_pubkey);
+    CfdFreeStringBuffer(recovered_pubkey);
+    recovered_pubkey = NULL;
+  }
+
+  ret = CfdVerifyMessage(handle, exp_sig_hex, pubkey2, msg, NULL,
+      &recovered_pubkey);
+  EXPECT_EQ(kCfdSignVerificationError, ret);
+  if (ret == kCfdSuccess) {
+    EXPECT_STREQ(pubkey, recovered_pubkey);
+    CfdFreeStringBuffer(recovered_pubkey);
+    recovered_pubkey = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
 
 TEST(cfdcapi_key, EcdsaAdaptorSignatureTest) {
   void* handle = NULL;
