@@ -342,6 +342,7 @@ CFDC_API int CfdGetTaprootTweakedPrivkey(
 
 /**
  * @brief Get tapscript hash.
+ * @deprecated Please use CfdGetTaprootScriptTreeString.
  * @param[in] handle            cfd handle.
  * @param[in] tree_handle       taproot script tree handle.
  * @param[out] tree_string      taproot string. (proposal)
@@ -350,6 +351,18 @@ CFDC_API int CfdGetTaprootTweakedPrivkey(
  * @return CfdErrorCode
  */
 CFDC_API int CfdGetTaprootScriptTreeSrting(
+    void* handle, void* tree_handle, char** tree_string);
+
+/**
+ * @brief Get tapscript hash.
+ * @param[in] handle            cfd handle.
+ * @param[in] tree_handle       taproot script tree handle.
+ * @param[out] tree_string      taproot string. (proposal)
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetTaprootScriptTreeString(
     void* handle, void* tree_handle, char** tree_string);
 
 /**

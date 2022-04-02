@@ -572,7 +572,7 @@ int CfdSetScriptTreeFromString(
     if (IsEmptyString(tapscript)) {
       TapBranch branch(buffer->net_type);
       if (!IsEmptyString(tree_string)) {
-        branch = TapBranch::FromString(tree_string);
+        branch = TapBranch::FromString(tree_string, buffer->net_type);
       }
       buffer->branch_buffer->clear();
       buffer->branch_buffer->emplace_back(branch);
@@ -1158,6 +1158,11 @@ int CfdGetTaprootTweakedPrivkey(
 }
 
 int CfdGetTaprootScriptTreeSrting(
+    void* handle, void* tree_handle, char** tree_string) {
+  return CfdGetTaprootScriptTreeString(handle, tree_handle, tree_string);
+}
+
+int CfdGetTaprootScriptTreeString(
     void* handle, void* tree_handle, char** tree_string) {
   int result = CfdErrorCode::kCfdUnknownError;
   try {
