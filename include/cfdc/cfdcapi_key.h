@@ -566,7 +566,7 @@ CFDC_API int CfdNegatePrivkey(
     void* handle, const char* privkey, char** output);
 
 /**
- * @brief Negate privkey.
+ * @brief Sign message by privkey.
  * @param[in] handle            cfd handle.
  * @param[in] privkey           privkey(hex or wif).
  * @param[in] message           message.
