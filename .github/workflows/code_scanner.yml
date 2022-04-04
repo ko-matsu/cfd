@@ -14,11 +14,17 @@ on:
     - '**.h'
     - '**/code_scanner.yml'
     - '**/external_project_local_setting.config'
+  pull_request:
+    branches:
+    - master
+    - stable_v*
+    - develop
+    - features/sprint*
 
 jobs:
   analyze-CodeQL:
     name: CodeQL
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     strategy:
       fail-fast: false
