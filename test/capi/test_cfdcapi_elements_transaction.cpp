@@ -2413,7 +2413,7 @@ TEST(cfdcapi_elements_transaction, AddTapScriptSign) {
     if (ret == kCfdSuccess) {
       ret = CfdSignSchnorr(handle, exp_sighash, privkey, "", &schnorr_signature);
       EXPECT_EQ(kCfdSuccess, ret);
-      EXPECT_STREQ("c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae034", schnorr_signature);
+      EXPECT_STREQ("e15d320eaca60bb7492c927eee15cac0c5287811e208e8bd59dea59e50bdc062acd490f4daf201f2cfc8140774a34106c3a9b42165b7b5b23376a39771b6cfa0", schnorr_signature);
 
       ret = CfdVerifySchnorr(handle, schnorr_signature, exp_sighash, schnorr_pubkey);
       EXPECT_EQ(kCfdSuccess, ret);
@@ -2425,7 +2425,7 @@ TEST(cfdcapi_elements_transaction, AddTapScriptSign) {
     ret = CfdAddTxSignByHandle(handle, tx_handle,
       out_point_txid, out_point_vout,
       kCfdTaproot,
-      "c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae034" "01",
+      "e15d320eaca60bb7492c927eee15cac0c5287811e208e8bd59dea59e50bdc062acd490f4daf201f2cfc8140774a34106c3a9b42165b7b5b23376a39771b6cfa0" "01",
       false, sighash_type, false, true);
     EXPECT_EQ(kCfdSuccess, ret);
 
@@ -2438,7 +2438,7 @@ TEST(cfdcapi_elements_transaction, AddTapScriptSign) {
     ret = CfdFinalizeTransaction(handle, tx_handle, &tx_string);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
-      EXPECT_STREQ("020000000101648f93bb73d5d1c7acbc0c34cca5c7af0df6062b13e7711d62ab5b5cc5cfc39a0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f13000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000341c1aa13d3b4eacb33c47e925c855e4f5bf146f0a9738ad38b03c6dd89c738ba70e48a899600eb4fb37b401ef142be09dd88a0ddcff25a2806e0dd8f2a7b3ae0340122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d540000000000", tx_string);
+      EXPECT_STREQ("020000000101648f93bb73d5d1c7acbc0c34cca5c7af0df6062b13e7711d62ab5b5cc5cfc39a0000000000ffffffff020125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a01000000009502f13000160014164e985d0fc92c927a66c0cbaf78e6ea389629d50125b251070e29ca19043cf33ccd7324e2ddab03ecc4ae0b5e77c4fc0e5cf6c95a0100000000000003e800000000000000000341e15d320eaca60bb7492c927eee15cac0c5287811e208e8bd59dea59e50bdc062acd490f4daf201f2cfc8140774a34106c3a9b42165b7b5b23376a39771b6cfa00122201777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfbac61c01777701648fa4dd93c74edd9d58cfcc7bdc2fa30a2f6fa908b6fd70c92833cfb4d18084bb47027f47d428b2ed67e1ccace5520fdc36f308e272394e288d53b6ddc82121e4ff8d23745f3859e8939ecb0a38af63e6ddea2fff97a7fd61a1d2d540000000000", tx_string);
       CfdFreeStringBuffer(tx_string);
     }
 
