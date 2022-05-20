@@ -281,7 +281,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xcode: ['10.3', '11.7', '12.4', '12.5.1', '13.2.1', '13.2.1', '13.3.1']
+        xcode: ['10.3', '11.7', '12.4', '12.5.1', '13.2.1', '13.3.1']
         shared: [on, off]
         include:
           - xcode: '10.3'
