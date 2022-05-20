@@ -19,13 +19,19 @@ jobs:
       matrix:
         os: [windows-2019, windows-2022]
         generator: ['MSYS Makefiles']
-        shared: [on]
+        shared: [on, off]
         include:
           - os: windows-2019
-            shared: [on]
+            shared: on
+            generator: 'Visual Studio 16 2019'
+          - os: windows-2019
+            shared: off
             generator: 'Visual Studio 16 2019'
           - os: windows-2022
-            shared: [on]
+            shared: on
+            generator: 'Visual Studio 17 2022'
+          - os: windows-2022
+            shared: off
             generator: 'Visual Studio 17 2022'
 
     steps:
@@ -47,7 +53,7 @@ jobs:
     strategy:
       matrix:
         # os: [macos-10.15]
-        os: [macos-10.15, macos-11]
+        os: [macos-10.15, macos-11, macos-12]
         xcode_version: ['11.7']
         include:
           - os: macos-10.15
@@ -56,6 +62,13 @@ jobs:
             xcode_version: '12.5.1'
           - os: macos-11
             xcode_version: '13.2.1'
+          - os: macos-12
+            xcode_version: '13.1'
+          - os: macos-12
+            xcode_version: '13.3.1'
+        exclude:
+          - os: macos-12
+            xcode_version: '11.7'
 
     steps:
     - uses: actions/checkout@v2
@@ -79,9 +92,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
-        shared: [on]
+        os: [ubuntu-22.04, ubuntu-20.04, ubuntu-18.04]
+        shared: [on, off]
         elements: [on]
+        include:
+          - os: ubuntu-22.04
+            elements: off
 
     steps:
     - uses: actions/checkout@v2
@@ -117,10 +133,14 @@ jobs:
 
   cmake-cpp-support-test:
     name: cmake build-ubuntu C++ support test
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        cppversion: [11, 14, 17, 20]
+        os: [windows-2022, ubuntu-22.04]
+        cppver: [11, 14, 17, 20]
+        include:
+          - os: windows-2022
+            generator: 'Visual Studio 17 2022'
 
     steps:
     - uses: actions/checkout@v2
@@ -128,11 +148,14 @@ jobs:
       run: |
         cmake --version
         gcc --version
-    - name: cmake-build
-      run: |
-        cmake --version
-        cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on -DCMAKE_BUILD_TYPE=Release -DSTD_CPP_VERSION=${{ matrix.cppversion }} -DTARGET_RPATH=./build/Release
-        cmake --build build --config Debug --parallel 4
+    - name: cmake_configure
+      if: matrix.os != 'windows-2022'
+      run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH=./build/Release
+    - name: cmake_generage vs
+      if: matrix.os == 'windows-2022'
+      run: cmake -S . -B build -G "${{ matrix.generator }}" -A x64 -DENABLE_SHARED=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release
+    - name: cmake_build
+      run: cmake --build build --config Release --parallel 4
     - name: test
       run: |
         cd build
