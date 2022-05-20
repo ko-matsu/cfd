@@ -24,10 +24,16 @@ jobs:
         shared: [on, off]
         include:
           - os: windows-2019
-            shared: [on, off]
+            shared: on
+            generator: 'Visual Studio 16 2019'
+          - os: windows-2019
+            shared: off
             generator: 'Visual Studio 16 2019'
           - os: windows-2022
-            shared: [on, off]
+            shared: on
+            generator: 'Visual Studio 17 2022'
+          - os: windows-2022
+            shared: off
             generator: 'Visual Studio 17 2022'
 
     steps:
@@ -49,7 +55,7 @@ jobs:
     strategy:
       matrix:
         # os: [macos-10.15]
-        os: [macos-10.15, macos-11]
+        os: [macos-10.15, macos-11, macos-12]
         xcode_version: ['11.7']
         include:
           - os: macos-10.15
@@ -58,6 +64,13 @@ jobs:
             xcode_version: '12.5.1'
           - os: macos-11
             xcode_version: '13.2.1'
+          - os: macos-12
+            xcode_version: '13.1'
+          - os: macos-12
+            xcode_version: '13.3.1'
+        exclude:
+          - os: macos-12
+            xcode_version: '11.7'
 
     steps:
     - uses: actions/checkout@v2
@@ -83,11 +96,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
+        os: [ubuntu-22.04, ubuntu-20.04, ubuntu-18.04]
         shared: [on, off]
-        elements: [on, off]
-        exclude:
-          - os: ubuntu-18.04
+        elements: [on]
+        include:
+          - os: ubuntu-22.04
             elements: off
 
     steps:
@@ -108,6 +121,71 @@ jobs:
         cd build
         ctest -C Release --output-on-failure
         cd ..
+
+  cmake-cpp-support-test:
+    name: cmake build-ubuntu C++ support test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-2022, ubuntu-22.04]
+        cppver: [11, 14, 17, 20]
+        include:
+          - os: windows-2022
+            generator: 'Visual Studio 17 2022'
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dump version
+      run: |
+        cmake --version
+        gcc --version
+    - name: cmake_configure
+      if: matrix.os != 'windows-2022'
+      run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH=./build/Release
+    - name: cmake_generage vs
+      if: matrix.os == 'windows-2022'
+      run: cmake -S . -B build -G "${{ matrix.generator }}" -A x64 -DENABLE_SHARED=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release
+    - name: cmake_build
+      run: cmake --build build --config Release --parallel 4
+    - name: test
+      run: |
+        cd build
+        ctest -C Release --output-on-failure
+        cd ..
+
+  ubuntu-valgrind:
+    name: valgrind-ubuntu
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04]
+        shared: [on]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dump version
+      run: |
+        cmake --version
+        gcc --version
+    - name: ubuntu-apt-install
+      run: |
+        cat /etc/os-release
+        sudo apt-get update
+        sudo apt-get install -y valgrind
+    - name: cmake-build
+      run: |
+        cmake --version
+        cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DCMAKE_BUILD_TYPE=Debug -DTARGET_RPATH=./build/Debug
+        cmake --build build --config Debug --parallel 4
+    - name: valgrind
+      run: |
+         # --valgrind-stacksize=1048576 --num-callers=12
+         valgrind -v --tool=memcheck --leak-check=full --valgrind-stacksize=10485760 --log-file=./valgrind.log --time-stamp=yes ./build/Debug/cfd_test
+    - name: upload coverage
+      uses: actions/upload-artifact@v1
+      with:
+        name: valgrind-log
+        path: ./valgrind.log
 
   doxygen-ubuntu:
     name: doxygen-check
