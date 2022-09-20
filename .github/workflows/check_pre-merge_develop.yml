@@ -22,10 +22,16 @@ jobs:
         shared: [on, off]
         include:
           - os: windows-2019
-            shared: [on, off]
+            shared: on
+            generator: 'Visual Studio 16 2019'
+          - os: windows-2019
+            shared: off
             generator: 'Visual Studio 16 2019'
           - os: windows-2022
-            shared: [on, off]
+            shared: on
+            generator: 'Visual Studio 17 2022'
+          - os: windows-2022
+            shared: off
             generator: 'Visual Studio 17 2022'
 
     steps:
@@ -85,11 +91,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
+        os: [ubuntu-22.04, ubuntu-20.04]
         shared: [on, off]
-        elements: [on, off]
-        exclude:
-          - os: ubuntu-18.04
+        elements: [on]
+        include:
+          - os: ubuntu-22.04
             elements: off
 
     steps:
@@ -113,7 +119,7 @@ jobs:
 
   doxygen-ubuntu:
     name: doxygen-check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v2

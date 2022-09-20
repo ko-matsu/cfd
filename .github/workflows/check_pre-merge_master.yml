@@ -93,7 +93,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04, ubuntu-18.04]
+        os: [ubuntu-22.04, ubuntu-20.04]
         shared: [on, off]
         elements: [on]
         include:
@@ -118,6 +118,47 @@ jobs:
         cd build
         ctest -C Release --output-on-failure
         cd ..
+
+  cmake-ubuntu-coverage:
+    name: cmake build-ubuntu
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        shared: [on]
+        elements: [on]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: dump version
+      run: |
+        cmake --version
+        gcc --version
+    - name: ubuntu-apt-install
+      run: sudo apt install lcov
+    - name: cmake-build
+      run: |
+        cmake --version
+        cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_ELEMENTS=${{ matrix.elements }} -DENABLE_DEBUG=on -DENABLE_COVERAGE=on -DCMAKE_BUILD_TYPE=Debug -DTARGET_RPATH=./build/Debug
+        cmake --build build --config Debug --parallel 4
+    - name: lint_check
+      run: ./tools/lint_quiet.sh
+    - name: test
+      run: |
+        cd build
+        ctest -C Debug --output-on-failure -R cfd
+        cd ..
+    - name: collect coverage
+      run: |
+        cd build
+        make lcov_cfd
+        zip -r lcov_cfd_output.zip lcov_cfd_output
+        cd ..
+    - name: upload coverage
+      uses: actions/upload-artifact@v1
+      with:
+        name: output-lcov-cfd-${{ matrix.os }}
+        path: ./build/lcov_cfd_output.zip
 
   cmake-cpp-support-test:
     name: cmake build-ubuntu C++ support test
@@ -155,7 +196,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-18.04]
+        os: [ubuntu-22.04]
         shared: [on]
 
     steps:
@@ -184,9 +225,25 @@ jobs:
         name: valgrind-log
         path: ./valgrind.log
 
+  arm-build-test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        platform: ['linux/arm/v7', 'linux/arm64/v8']
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: docker build
+      run: |
+        docker buildx build --platform ${{matrix.platform}} -f ./Dockerfile . --no-cache
+
   doxygen-ubuntu:
     name: doxygen-check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v2

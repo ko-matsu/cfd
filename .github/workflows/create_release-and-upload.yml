@@ -8,7 +8,7 @@ on:
 jobs:
   create_releases:
     name: create-releases
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     outputs:
       release_url: ${{ steps.output_url.outputs.upload_url }}
 
@@ -144,7 +144,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-#        os: [ubuntu-20.04, ubuntu-18.04]
         os_ver: [22, 20, 18]
         bin: [gcc, gcc-static]
         include:
@@ -209,7 +208,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        alpine: ['3.10', '3.12', '3.13', '3.14', '3.15']
+        alpine: ['3.10', '3.12', '3.13', '3.14', '3.15', '3.16']
 
     steps:
     - name: checkout
@@ -242,6 +241,11 @@ jobs:
     - name: docker setup 3.15
       if: matrix.alpine == '3.15'
       uses: docker://alpine:3.15
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: docker setup 3.16
+      if: matrix.alpine == '3.16'
+      uses: docker://alpine:3.16
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
     - name: create archive file
