@@ -103,10 +103,10 @@ cmake version 3.14.2 or lower, download from website and install cmake.
 
 ```Shell
 # build image, dependencies and run tests
-sudo docker build -t cfd .
+docker buildx build -t cfd .
 
 # run container and invoke shell
-sudo docker run -it cfd bash
+docker run -it cfd bash
 ```
 
 ---
@@ -135,7 +135,7 @@ make
 ```
 
 ``` (windows) command prompt example
-cmake -S . -B build  -G "Visual Studio 16 2019"
+cmake -S . -B build -G "Visual Studio 16 2019"
 cmake -D ENABLE_SHARED=1 -DCMAKE_BUILD_TYPE=Release --build build
 cmake --build build
 ```
