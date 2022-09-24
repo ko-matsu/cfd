@@ -120,6 +120,62 @@ using cfd::capi::SetLastFatalError;
 // API
 extern "C" {
 
+CFDC_API int CfdParseScriptAll(
+    void* handle, const char* script, char** script_item_all) {
+  CfdCapiScriptItemHandleData* buffer = nullptr;
+  try {
+    cfd::Initialize();
+    if (script == nullptr) {
+      warn(CFD_LOG_SOURCE, "script is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parse script. script is null.");
+    }
+    if (script_item_all == nullptr) {
+      warn(CFD_LOG_SOURCE, "script item is null.");
+      throw CfdException(
+          CfdError::kCfdIllegalArgumentError,
+          "Failed to parse script. script item is null.");
+    }
+
+    Script script_obj;
+    if (*script != '\0') {
+      script_obj = Script(script);
+    }
+    std::vector<ScriptElement> script_elems = script_obj.GetElementList();
+
+    std::string script_str;
+    for (const auto& elem : script_elems) {
+      std::string data;
+      if (elem.IsOpCode()) {
+        // Convert to OpCode string
+        data = elem.GetOpCode().ToCodeString();
+      } else {
+        data = elem.ToString();
+      }
+      if (script_str.empty()) {
+        script_str = data;
+      } else {
+        script_str += " " + data;
+      }
+    }
+    *script_item_all = CreateString(script_str);
+
+    return CfdErrorCode::kCfdSuccess;
+  } catch (const CfdException& except) {
+    if (buffer != nullptr) CfdFreeScriptItemHandle(handle, buffer);
+    return SetLastError(handle, except);
+  } catch (const std::exception& std_except) {
+    if (buffer != nullptr) CfdFreeScriptItemHandle(handle, buffer);
+    SetLastFatalError(handle, std_except.what());
+    return CfdErrorCode::kCfdUnknownError;
+  } catch (...) {
+    if (buffer != nullptr) CfdFreeScriptItemHandle(handle, buffer);
+    SetLastFatalError(handle, "unknown error.");
+    return CfdErrorCode::kCfdUnknownError;
+  }
+}
+
 CFDC_API int CfdParseScript(
     void* handle, const char* script, void** script_item_handle,
     uint32_t* script_item_num) {
