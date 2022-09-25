@@ -20,6 +20,39 @@ class cfdcapi_script : public ::testing::Test {
   virtual void TearDown() { }
 };
 
+TEST(cfdcapi_script, CfdParseScriptAllTest_LockingScript_Test) {
+  void* handle = NULL;
+  int ret = CfdCreateHandle(&handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_FALSE((NULL == handle));
+
+  // OP_DUP OP_HASH160 <HASH160(038f5d4ee5a661c04de7b715c6b9ac935456419fa9f484470275d1d489f2793301)> OP_EQUALVERIFY OP_CHECKSIG
+  const char* locking_script = "76a9142e3f2c7e30abce5b22451184c5e531a1e23c6e1288ac";
+  char* script_str = nullptr;
+  uint32_t item_num = 0;;
+
+  ret = CfdParseScriptAll(handle, locking_script, &script_str);
+  EXPECT_EQ(kCfdSuccess, ret);
+  EXPECT_STREQ(script_str,
+    "OP_DUP OP_HASH160 2e3f2c7e30abce5b22451184c5e531a1e23c6e12 OP_EQUALVERIFY OP_CHECKSIG"); // NOLINT
+
+  ret = CfdFreeStringBuffer(script_str);
+  EXPECT_EQ(kCfdSuccess, ret);
+
+  ret = CfdGetLastErrorCode(handle);
+  if (ret != kCfdSuccess) {
+    char* str_buffer = NULL;
+    ret = CfdGetLastErrorMessage(handle, &str_buffer);
+    EXPECT_EQ(kCfdSuccess, ret);
+    EXPECT_STREQ("", str_buffer);
+    CfdFreeStringBuffer(str_buffer);
+    str_buffer = NULL;
+  }
+
+  ret = CfdFreeHandle(handle);
+  EXPECT_EQ(kCfdSuccess, ret);
+}
+
 TEST(cfdcapi_script, CfdParseScriptTest_LockingScript_Test) {
   void* handle = NULL;
   int ret = CfdCreateHandle(&handle);

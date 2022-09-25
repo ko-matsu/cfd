@@ -20,9 +20,22 @@ extern "C" {
  * @brief parse script and return script item handle.
  * @param[in] handle              cfd handle.
  * @param[in] script              script string.
+ * @param[out] script_item_all    string of script item, need split space.
+ *   If 'CfdFreeStringBuffer' is implemented,
+ *   Call 'CfdFreeStringBuffer' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdParseScriptAll(
+    void* handle, const char* script, char** script_item_all);
+
+/**
+ * @brief parse script and return script item handle.
+ * @param[in] handle              cfd handle.
+ * @param[in] script              script string.
  * @param[out] script_item_handle script item handle.
  * @param[out] script_item_num    num of items contains script.
  * @return CfdErrorCode
+ * @deprecated please use CfdParseScriptAll
  */
 CFDC_API int CfdParseScript(
     void* handle, const char* script, void** script_item_handle,
@@ -37,6 +50,7 @@ CFDC_API int CfdParseScript(
  *   If 'CfdFreeStringBuffer' is implemented,
  *   Call 'CfdFreeStringBuffer' after you are finished using it.
  * @return CfdErrorCode
+ * @deprecated please use CfdParseScriptAll
  */
 CFDC_API int CfdGetScriptItem(
     void* handle, void* script_item_handle, uint32_t index,
@@ -47,6 +61,7 @@ CFDC_API int CfdGetScriptItem(
  * @param[in] handle             handle pointer.
  * @param[in] script_item_handle handle of getting script item.
  * @return CfdErrorCode
+ * @deprecated please use CfdParseScriptAll
  */
 CFDC_API int CfdFreeScriptItemHandle(void* handle, void* script_item_handle);
 
