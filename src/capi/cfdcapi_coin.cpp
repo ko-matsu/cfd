@@ -595,6 +595,12 @@ int CfdFreeCoinSelectionHandle(void* handle, void* coin_select_handle) {
 
 int CfdInitializeEstimateFee(
     void* handle, void** fee_handle, bool is_elements) {
+  int net_type = (is_elements) ? kCfdNetworkLiquidv1 : kCfdNetworkMainnet;
+  return CfdInitializeEstimateFeeWithNetwork(handle, net_type, fee_handle);
+}
+
+int CfdInitializeEstimateFeeWithNetwork(
+    void* handle, int net_type, void** fee_handle) {
   CfdCapiEstimateFeeData* buffer = nullptr;
   try {
     cfd::Initialize();
@@ -604,6 +610,7 @@ int CfdInitializeEstimateFee(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. Fee handle is null.");
     }
+    bool is_elements = cfd::capi::IsElementsNetType(net_type);
 
     buffer = static_cast<CfdCapiEstimateFeeData*>(
         AllocBuffer(kPrefixEstimateFeeData, sizeof(CfdCapiEstimateFeeData)));

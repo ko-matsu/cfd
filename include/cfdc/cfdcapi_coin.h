@@ -166,11 +166,24 @@ CFDC_API int CfdFreeCoinSelectionHandle(
  * @brief Initialize handle for fee estimation apis.
  * @param[in] handle        cfd handle.
  * @param[out] fee_handle   handle for fee estimation apis.
+ *   Call 'CfdFreeEstimateFeeHandle' after you are finished using it.
  * @param[in] is_elements   estimate on elements chain.
  * @return CfdErrorCode
+ * @deprecated please use CfdInitializeEstimateFeeWithNetwork
  */
 CFDC_API int CfdInitializeEstimateFee(
     void* handle, void** fee_handle, bool is_elements);
+
+/**
+ * @brief Initialize handle for fee estimation apis.
+ * @param[in] handle        cfd handle.
+ * @param[in] net_type      network type.
+ * @param[out] fee_handle   handle for fee estimation apis.
+ *   Call 'CfdFreeEstimateFeeHandle' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdInitializeEstimateFeeWithNetwork(
+    void* handle, int net_type, void** fee_handle);
 
 /**
  * @brief Add Transaction Input for estimate fee handle.
