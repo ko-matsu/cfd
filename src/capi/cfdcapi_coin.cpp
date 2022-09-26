@@ -778,6 +778,14 @@ int CfdFinalizeEstimateFee(
     void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
     int64_t* txout_fee, int64_t* utxo_fee, bool is_blind,
     double effective_fee_rate) {
+  return CfdGetEstimateFee(handle, fee_handle, tx_hex, fee_asset,
+      is_blind, effective_fee_rate, txout_fee, utxo_fee);
+}
+
+int CfdGetEstimateFee(
+    void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
+    bool is_blind, double effective_fee_rate,
+    int64_t* txout_fee, int64_t* utxo_fee) {
   try {
     cfd::Initialize();
     CheckBuffer(fee_handle, kPrefixEstimateFeeData);
