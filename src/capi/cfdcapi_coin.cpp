@@ -610,14 +610,15 @@ int CfdInitializeEstimateFeeWithNetwork(
           CfdError::kCfdIllegalArgumentError,
           "Failed to parameter. Fee handle is null.");
     }
-    bool is_elements = cfd::capi::IsElementsNetType(net_type);
 
     buffer = static_cast<CfdCapiEstimateFeeData*>(
         AllocBuffer(kPrefixEstimateFeeData, sizeof(CfdCapiEstimateFeeData)));
     buffer->input_utxos = new std::vector<UtxoData>();
 #ifndef CFD_DISABLE_ELEMENTS
-    buffer->is_elements = is_elements;
+    buffer->is_elements = cfd::capi::IsElementsNetType(net_type);
     buffer->input_elements_utxos = new std::vector<ElementsUtxoAndOption>();
+#else
+    info(CFD_LOG_SOURCE, "net_type={}", net_type);
 #endif                                               // CFD_DISABLE_ELEMENTS
     buffer->minimum_bits = cfd::capi::kMinimumBits;  // old(36)
 
