@@ -166,11 +166,24 @@ CFDC_API int CfdFreeCoinSelectionHandle(
  * @brief Initialize handle for fee estimation apis.
  * @param[in] handle        cfd handle.
  * @param[out] fee_handle   handle for fee estimation apis.
+ *   Call 'CfdFreeEstimateFeeHandle' after you are finished using it.
  * @param[in] is_elements   estimate on elements chain.
  * @return CfdErrorCode
+ * @deprecated please use CfdInitializeEstimateFeeWithNetwork
  */
 CFDC_API int CfdInitializeEstimateFee(
     void* handle, void** fee_handle, bool is_elements);
+
+/**
+ * @brief Initialize handle for fee estimation apis.
+ * @param[in] handle        cfd handle.
+ * @param[in] net_type      network type.
+ * @param[out] fee_handle   handle for fee estimation apis.
+ *   Call 'CfdFreeEstimateFeeHandle' after you are finished using it.
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdInitializeEstimateFeeWithNetwork(
+    void* handle, int net_type, void** fee_handle);
 
 /**
  * @brief Add Transaction Input for estimate fee handle.
@@ -268,11 +281,31 @@ CFDC_API int CfdSetOptionEstimateFee(
  * @param[in] is_blind              need blind later.
  * @param[in] effective_fee_rate    effective fee rate for estimation.
  * @return CfdErrorCode
+ * @deprecated please use CfdGetEstimateFee
  */
 CFDC_API int CfdFinalizeEstimateFee(
     void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
     int64_t* txout_fee, int64_t* utxo_fee, bool is_blind,
     double effective_fee_rate);
+
+/**
+ * @brief Get fee estimation api call.
+ * @param[in] handle                cfd handle.
+ * @param[in] fee_handle            handle for fee estimation apis.
+ * @param[in] tx_hex                transaction hex.
+ * @param[in] fee_asset             asset id used as fee.
+ * @param[in] is_blind              need blind later.
+ * @param[in] effective_fee_rate    effective fee rate for estimation.
+ * @param[out] txout_fee            estimated fee by transaction base & output.
+ *     (not contain utxo_fee.)
+ * @param[out] utxo_fee             estimated fee by input utxos.
+ *     (not contain txout_fee.)
+ * @return CfdErrorCode
+ */
+CFDC_API int CfdGetEstimateFee(
+    void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
+    bool is_blind, double effective_fee_rate,
+    int64_t* txout_fee, int64_t* utxo_fee);
 
 /**
  * @brief Free handle for fee estimation

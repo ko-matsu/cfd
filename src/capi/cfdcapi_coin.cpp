@@ -595,6 +595,12 @@ int CfdFreeCoinSelectionHandle(void* handle, void* coin_select_handle) {
 
 int CfdInitializeEstimateFee(
     void* handle, void** fee_handle, bool is_elements) {
+  int net_type = (is_elements) ? kCfdNetworkLiquidv1 : kCfdNetworkMainnet;
+  return CfdInitializeEstimateFeeWithNetwork(handle, net_type, fee_handle);
+}
+
+int CfdInitializeEstimateFeeWithNetwork(
+    void* handle, int net_type, void** fee_handle) {
   CfdCapiEstimateFeeData* buffer = nullptr;
   try {
     cfd::Initialize();
@@ -609,8 +615,10 @@ int CfdInitializeEstimateFee(
         AllocBuffer(kPrefixEstimateFeeData, sizeof(CfdCapiEstimateFeeData)));
     buffer->input_utxos = new std::vector<UtxoData>();
 #ifndef CFD_DISABLE_ELEMENTS
-    buffer->is_elements = is_elements;
+    buffer->is_elements = cfd::capi::IsElementsNetType(net_type);
     buffer->input_elements_utxos = new std::vector<ElementsUtxoAndOption>();
+#else
+    info(CFD_LOG_SOURCE, "net_type={}", net_type);
 #endif                                               // CFD_DISABLE_ELEMENTS
     buffer->minimum_bits = cfd::capi::kMinimumBits;  // old(36)
 
@@ -771,6 +779,14 @@ int CfdFinalizeEstimateFee(
     void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
     int64_t* txout_fee, int64_t* utxo_fee, bool is_blind,
     double effective_fee_rate) {
+  return CfdGetEstimateFee(handle, fee_handle, tx_hex, fee_asset,
+      is_blind, effective_fee_rate, txout_fee, utxo_fee);
+}
+
+int CfdGetEstimateFee(
+    void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
+    bool is_blind, double effective_fee_rate,
+    int64_t* txout_fee, int64_t* utxo_fee) {
   try {
     cfd::Initialize();
     CheckBuffer(fee_handle, kPrefixEstimateFeeData);
