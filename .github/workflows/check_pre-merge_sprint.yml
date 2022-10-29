@@ -3,10 +3,10 @@ name: sprint pre-merge check
 on: 
   push:
     branches:
-    - features/sprint*
+    - features/*
   pull_request:
     branches:
-    - features/sprint*
+    - features/*
 
 jobs:
   cmake-win:
@@ -120,7 +120,7 @@ jobs:
         zip -r lcov_cfd_output.zip lcov_cfd_output
         cd ..
     - name: upload coverage
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: output-lcov-cfd-${{ matrix.os }}
         path: ./build/lcov_cfd_output.zip
@@ -185,7 +185,7 @@ jobs:
          # --valgrind-stacksize=1048576 --num-callers=12
          valgrind -v --tool=memcheck --leak-check=full --valgrind-stacksize=10485760 --log-file=./valgrind.log --time-stamp=yes ./build/Debug/cfd_test
     - name: upload coverage
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: valgrind-log
         path: ./valgrind.log
