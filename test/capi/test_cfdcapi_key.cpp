@@ -945,6 +945,8 @@ TEST(cfdcapi_key, MnemonicTest) {
     auto words = StringUtil::Split(mnemonic_words, " ");
     EXPECT_EQ("about", words[3]);
     EXPECT_EQ(2048, words.size());
+    CfdFreeStringBuffer(mnemonic_words);
+    mnemonic_words = NULL;
   }
 
   char* seed = nullptr;
@@ -1005,7 +1007,10 @@ TEST(cfdcapi_key, MessageSignTest) {
   const char* pubkey2 = "0378bfaa4e045cc450ce9397136ac9bac1914147d85945dd9c8c3b2edc0108249d";
   const char* msg = "This is just a test message";
   char* signature = NULL;
-  char* recovered_pubkey = NULL;
+  char* recovered_pubkey1 = NULL;
+  char* recovered_pubkey2 = NULL;
+  char* recovered_pubkey3 = NULL;
+  char* recovered_pubkey4 = NULL;
 
   ret = CfdSignMessage(handle, privkey_wif, msg, NULL, true,
       &signature);
@@ -1017,12 +1022,12 @@ TEST(cfdcapi_key, MessageSignTest) {
   }
 
   ret = CfdVerifyMessage(handle, exp_sig_b64, pubkey, msg, NULL,
-      &recovered_pubkey);
+      &recovered_pubkey1);
   EXPECT_EQ(kCfdSuccess, ret);
-  if (ret == kCfdSuccess) {
-    EXPECT_STREQ(pubkey, recovered_pubkey);
-    CfdFreeStringBuffer(recovered_pubkey);
-    recovered_pubkey = NULL;
+  if ((ret == kCfdSuccess) || (ret == kCfdSignVerificationError)) {
+    EXPECT_STREQ(pubkey, recovered_pubkey1);
+    CfdFreeStringBuffer(recovered_pubkey1);
+    recovered_pubkey1 = NULL;
   }
 
   ret = CfdSignMessage(handle, privkey_hex, msg, NULL, false,
@@ -1035,31 +1040,31 @@ TEST(cfdcapi_key, MessageSignTest) {
   }
 
   ret = CfdVerifyMessage(handle, exp_sig_hex, pubkey, msg, NULL,
-      &recovered_pubkey);
+      &recovered_pubkey2);
   EXPECT_EQ(kCfdSuccess, ret);
-  if (ret == kCfdSuccess) {
-    EXPECT_STREQ(pubkey, recovered_pubkey);
-    CfdFreeStringBuffer(recovered_pubkey);
-    recovered_pubkey = NULL;
+  if ((ret == kCfdSuccess) || (ret == kCfdSignVerificationError)) {
+    EXPECT_STREQ(pubkey, recovered_pubkey2);
+    CfdFreeStringBuffer(recovered_pubkey2);
+    recovered_pubkey2 = NULL;
   }
 
   // verify error
   ret = CfdVerifyMessage(handle, exp_sig_hex, pubkey, "This is just a test message2", NULL,
-      &recovered_pubkey);
+      &recovered_pubkey3);
   EXPECT_EQ(kCfdSignVerificationError, ret);
-  if (ret == kCfdSuccess) {
-    EXPECT_STRNE(pubkey, recovered_pubkey);
-    CfdFreeStringBuffer(recovered_pubkey);
-    recovered_pubkey = NULL;
+  if ((ret == kCfdSuccess) || (ret == kCfdSignVerificationError)) {
+    EXPECT_STRNE(pubkey, recovered_pubkey3);
+    CfdFreeStringBuffer(recovered_pubkey3);
+    recovered_pubkey3 = NULL;
   }
 
   ret = CfdVerifyMessage(handle, exp_sig_hex, pubkey2, msg, NULL,
-      &recovered_pubkey);
+      &recovered_pubkey4);
   EXPECT_EQ(kCfdSignVerificationError, ret);
-  if (ret == kCfdSuccess) {
-    EXPECT_STREQ(pubkey, recovered_pubkey);
-    CfdFreeStringBuffer(recovered_pubkey);
-    recovered_pubkey = NULL;
+  if ((ret == kCfdSuccess) || (ret == kCfdSignVerificationError)) {
+    EXPECT_STREQ(pubkey, recovered_pubkey4);
+    CfdFreeStringBuffer(recovered_pubkey4);
+    recovered_pubkey4 = NULL;
   }
 
   ret = CfdFreeHandle(handle);
