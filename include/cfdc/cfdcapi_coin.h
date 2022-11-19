@@ -304,8 +304,8 @@ CFDC_API int CfdFinalizeEstimateFee(
  */
 CFDC_API int CfdGetEstimateFee(
     void* handle, void* fee_handle, const char* tx_hex, const char* fee_asset,
-    bool is_blind, double effective_fee_rate,
-    int64_t* txout_fee, int64_t* utxo_fee);
+    bool is_blind, double effective_fee_rate, int64_t* txout_fee,
+    int64_t* utxo_fee);
 
 /**
  * @brief Free handle for fee estimation
