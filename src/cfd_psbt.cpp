@@ -597,7 +597,9 @@ void Psbt::Verify(const OutPoint& outpoint) const {
 
     UtxoData utxo = GetUtxoData(index);
     TxIn txin(utxo.txid, utxo.vout, tx.GetTxIn(index).GetSequence());
-    ByteData scriptsig = cfd::core::Psbt::GetTxInFinalScript(index, false)[0];
+    ByteData scriptsig;
+    auto tmp_scriptsigs = cfd::core::Psbt::GetTxInFinalScript(index, false);
+    if (!tmp_scriptsigs.empty()) scriptsig = tmp_scriptsigs[0];
     if (!scriptsig.IsEmpty()) txin.SetUnlockingScript(Script(scriptsig));
     auto witness_stack = cfd::core::Psbt::GetTxInFinalScript(index, true);
     for (const auto& stack : witness_stack) {
@@ -719,6 +721,10 @@ uint32_t Psbt::GetDefaultSequence() const {
 }
 
 UtxoData Psbt::GetUtxoData(uint32_t index, NetType net_type) const {
+  static const ByteData final_scriptsig_key(
+      cfd::core::Psbt::kPsbtInputFinalScriptsig);
+  static const ByteData final_script_witness_key(
+      cfd::core::Psbt::kPsbtInputFinalScriptWitness);
   CheckTxInIndex(index, __LINE__, __FUNCTION__);
   struct wally_psbt* psbt_pointer;
   psbt_pointer = static_cast<struct wally_psbt*>(wally_psbt_pointer_);
@@ -787,11 +793,9 @@ UtxoData Psbt::GetUtxoData(uint32_t index, NetType net_type) const {
           }
         }
       }
-    } else if (psbt_pointer->inputs[index].final_scriptsig != nullptr) {
-      Script scriptsig(ByteData(
-          psbt_pointer->inputs[index].final_scriptsig,
-          static_cast<uint32_t>(
-              psbt_pointer->inputs[index].final_scriptsig_len)));
+    } else if (IsFindTxInRecord(index, final_scriptsig_key)) {
+      auto data = GetTxInRecord(index, final_scriptsig_key);
+      Script scriptsig(data);
       auto items = scriptsig.GetElementList();
       uint32_t last_index = static_cast<uint32_t>(items.size());
       if (last_index > 0) {
@@ -809,11 +813,9 @@ UtxoData Psbt::GetUtxoData(uint32_t index, NetType net_type) const {
       }
     }
   } else if (witness_only) {
-    if (psbt_pointer->inputs[index].witness_script != nullptr) {
-      utxo.redeem_script = Script(ByteData(
-          psbt_pointer->inputs[index].witness_script,
-          static_cast<uint32_t>(
-              psbt_pointer->inputs[index].witness_script_len)));
+    auto witness_script = GetTxInRedeemScriptDirect(index, true, true);
+    if (!witness_script.IsEmpty()) {
+      utxo.redeem_script = witness_script;
       if (utxo.address_type == AddressType::kP2shAddress) {
         utxo.address_type = AddressType::kP2shP2wshAddress;
       }
@@ -823,11 +825,9 @@ UtxoData Psbt::GetUtxoData(uint32_t index, NetType net_type) const {
 
     key_list = cfd::core::Psbt::GetTxInKeyDataList(index);
   } else {
-    if (psbt_pointer->inputs[index].redeem_script != nullptr) {
-      utxo.redeem_script = Script(ByteData(
-          psbt_pointer->inputs[index].redeem_script,
-          static_cast<uint32_t>(
-              psbt_pointer->inputs[index].redeem_script_len)));
+    auto redeem_script = GetTxInRedeemScriptDirect(index, true, false);
+    if (!redeem_script.IsEmpty()) {
+      utxo.redeem_script = redeem_script;
     }
     key_list = cfd::core::Psbt::GetTxInKeyDataList(index);
   }

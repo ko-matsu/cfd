@@ -502,6 +502,9 @@ TEST(cfdcapi_psbt, UsecaseMultisig) {
 
         ret = CfdGetPsbtData(handle, psbt_handle1, &psbt1, nullptr);
         EXPECT_EQ(kCfdSuccess, ret);
+        if (ret == kCfdSuccess) {
+          EXPECT_STREQ("cHNidP8BADMCAAAAAWkv08JB0xYYGWvDa23k9riJEU5CDpvd+cu+Ux5aVE1UAAAAAAD/////AAAAAAAAAQEgCFjNHQAAAAAXqRSUX7UDkacGN8H/xat/tlMIwvIxdYcBAwQBAAAAAQQiACCcTayyXruK2ou7Gt24ad6k2BcMyVHx2WlLIVThWDJ2yQEFR1IhA6US9fWcDnkB/EeO1jU+73b0T5yywYW/vPfwubt2cWvzIQP01HNhTpVKxPVRjm98szB7T4R0PhN+1O7LX0+2Q8I7R1KuIgYDpRL19ZwOeQH8R47WNT7vdvRPnLLBhb+89/C5u3Zxa/MYKnBHYCwAAIAAAACAAAAAgAAAAAALAAAAAA==", psbt1);
+        }
 
         ret = CfdFreePsbtHandle(handle, psbt_handle1);
         EXPECT_EQ(kCfdSuccess, ret);
@@ -519,6 +522,9 @@ TEST(cfdcapi_psbt, UsecaseMultisig) {
 
         ret = CfdGetPsbtData(handle, psbt_handle2, &psbt2, nullptr);
         EXPECT_EQ(kCfdSuccess, ret);
+        if (ret == kCfdSuccess) {
+          EXPECT_STREQ("cHNidP8BADMCAAAAAWkv08JB0xYYGWvDa23k9riJEU5CDpvd+cu+Ux5aVE1UAAAAAAD/////AAAAAAAAAQEgCFjNHQAAAAAXqRSUX7UDkacGN8H/xat/tlMIwvIxdYcBAwQBAAAAAQQiACCcTayyXruK2ou7Gt24ad6k2BcMyVHx2WlLIVThWDJ2yQEFR1IhA6US9fWcDnkB/EeO1jU+73b0T5yywYW/vPfwubt2cWvzIQP01HNhTpVKxPVRjm98szB7T4R0PhN+1O7LX0+2Q8I7R1KuIgYD9NRzYU6VSsT1UY5vfLMwe0+EdD4TftTuy19PtkPCO0cYnWtthiwAAIAAAACAAAAAgAAAAAALAAAAAA==", psbt2);
+        }
 
         ret = CfdFreePsbtHandle(handle, psbt_handle2);
         EXPECT_EQ(kCfdSuccess, ret);
@@ -541,6 +547,16 @@ TEST(cfdcapi_psbt, UsecaseMultisig) {
     ret = CfdSetPsbtTxOutBip32Pubkey(handle, psbt_handle, 0,
         key2, "9d6b6d86", path1);
     EXPECT_EQ(kCfdSuccess, ret);
+
+    ret = CfdGetPsbtData(handle, psbt_handle, &base64, nullptr);
+    EXPECT_EQ(kCfdSuccess, ret);
+    if (ret == kCfdSuccess) {
+      EXPECT_STREQ("cHNidP8BAF4CAAAAAWkv08JB0xYYGWvDa23k9riJEU5CDpvd+cu+Ux5aVE1UAAAAAAD/////ARBLzR0AAAAAIgAgPK0GGd5n5iR6dqECgTY1wFNFfGuk/eSsH/2BSNcOS8wAAAAAAAEBIAhYzR0AAAAAF6kUlF+1A5GnBjfB/8Wrf7ZTCMLyMXWHAQMEAQAAAAEEIgAgnE2ssl67itqLuxrduGnepNgXDMlR8dlpSyFU4VgydskBBUdSIQOlEvX1nA55AfxHjtY1Pu929E+cssGFv7z38Lm7dnFr8yED9NRzYU6VSsT1UY5vfLMwe0+EdD4TftTuy19PtkPCO0dSrgABAUdSIQKQbTmfbbvsyJjUuN4/SXR0yGpB8s821x+V5coGsHSGeyECYix5dOwy3nWvo3M7CabDPQ3qUUsp+qzPsJkXdPRiIkJSriICAmIseXTsMt51r6NzOwmmwz0N6lFLKfqsz7CZF3T0YiJCGJ1rbYYsAACAAAAAgAAAAIAAAAAADAAAACICApBtOZ9tu+zImNS43j9JdHTIakHyzzbXH5XlygawdIZ7GCpwR2AsAACAAAAAgAAAAIAAAAAADAAAAAA=", base64);
+
+      ret = CfdFreeStringBuffer(base64);
+      EXPECT_EQ(kCfdSuccess, ret);
+      base64 = nullptr;
+    }
 
     if ((psbt1 != nullptr) && (psbt2 != nullptr)) {
       ret = CfdJoinPsbt(handle, psbt_handle, psbt1);
@@ -1338,11 +1354,11 @@ TEST(cfdcapi_psbt, GetPsbtGlobal) {
   if (ret == kCfdSuccess) {
     const char* pubkey = "xpub6EkLrUTiaMiLbMAkbLN2BdH4hWkCQT7fLQf3Q6Ymx3gAqbuFeSKHfTMVDtjcsuRtEFqJbAsjYFZMrqeDLgRSsn4yuQygK44HWPrnA7gZC2C";
     ret = CfdAddPsbtGlobalXpubkey(handle, psbt_handle,
-        pubkey, "b7665978", "0/44");
+        pubkey, "b7665978", "0h/0h/0/44");
     EXPECT_EQ(kCfdSuccess, ret);
 
     ret = CfdAddPsbtGlobalXpubkey(handle, psbt_handle,
-        "[ae05dbb7/0/44']xpub6JNQxQDHv2vcUQiXjggbaGYZg3nmxX6ojMcJPSs4KfLSLnMBCg8VbJUh5n4to2SwLWXdSXnHBkUQx1fVnJ9oKYjPPYAQehjWRpx6ErQyykX", nullptr, nullptr);
+        "[b7665978/0h/0h/0/44/0/44']xpub6JNQxQDHv2vcUQiXjggbaGYZg3nmxX6ojMcJPSs4KfLSLnMBCg8VbJUh5n4to2SwLWXdSXnHBkUQx1fVnJ9oKYjPPYAQehjWRpx6ErQyykX", nullptr, nullptr);
     EXPECT_EQ(kCfdSuccess, ret);
 
     ret = CfdIsFindPsbtPubkeyRecord(handle, psbt_handle, kCfdPsbtRecordGloalXpub, 0, pubkey);
@@ -1353,7 +1369,7 @@ TEST(cfdcapi_psbt, GetPsbtGlobal) {
         kCfdPsbtRecordGloalXpub, 0, pubkey, &signature);
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
-      EXPECT_STREQ("b7665978000000002c000000", signature);
+      EXPECT_STREQ("b76659780000008000000080000000002c000000", signature);
       ret = CfdFreeStringBuffer(signature);
       EXPECT_EQ(kCfdSuccess, ret);
     }
@@ -1364,7 +1380,7 @@ TEST(cfdcapi_psbt, GetPsbtGlobal) {
     EXPECT_EQ(kCfdSuccess, ret);
     if (ret == kCfdSuccess) {
       EXPECT_STREQ("b7665978", fingerprint);
-      EXPECT_STREQ("0/44", path);
+      EXPECT_STREQ("0'/0'/0/44", path);
       ret = CfdFreeStringBuffer(fingerprint);
       EXPECT_EQ(kCfdSuccess, ret);
       ret = CfdFreeStringBuffer(path);
@@ -1406,11 +1422,11 @@ TEST(cfdcapi_psbt, GetPsbtGlobal) {
           if (index == 0) {
             EXPECT_STREQ("xpub6EkLrUTiaMiLbMAkbLN2BdH4hWkCQT7fLQf3Q6Ymx3gAqbuFeSKHfTMVDtjcsuRtEFqJbAsjYFZMrqeDLgRSsn4yuQygK44HWPrnA7gZC2C", pk);
             EXPECT_STREQ("b7665978", fingerprint);
-            EXPECT_STREQ("0/44", path);
+            EXPECT_STREQ("0'/0'/0/44", path);
           } else if (index == 1) {
             EXPECT_STREQ("xpub6JNQxQDHv2vcUQiXjggbaGYZg3nmxX6ojMcJPSs4KfLSLnMBCg8VbJUh5n4to2SwLWXdSXnHBkUQx1fVnJ9oKYjPPYAQehjWRpx6ErQyykX", pk);
-            EXPECT_STREQ("ae05dbb7", fingerprint);
-            EXPECT_STREQ("0/44'", path);
+            EXPECT_STREQ("b7665978", fingerprint);
+            EXPECT_STREQ("0'/0'/0/44/0/44'", path);
           }
           ret = CfdFreeStringBuffer(pk);
           EXPECT_EQ(kCfdSuccess, ret);

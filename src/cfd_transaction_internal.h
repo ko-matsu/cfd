@@ -8,6 +8,7 @@
 #define CFD_SRC_CFD_TRANSACTION_INTERNAL_H_
 
 #include <algorithm>
+#include <functional>
 #include <string>
 #include <vector>
 

@@ -5,6 +5,7 @@
  * @brief cfdのnode.js向けAPI実装ファイル
  */
 #include <string>
+#include <functional>
 
 #include "cfd/cfd_common.h"
 #include "cfd/cfd_json_mapping_api.h"

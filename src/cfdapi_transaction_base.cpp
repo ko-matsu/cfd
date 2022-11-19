@@ -7,6 +7,7 @@
 #include "cfdapi_transaction_base.h"  // NOLINT
 
 #include <algorithm>
+#include <functional>
 #include <string>
 #include <vector>
 

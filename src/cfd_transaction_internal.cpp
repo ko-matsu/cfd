@@ -7,6 +7,7 @@
 #include "cfd_transaction_internal.h"  // NOLINT
 
 #include <algorithm>
+#include <functional>
 #include <string>
 #include <vector>
 
