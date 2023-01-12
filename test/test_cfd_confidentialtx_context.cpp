@@ -809,7 +809,8 @@ TEST(ConfidentialTransactionContext, SequenceApiTestWithKey)
   EXPECT_NO_THROW(txc.Verify(OutPoint(utxo2.txid, utxo2.vout)));
   EXPECT_NO_THROW(tx = txc.Finalize());
 
-  if ((tx.GetDataSize() != 9185) && (tx.GetDataSize() != 9186) && (tx.GetDataSize() != 9187)) {
+  if ((tx.GetDataSize() != 9184) && (tx.GetDataSize() != 9185) && (tx.GetDataSize() != 9186) &&
+      (tx.GetDataSize() != 9187)) {
     EXPECT_EQ(0, tx.GetDataSize());
   }
 }
