@@ -10,9 +10,6 @@ on:
     - master
     - stable_v*
 
-env:
-  CMAKE_VERSION: 3.17.2
-
 jobs:
   cmake-win-test:
     name: cmake build-win
@@ -37,7 +34,7 @@ jobs:
             generator: 'Visual Studio 17 2022'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: cmake_version
       run: cmake --version
     - name: cmake_generage
@@ -70,7 +67,7 @@ jobs:
             xcode_version: '11.7'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Select Xcode version
       run: sudo xcode-select -s '/Applications/Xcode_${{matrix.xcode_version}}.app/Contents/Developer'
     - name: Show Xcode version
@@ -101,7 +98,7 @@ jobs:
             elements: off
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: dump version
       run: |
         cmake --version
@@ -129,7 +126,7 @@ jobs:
         elements: [on]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: dump version
       run: |
         cmake --version
@@ -172,7 +169,7 @@ jobs:
             generator: 'Visual Studio 17 2022'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: dump version
       run: |
         cmake --version
@@ -200,7 +197,7 @@ jobs:
         shared: [on]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: dump version
       run: |
         cmake --version
@@ -246,7 +243,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: install_doxygen
       run: sudo apt install doxygen graphviz
     - name: doxygen_check
