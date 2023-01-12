@@ -14,7 +14,7 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -39,7 +39,7 @@ jobs:
     - name: output url
       id: output_url
       run: |
-        echo "::set-output name=upload_url::${{steps.get_release.outputs.upload_url}}${{steps.create_release.outputs.upload_url}}"
+        echo "upload_url=${{steps.get_release.outputs.upload_url}}${{steps.create_release.outputs.upload_url}}" >> $GITHUB_OUTPUT
 
   upload-object-windows:
     name: upload-object-win
@@ -77,25 +77,13 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
-    - name: cmake version
-      id: cmake_version
-      shell: bash
-      run: |
-        cmake --version
-        cmake_version=$(cmake --version | head -n 1)
-        echo ::set-output name=CMAKE_VERSION::${cmake_version}
-    - name: update cmake
-      if: "contains(${{steps.cmake_version.outputs.CMAKE_VERSION}}, '3.23.0')"
-      uses: jwlawson/actions-setup-cmake@v1.12
-      with:
-        cmake-version: '3.23.x'
+      uses: actions/checkout@v3
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
       shell: bash
     - name: dump version
       env:
@@ -144,7 +132,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os_ver: [22, 20, 18]
+        os_ver: [22, 20]
         bin: [gcc, gcc-static]
         include:
           - bin: gcc
@@ -154,22 +142,10 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
-    - name: cmake version
-      id: cmake_version
-      shell: bash
-      run: |
-        cmake --version
-        cmake_version=$(cmake --version | head -n 1)
-        echo ::set-output name=CMAKE_VERSION::${cmake_version}
-    - name: update cmake
-      if: "contains(${{steps.cmake_version.outputs.CMAKE_VERSION}}, '3.23.0')"
-      uses: jwlawson/actions-setup-cmake@v1.12
-      with:
-        cmake-version: '3.23.x'
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: cmake-build
       run: |
         mkdir dist
@@ -190,7 +166,7 @@ jobs:
         ls -l
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
       env:
@@ -204,18 +180,18 @@ jobs:
   upload-object-alpine:
     name: upload-object-alpine
     needs: create_releases
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
-        alpine: ['3.10', '3.12', '3.13', '3.14', '3.15', '3.16']
+        alpine: ['3.10', '3.12', '3.13', '3.14', '3.15', '3.16', '3.17']
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: list
       run: ls -a $GITHUB_WORKSPACE
     - name: docker setup 3.10
@@ -248,6 +224,11 @@ jobs:
       uses: docker://alpine:3.16
       with:
         entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+    - name: docker setup 3.17
+      if: matrix.alpine == '3.17'
+      uses: docker://alpine:3.17
+      with:
+        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
     - name: create archive file
       run: |
         echo "---- dump output data ----"
@@ -265,7 +246,7 @@ jobs:
         sudo ls -l /tmp/cfd
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       id: upload-release-asset 
 #      if: success()
@@ -303,22 +284,10 @@ jobs:
 
     steps:
     - name: checkout
-      uses: actions/checkout@v2
-    - name: cmake version
-      id: cmake_version
-      shell: bash
-      run: |
-        cmake --version
-        cmake_version=$(cmake --version | head -n 1)
-        echo ::set-output name=CMAKE_VERSION::${cmake_version}
-    - name: update cmake
-      if: "contains(${{steps.cmake_version.outputs.CMAKE_VERSION}}, '3.23.0')"
-      uses: jwlawson/actions-setup-cmake@v1.12
-      with:
-        cmake-version: '3.23.x'
+      uses: actions/checkout@v3
     - name: Get the version
       id: get_version
-      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run: echo "VERSION=${GITHUB_REF/refs\/tags\///}" >> $GITHUB_OUTPUT
     - name: Select Xcode version
       run: sudo xcode-select -s '/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer'
     - name: Show Xcode version
@@ -343,7 +312,7 @@ jobs:
         ls -l
     - name: output url
       id: get_url
-      run: echo "::set-output name=upload_url::${{ needs.create_releases.outputs.release_url }}"
+      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
       env:
