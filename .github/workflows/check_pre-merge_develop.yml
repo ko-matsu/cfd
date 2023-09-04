@@ -1,12 +1,12 @@
 name: develop pre-merge check
 
-on: 
+on:
   push:
     branches:
-    - develop
+      - develop
   pull_request:
     branches:
-    - develop
+      - develop
 
 jobs:
   cmake-win-test:
@@ -32,56 +32,56 @@ jobs:
             generator: 'Visual Studio 17 2022'
 
     steps:
-    - uses: actions/checkout@v3
-    - name: cmake_version
-      run: cmake --version
-    - name: cmake_generage
-      run: cmake -S . -B build -G "${{ matrix.generator }}" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=on
-    - name: cmake_build
-      run: cmake --build build --config Release --parallel 4
-    - name: ctest
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
+      - uses: actions/checkout@v3
+      - name: cmake_version
+        run: cmake --version
+      - name: cmake_generage
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=on
+      - name: cmake_build
+        run: cmake --build build --config Release --parallel 4
+      - name: ctest
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
 
   cmake-mac-test:
     name: cmake build-mac
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-11, macos-12]
-        xcode_version: ['11.7']
+        os: [macos-11, macos-12, macos-13]
+        xcode_version: ['13.2.1']
         include:
           - os: macos-11
             xcode_version: '12.5.1'
-          - os: macos-11
-            xcode_version: '13.2.1'
-          - os: macos-12
-            xcode_version: '13.1'
           - os: macos-12
             xcode_version: '13.4.1'
-        exclude:
           - os: macos-12
-            xcode_version: '11.7'
+            xcode_version: '14.2'
+          - os: macos-13
+            xcode_version: '14.3.1'
+        exclude:
+          - os: macos-13
+            xcode_version: '13.2.1'
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Select Xcode version
-      run: sudo xcode-select -s '/Applications/Xcode_${{matrix.xcode_version}}.app/Contents/Developer'
-    - name: Show Xcode version
-      run: xcodebuild -version
-    - name: cmake_version
-      run: cmake --version
-    - name: cmake_generage-macos
-      run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on
-    - name: cmake_build
-      run: cmake --build build --config Release --parallel 4
-    - name: ctest
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
-    - name: lint_check
-      run: ./tools/lint_quiet.sh
+      - uses: actions/checkout@v3
+      - name: Select Xcode version
+        run: sudo xcode-select -s '/Applications/Xcode_${{matrix.xcode_version}}.app/Contents/Developer'
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: cmake_version
+        run: cmake --version
+      - name: cmake_generage-macos
+        run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on
+      - name: cmake_build
+        run: cmake --build build --config Release --parallel 4
+      - name: ctest
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
+      - name: lint_check
+        run: ./tools/lint_quiet.sh
 
   cmake-ubuntu-test:
     name: cmake build
@@ -96,33 +96,33 @@ jobs:
             elements: off
 
     steps:
-    - uses: actions/checkout@v3
-    - name: dump version
-      run: |
-        cmake --version
-        gcc --version
-    - name: cmake_configure
-      run: |
-        cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_ELEMENTS=${{ matrix.elements }} -DTARGET_RPATH=./build/Release
-    - name: cmake-build
-      run: cmake --build build --config Release --parallel 4
-    - name: lint_check
-      run: ./tools/lint_quiet.sh
-    - name: test
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
-        cd ..
+      - uses: actions/checkout@v3
+      - name: dump version
+        run: |
+          cmake --version
+          gcc --version
+      - name: cmake_configure
+        run: |
+          cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_ELEMENTS=${{ matrix.elements }} -DTARGET_RPATH=./build/Release
+      - name: cmake-build
+        run: cmake --build build --config Release --parallel 4
+      - name: lint_check
+        run: ./tools/lint_quiet.sh
+      - name: test
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
+          cd ..
 
   doxygen-ubuntu:
     name: doxygen-check
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
-    - name: install_doxygen
-      run: sudo apt install doxygen graphviz
-    - name: doxygen_check
-      run: |
-        cd doc
-        doxygen Doxyfile_quiet_all
+      - uses: actions/checkout@v3
+      - name: install_doxygen
+        run: sudo apt install doxygen graphviz
+      - name: doxygen_check
+        run: |
+          cd doc
+          doxygen Doxyfile_quiet_all

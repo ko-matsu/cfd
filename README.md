@@ -135,7 +135,7 @@ make
 ```
 
 ``` (windows) command prompt example
-cmake -S . -B build -G "Visual Studio 16 2019"
+cmake -S . -B build -G "Visual Studio 17 2022"
 cmake -D ENABLE_SHARED=1 -DCMAKE_BUILD_TYPE=Release --build build
 cmake --build build
 ```
