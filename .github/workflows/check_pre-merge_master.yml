@@ -1,14 +1,14 @@
 name: master pre-merge check
 
-on: 
+on:
   push:
     branches:
-    - master
-    - stable_v*
+      - master
+      - stable_v*
   pull_request:
     branches:
-    - master
-    - stable_v*
+      - master
+      - stable_v*
 
 jobs:
   cmake-win-test:
@@ -34,17 +34,17 @@ jobs:
             generator: 'Visual Studio 17 2022'
 
     steps:
-    - uses: actions/checkout@v3
-    - name: cmake_version
-      run: cmake --version
-    - name: cmake_generage
-      run: cmake -S . -B build -G "${{ matrix.generator }}" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=on
-    - name: cmake_build
-      run: cmake --build build --config Release --parallel 4
-    - name: ctest
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
+      - uses: actions/checkout@v3
+      - name: cmake_version
+        run: cmake --version
+      - name: cmake_generage
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=on
+      - name: cmake_build
+        run: cmake --build build --config Release --parallel 4
+      - name: ctest
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
 
   cmake-mac-test:
     name: cmake build-mac
@@ -67,23 +67,23 @@ jobs:
             xcode_version: '13.2.1'
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Select Xcode version
-      run: sudo xcode-select -s '/Applications/Xcode_${{matrix.xcode_version}}.app/Contents/Developer'
-    - name: Show Xcode version
-      run: xcodebuild -version
-    - name: cmake_version
-      run: cmake --version
-    - name: cmake_generage-macos
-      run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on
-    - name: cmake_build
-      run: cmake --build build --config Release --parallel 4
-    - name: ctest
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
-    - name: lint_check
-      run: ./tools/lint_quiet.sh
+      - uses: actions/checkout@v3
+      - name: Select Xcode version
+        run: sudo xcode-select -s '/Applications/Xcode_${{matrix.xcode_version}}.app/Contents/Developer'
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: cmake_version
+        run: cmake --version
+      - name: cmake_generage-macos
+        run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on
+      - name: cmake_build
+        run: cmake --build build --config Release --parallel 4
+      - name: ctest
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
+      - name: lint_check
+        run: ./tools/lint_quiet.sh
 
   cmake-ubuntu-test:
     name: cmake build
@@ -98,23 +98,23 @@ jobs:
             elements: off
 
     steps:
-    - uses: actions/checkout@v3
-    - name: dump version
-      run: |
-        cmake --version
-        gcc --version
-    - name: cmake_configure
-      run: |
-        cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_ELEMENTS=${{ matrix.elements }} -DTARGET_RPATH=./build/Release
-    - name: cmake-build
-      run: cmake --build build --config Release --parallel 4
-    - name: lint_check
-      run: ./tools/lint_quiet.sh
-    - name: test
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
-        cd ..
+      - uses: actions/checkout@v3
+      - name: dump version
+        run: |
+          cmake --version
+          gcc --version
+      - name: cmake_configure
+        run: |
+          cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_ELEMENTS=${{ matrix.elements }} -DTARGET_RPATH=./build/Release
+      - name: cmake-build
+        run: cmake --build build --config Release --parallel 4
+      - name: lint_check
+        run: ./tools/lint_quiet.sh
+      - name: test
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
+          cd ..
 
   cmake-ubuntu-coverage:
     name: cmake build-ubuntu
@@ -126,36 +126,36 @@ jobs:
         elements: [on]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: dump version
-      run: |
-        cmake --version
-        gcc --version
-    - name: ubuntu-apt-install
-      run: sudo apt install lcov
-    - name: cmake-build
-      run: |
-        cmake --version
-        cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_ELEMENTS=${{ matrix.elements }} -DENABLE_DEBUG=on -DENABLE_COVERAGE=on -DCMAKE_BUILD_TYPE=Debug -DTARGET_RPATH=./build/Debug
-        cmake --build build --config Debug --parallel 4
-    - name: lint_check
-      run: ./tools/lint_quiet.sh
-    - name: test
-      run: |
-        cd build
-        ctest -C Debug --output-on-failure -R cfd
-        cd ..
-    - name: collect coverage
-      run: |
-        cd build
-        make lcov_cfd
-        zip -r lcov_cfd_output.zip lcov_cfd_output
-        cd ..
-    - name: upload coverage
-      uses: actions/upload-artifact@v1
-      with:
-        name: output-lcov-cfd-${{ matrix.os }}
-        path: ./build/lcov_cfd_output.zip
+      - uses: actions/checkout@v3
+      - name: dump version
+        run: |
+          cmake --version
+          gcc --version
+      - name: ubuntu-apt-install
+        run: sudo apt install lcov
+      - name: cmake-build
+        run: |
+          cmake --version
+          cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_ELEMENTS=${{ matrix.elements }} -DENABLE_DEBUG=on -DENABLE_COVERAGE=on -DCMAKE_BUILD_TYPE=Debug -DTARGET_RPATH=./build/Debug
+          cmake --build build --config Debug --parallel 4
+      - name: lint_check
+        run: ./tools/lint_quiet.sh
+      - name: test
+        run: |
+          cd build
+          ctest -C Debug --output-on-failure -R cfd
+          cd ..
+      - name: collect coverage
+        run: |
+          cd build
+          make lcov_cfd
+          zip -r lcov_cfd_output.zip lcov_cfd_output
+          cd ..
+      - name: upload coverage
+        uses: actions/upload-artifact@v1
+        with:
+          name: output-lcov-cfd-${{ matrix.os }}
+          path: ./build/lcov_cfd_output.zip
 
   cmake-cpp-support-test:
     name: cmake build-ubuntu C++ support test
@@ -169,24 +169,24 @@ jobs:
             generator: 'Visual Studio 17 2022'
 
     steps:
-    - uses: actions/checkout@v3
-    - name: dump version
-      run: |
-        cmake --version
-        gcc --version
-    - name: cmake_configure
-      if: matrix.os != 'windows-2022'
-      run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH=./build/Release
-    - name: cmake_generage vs
-      if: matrix.os == 'windows-2022'
-      run: cmake -S . -B build -G "${{ matrix.generator }}" -A x64 -DENABLE_SHARED=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release
-    - name: cmake_build
-      run: cmake --build build --config Release --parallel 4
-    - name: test
-      run: |
-        cd build
-        ctest -C Release --output-on-failure
-        cd ..
+      - uses: actions/checkout@v3
+      - name: dump version
+        run: |
+          cmake --version
+          gcc --version
+      - name: cmake_configure
+        if: matrix.os != 'windows-2022'
+        run: cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=on -DENABLE_ELEMENTS=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH=./build/Release
+      - name: cmake_generage vs
+        if: matrix.os == 'windows-2022'
+        run: cmake -S . -B build -G "${{ matrix.generator }}" -A x64 -DENABLE_SHARED=on -DENABLE_TESTS=on -DSTD_CPP_VERSION=${{ matrix.cppver }} -DCMAKE_BUILD_TYPE=Release
+      - name: cmake_build
+        run: cmake --build build --config Release --parallel 4
+      - name: test
+        run: |
+          cd build
+          ctest -C Release --output-on-failure
+          cd ..
 
   ubuntu-valgrind:
     name: valgrind-ubuntu
@@ -197,30 +197,30 @@ jobs:
         shared: [on]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: dump version
-      run: |
-        cmake --version
-        gcc --version
-    - name: ubuntu-apt-install
-      run: |
-        cat /etc/os-release
-        sudo apt-get update
-        sudo apt-get install -y valgrind
-    - name: cmake-build
-      run: |
-        cmake --version
-        cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DCMAKE_BUILD_TYPE=Debug -DTARGET_RPATH=./build/Debug
-        cmake --build build --config Debug --parallel 4
-    - name: valgrind
-      run: |
-         # --valgrind-stacksize=1048576 --num-callers=12
-         valgrind -v --tool=memcheck --leak-check=full --valgrind-stacksize=10485760 --log-file=./valgrind.log --time-stamp=yes ./build/Debug/cfd_test
-    - name: upload coverage
-      uses: actions/upload-artifact@v1
-      with:
-        name: valgrind-log
-        path: ./valgrind.log
+      - uses: actions/checkout@v3
+      - name: dump version
+        run: |
+          cmake --version
+          gcc --version
+      - name: ubuntu-apt-install
+        run: |
+          cat /etc/os-release
+          sudo apt-get update
+          sudo apt-get install -y valgrind
+      - name: cmake-build
+        run: |
+          cmake --version
+          cmake -S . -B build -G "Unix Makefiles" -DENABLE_SHARED=${{ matrix.shared }} -DCMAKE_BUILD_TYPE=Debug -DTARGET_RPATH=./build/Debug
+          cmake --build build --config Debug --parallel 4
+      - name: valgrind
+        run: |
+          # --valgrind-stacksize=1048576 --num-callers=12
+          valgrind -v --tool=memcheck --leak-check=full --valgrind-stacksize=10485760 --log-file=./valgrind.log --time-stamp=yes ./build/Debug/cfd_test
+      - name: upload coverage
+        uses: actions/upload-artifact@v1
+        with:
+          name: valgrind-log
+          path: ./valgrind.log
 
   arm-build-test:
     runs-on: ubuntu-22.04
@@ -229,24 +229,24 @@ jobs:
         platform: ['linux/arm/v7', 'linux/arm64/v8']
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    - name: docker build
-      run: |
-        docker buildx build --platform ${{matrix.platform}} -f ./Dockerfile . --no-cache
+      - uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: docker build
+        run: |
+          docker buildx build --platform ${{matrix.platform}} -f ./Dockerfile . --no-cache
 
   doxygen-ubuntu:
     name: doxygen-check
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
-    - name: install_doxygen
-      run: sudo apt install doxygen graphviz
-    - name: doxygen_check
-      run: |
-        cd doc
-        doxygen Doxyfile_quiet_all
+      - uses: actions/checkout@v3
+      - name: install_doxygen
+        run: sudo apt install doxygen graphviz
+      - name: doxygen_check
+        run: |
+          cd doc
+          doxygen Doxyfile_quiet_all

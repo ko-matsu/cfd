@@ -1,9 +1,9 @@
 name: create-release-upload
 
-on: 
+on:
   push:
     tags:
-    - 'v*'
+      - 'v*'
 
 jobs:
   create_releases:
@@ -66,53 +66,53 @@ jobs:
             os: windows-2019
 
     steps:
-    - name: checkout
-      uses: actions/checkout@v3
-    - name: output url
-      id: get_url
-      run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: Get the version
-      id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: dump version
-      env:
-        version: ${{ steps.get_version.outputs.VERSION }}
-      run: echo "version=${version}"
-      shell: bash
-    - name: Get the asset name
-      id: asset_name
-      run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-win-${{ matrix.bin }}-x86_64.zip" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: create folder
-      run: mkdir dist
-    - name: cmake-build
-      run: |
-        cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_INSTALL_PREFIX="./dist"
-        cmake --build build --parallel 2 --config Release
-      timeout-minutes: 20
-    - name: cmake-install
-      run: |
-        cmake --install build
-        cd dist
-        del /F /Q cmake\wallycore-*
-        del /F /Q lib\wallycore.*
-        del /F /Q lib\libwallycore.*
-        del /F /Q lib\pkgconfig\wallycore.pc
-      shell: cmd
-    - name: create archive file
-      run: |
-        cd dist
-        Compress-Archive -Path ./* -DestinationPath ../${{ steps.asset_name.outputs.ASSET_NAME }}
-        cd ..
-        echo "---- dump zip file ----"
-        dir .
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ${{ steps.asset_name.outputs.ASSET_NAME }}
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: output url
+        id: get_url
+        run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: dump version
+        env:
+          version: ${{ steps.get_version.outputs.VERSION }}
+        run: echo "version=${version}"
+        shell: bash
+      - name: Get the asset name
+        id: asset_name
+        run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-win-${{ matrix.bin }}-x86_64.zip" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: create folder
+        run: mkdir dist
+      - name: cmake-build
+        run: |
+          cmake -S . -B build -G "${{ matrix.generator }}" -DCMAKE_BUILD_TYPE=Release -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_CAPI=on -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_INSTALL_PREFIX="./dist"
+          cmake --build build --parallel 2 --config Release
+        timeout-minutes: 20
+      - name: cmake-install
+        run: |
+          cmake --install build
+          cd dist
+          del /F /Q cmake\wallycore-*
+          del /F /Q lib\wallycore.*
+          del /F /Q lib\libwallycore.*
+          del /F /Q lib\pkgconfig\wallycore.pc
+        shell: cmd
+      - name: create archive file
+        run: |
+          cd dist
+          Compress-Archive -Path ./* -DestinationPath ../${{ steps.asset_name.outputs.ASSET_NAME }}
+          cd ..
+          echo "---- dump zip file ----"
+          dir .
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.asset_name.outputs.ASSET_NAME }}
 
   upload-object-ubuntu:
     name: upload-object-ubuntu
@@ -130,38 +130,38 @@ jobs:
             shared: off
 
     steps:
-    - name: checkout
-      uses: actions/checkout@v3
-    - name: Get the version
-      id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-    - name: Get the asset name
-      id: asset_name
-      run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-ubuntu${{ matrix.os_ver }}04-${{ matrix.bin }}-x86_64.zip" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: cmake-build
-      run: |
-        mkdir dist
-        mkdir build
-        cd build
-        cmake .. -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib"
-        cd ..
-        cmake --build build --parallel 2 --config Release
-        cd build
-        sudo make install DESTDIR=../dist
-        cd ..
-      timeout-minutes: 20
-    - name: create archive file
-      run: |
-        cd dist
-        zip -r ../${{ steps.asset_name.outputs.ASSET_NAME }} usr
-        echo "---- dump zip file ----"
-        ls -l
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ${{ steps.asset_name.outputs.ASSET_NAME }}
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+      - name: Get the asset name
+        id: asset_name
+        run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-ubuntu${{ matrix.os_ver }}04-${{ matrix.bin }}-x86_64.zip" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: cmake-build
+        run: |
+          mkdir dist
+          mkdir build
+          cd build
+          cmake .. -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib"
+          cd ..
+          cmake --build build --parallel 2 --config Release
+          cd build
+          sudo make install DESTDIR=../dist
+          cd ..
+        timeout-minutes: 20
+      - name: create archive file
+        run: |
+          cd dist
+          zip -r ../${{ steps.asset_name.outputs.ASSET_NAME }} usr
+          echo "---- dump zip file ----"
+          ls -l
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.asset_name.outputs.ASSET_NAME }}
 
   upload-object-alpine:
     name: upload-object-alpine
@@ -173,59 +173,59 @@ jobs:
         alpine: ['3.15', '3.16', '3.17', '3.18']
 
     steps:
-    - name: checkout
-      uses: actions/checkout@v3
-    - name: Get the version
-      id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-    - name: Get the asset name
-      id: asset_name
-      run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-alpine-${{ matrix.alpine }}-x86_64.zip" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: list
-      run: ls -a $GITHUB_WORKSPACE
-    - name: docker setup 3.15
-      if: matrix.alpine == '3.15'
-      uses: docker://alpine:3.15
-      with:
-        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
-    - name: docker setup 3.16
-      if: matrix.alpine == '3.16'
-      uses: docker://alpine:3.16
-      with:
-        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
-    - name: docker setup 3.17
-      if: matrix.alpine == '3.17'
-      uses: docker://alpine:3.17
-      with:
-        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
-    - name: docker setup 3.18
-      if: matrix.alpine == '3.18'
-      uses: docker://alpine:3.18
-      with:
-        entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
-    - name: create archive file
-      run: |
-        echo "---- dump output data ----"
-        ls -l $GITHUB_WORKSPACE/dist/usr/local/*
-        mkdir -p /tmp/cfd
-        sudo chmod 777 /tmp/cfd
-        sudo chown runner /tmp/cfd
-        sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd
-        cd /tmp/cfd
-        sudo zip -r /tmp/cfd/cfd.zip usr
-        sudo chmod 777 /tmp/cfd/cfd.zip
-        sudo chown runner /tmp/cfd/cfd.zip
-        sudo cp -rp /tmp/cfd/cfd.zip $GITHUB_WORKSPACE/dist/cfd.zip
-        echo "---- dump zip file ----"
-        sudo ls -l /tmp/cfd
-    - name: rename asset
-      run: mv /tmp/cfd/cfd.zip ${{ steps.asset_name.outputs.ASSET_NAME }}
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ${{ steps.asset_name.outputs.ASSET_NAME }}
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+      - name: Get the asset name
+        id: asset_name
+        run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-alpine-${{ matrix.alpine }}-x86_64.zip" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: list
+        run: ls -a $GITHUB_WORKSPACE
+      - name: docker setup 3.15
+        if: matrix.alpine == '3.15'
+        uses: docker://alpine:3.15
+        with:
+          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+      - name: docker setup 3.16
+        if: matrix.alpine == '3.16'
+        uses: docker://alpine:3.16
+        with:
+          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+      - name: docker setup 3.17
+        if: matrix.alpine == '3.17'
+        uses: docker://alpine:3.17
+        with:
+          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+      - name: docker setup 3.18
+        if: matrix.alpine == '3.18'
+        uses: docker://alpine:3.18
+        with:
+          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+      - name: create archive file
+        run: |
+          echo "---- dump output data ----"
+          ls -l $GITHUB_WORKSPACE/dist/usr/local/*
+          mkdir -p /tmp/cfd
+          sudo chmod 777 /tmp/cfd
+          sudo chown runner /tmp/cfd
+          sudo cp -r $GITHUB_WORKSPACE/dist/usr /tmp/cfd
+          cd /tmp/cfd
+          sudo zip -r /tmp/cfd/cfd.zip usr
+          sudo chmod 777 /tmp/cfd/cfd.zip
+          sudo chown runner /tmp/cfd/cfd.zip
+          sudo cp -rp /tmp/cfd/cfd.zip $GITHUB_WORKSPACE/dist/cfd.zip
+          echo "---- dump zip file ----"
+          sudo ls -l /tmp/cfd
+      - name: rename asset
+        run: mv /tmp/cfd/cfd.zip ${{ steps.asset_name.outputs.ASSET_NAME }}
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.asset_name.outputs.ASSET_NAME }}
 
   upload-object-macos:
     name: upload-object-macos
@@ -251,39 +251,39 @@ jobs:
             suffix: '-static'
 
     steps:
-    - name: checkout
-      uses: actions/checkout@v3
-    - name: Get the version
-      id: get_version
-      run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
-    - name: Get the asset name
-      id: asset_name
-      run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-osx-xcode${{ matrix.xcode }}${{ matrix.suffix }}-x86_64.zip" >> $GITHUB_OUTPUT
-      shell: bash
-    - name: Select Xcode version
-      run: sudo xcode-select -s '/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer'
-    - name: Show Xcode version
-      run: xcodebuild -version
-    - name: cmake-build
-      run: |
-        mkdir dist
-        mkdir build
-        cd build
-        cmake .. -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib;@executable_path;./build/Release"
-        cd ..
-        cmake --build build --parallel 2 --config Release
-        cd build
-        sudo make install DESTDIR=../dist
-        cd ..
-      timeout-minutes: 40
-    - name: create archive file
-      run: |
-        cd dist
-        zip -r ../${{ steps.asset_name.outputs.ASSET_NAME }} usr
-        echo "---- dump zip file ----"
-        ls -l
-    - name: Upload Release Asset
-      id: upload-release-asset
-      uses: softprops/action-gh-release@v1
-      with:
-        files: ${{ steps.asset_name.outputs.ASSET_NAME }}
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+      - name: Get the asset name
+        id: asset_name
+        run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-osx-xcode${{ matrix.xcode }}${{ matrix.suffix }}-x86_64.zip" >> $GITHUB_OUTPUT
+        shell: bash
+      - name: Select Xcode version
+        run: sudo xcode-select -s '/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer'
+      - name: Show Xcode version
+        run: xcodebuild -version
+      - name: cmake-build
+        run: |
+          mkdir dist
+          mkdir build
+          cd build
+          cmake .. -DENABLE_SHARED=${{ matrix.shared }} -DENABLE_TESTS=off -DENABLE_JS_WRAPPER=off -DCMAKE_BUILD_TYPE=Release -DTARGET_RPATH="/usr/local/lib;@executable_path;./build/Release"
+          cd ..
+          cmake --build build --parallel 2 --config Release
+          cd build
+          sudo make install DESTDIR=../dist
+          cd ..
+        timeout-minutes: 40
+      - name: create archive file
+        run: |
+          cd dist
+          zip -r ../${{ steps.asset_name.outputs.ASSET_NAME }} usr
+          echo "---- dump zip file ----"
+          ls -l
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ steps.asset_name.outputs.ASSET_NAME }}
