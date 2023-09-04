@@ -84,7 +84,7 @@ jobs:
         run: ./tools/lint_quiet.sh
 
   cmake-ubuntu-test:
-    name: cmake build
+    name: cmake build-ubuntu
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:

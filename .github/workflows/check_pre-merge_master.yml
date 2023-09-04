@@ -86,7 +86,7 @@ jobs:
         run: ./tools/lint_quiet.sh
 
   cmake-ubuntu-test:
-    name: cmake build
+    name: cmake build-ubuntu
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -117,7 +117,7 @@ jobs:
           cd ..
 
   cmake-ubuntu-coverage:
-    name: cmake build-ubuntu
+    name: cmake build-and-coverage-ubuntu
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
