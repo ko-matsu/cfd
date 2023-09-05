@@ -9,7 +9,7 @@ on:
       - features/sprint*
 
 jobs:
-  cmake-win:
+  cmake-win-test:
     name: cmake build-win
     runs-on: ${{ matrix.os }}
     strategy:
@@ -44,7 +44,7 @@ jobs:
           cd build
           ctest -C Release --output-on-failure -R cfd
 
-  cmake-mac:
+  cmake-mac-test:
     name: cmake build-mac
     runs-on: ${{ matrix.os }}
     strategy:
@@ -82,7 +82,7 @@ jobs:
           ctest -C Release --output-on-failure -R cfd_test
 
   cmake-ubuntu-coverage:
-    name: cmake build-ubuntu
+    name: cmake build-and-coverage-ubuntu
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -192,7 +192,7 @@ jobs:
 
   doxygen-ubuntu:
     name: doxygen-check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v3
