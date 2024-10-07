@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: output url
         id: get_url
         run: echo "upload_url=${{ needs.create_releases.outputs.release_url }}" >> $GITHUB_OUTPUT
@@ -121,7 +121,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os_ver: [22, 20]
+        os_ver: [24, 22, 20]
         bin: [gcc, gcc-static]
         include:
           - bin: gcc
@@ -131,7 +131,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
@@ -166,15 +166,15 @@ jobs:
   upload-object-alpine:
     name: upload-object-alpine
     needs: create_releases
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        alpine: ['3.15', '3.16', '3.17', '3.18']
+        alpine: ['3.17', '3.18', '3.19', '3.20']
 
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
@@ -184,16 +184,6 @@ jobs:
         shell: bash
       - name: list
         run: ls -a $GITHUB_WORKSPACE
-      - name: docker setup 3.15
-        if: matrix.alpine == '3.15'
-        uses: docker://alpine:3.15
-        with:
-          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
-      - name: docker setup 3.16
-        if: matrix.alpine == '3.16'
-        uses: docker://alpine:3.16
-        with:
-          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
       - name: docker setup 3.17
         if: matrix.alpine == '3.17'
         uses: docker://alpine:3.17
@@ -202,6 +192,16 @@ jobs:
       - name: docker setup 3.18
         if: matrix.alpine == '3.18'
         uses: docker://alpine:3.18
+        with:
+          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+      - name: docker setup 3.19
+        if: matrix.alpine == '3.19'
+        uses: docker://alpine:3.19
+        with:
+          entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
+      - name: docker setup 3.20
+        if: matrix.alpine == '3.20'
+        uses: docker://alpine:3.20
         with:
           entrypoint: /github/workspace/.github/workflows/docker/alpine_build_entrypoint.sh
       - name: create archive file
@@ -234,33 +234,43 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        xcode: ['12.5.1', '13.2.1', '13.4.1', '14.2', '14.3.1']
+        xcode: ['13.4.1', '14.2', '14.3.1', '15.2', '15.4']
+#        xcode: ['13.4.1', '14.2']
         shared: [on, off]
         include:
-          - xcode: '12.5.1'
-            os: macos-11
-          - xcode: '13.2.1'
-            os: macos-11
           - xcode: '13.4.1'
             os: macos-12
+            arch: 'x86_64'
           - xcode: '14.2'
             os: macos-12
+            arch: 'x86_64'
           - xcode: '14.3.1'
             os: macos-13
+            arch: 'x86_64'
+          - xcode: '15.2'
+            os: macos-13
+            arch: 'x86_64'
+#          - xcode: '15.4'
+#            os: macos-14-large
+#            arch: 'x86_64'
+          - xcode: '15.4'
+            os: macos-14
+            arch: 'arm64'
           - shared: on
             suffix: ''
           - shared: off
             suffix: '-static'
 
+
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Get the version
         id: get_version
         run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
       - name: Get the asset name
         id: asset_name
-        run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-osx-xcode${{ matrix.xcode }}${{ matrix.suffix }}-x86_64.zip" >> $GITHUB_OUTPUT
+        run: echo "ASSET_NAME=cfd-${{ steps.get_version.outputs.VERSION }}-osx-xcode${{ matrix.xcode }}${{ matrix.suffix }}-${{ matrix.arch }}.zip" >> $GITHUB_OUTPUT
         shell: bash
       - name: Select Xcode version
         run: sudo xcode-select -s '/Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer'
