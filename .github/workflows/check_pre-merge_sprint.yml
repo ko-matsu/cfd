@@ -181,7 +181,7 @@ jobs:
       - name: upload coverage
         uses: actions/upload-artifact@v4
         with:
-          name: valgrind-log
+          name: valgrind-log-${{ matrix.os }}
           path: ./valgrind.log
 
   doxygen-ubuntu:
